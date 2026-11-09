@@ -36,3 +36,4 @@
 - OSDR-style import: tested on an invented sample. Not run on a real OSDR download.
 - Voice check-in: offline with Vosk. Tested on a recorded phrase. A live microphone is not tested.
 - Checked: 245 tests pass on macOS.
+- Checked on Linux ARM64 with networking disabled: all 245 tests pass, including the C++ match and speech tests. The standalone Linux build passes its own check.
