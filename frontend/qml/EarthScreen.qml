@@ -24,22 +24,19 @@ Item {
         }
         Split {
             Layout.fillWidth: true
+            Statement { lead: screen.d.title; detail: screen.d.detail; size: 36 }
+            Note { visible: !!screen.d.reason; text: screen.d.reason || ""; font.pixelSize: 18 }
             Panel {
                 Layout.fillWidth: true
-                title: "Vigil's decision"
-                BigTitle { text: screen.d.title; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-                Body { text: screen.d.detail }
-                Note { visible: !!screen.d.reason; text: screen.d.reason || ""; font.pixelSize: 18 }
-            }
-            Panel {
-                Layout.fillWidth: true
+                divider: true
                 title: "One-way delay"
-                Text { text: screen.d.delay_minutes + " min"; font.family: Theme.mono; font.bold: true; font.pixelSize: 56; color: Theme.ink }
+                Text { text: screen.d.delay_minutes + " minutes"; font.family: Theme.body; font.weight: Font.Medium; font.features: { "tnum": 1 }; font.pixelSize: 40; font.letterSpacing: -1; color: Theme.ink }
                 Note { text: "Any reply takes at least " + (screen.d.delay_minutes * 2) + " minutes. Act on the checklist first." }
             }
             second: [
                 Panel {
                     Layout.fillWidth: true
+                    surface: true
                     title: "What Earth will receive"
                     Flow {
                         Layout.fillWidth: true
@@ -50,7 +47,7 @@ Item {
                                 required property string modelData
                                 spacing: 6
                                 Placard { text: modelData; anchors.verticalCenter: parent.verticalCenter }
-                                Annunciator { status: screen.d.preview.systems[modelData]; compact: true }
+                                StatusPill { status: screen.d.preview.systems[modelData]; compact: true }
                             }
                         }
                     }
@@ -59,6 +56,7 @@ Item {
                 },
                 Panel {
                     Layout.fillWidth: true
+                    surface: true
                     title: screen.sent ? "Sent" : "Add a short note (optional)"
                     Body { visible: screen.sent; text: "Your packet is on its way. It reaches Earth in " + screen.d.delay_minutes + " minutes." }
                     VButton { visible: screen.sent; text: "Watch it travel"; onClicked: vigil.navigate("/ground") }
@@ -73,7 +71,7 @@ Item {
                         font.pixelSize: 18
                         color: Theme.ink
                         Accessible.name: "Note to Earth"
-                        background: Rectangle { color: Theme.panel2; border.color: note.activeFocus ? Theme.action : Theme.rule; radius: 4 }
+                        background: Rectangle { color: Theme.panel2; border.color: note.activeFocus ? Theme.action : "transparent"; radius: 10 }
                     }
                     VButton { visible: !screen.sent; Layout.fillWidth: true; kind: "primary"; text: screen.d.level >= 3 ? "Send priority packet" : "Send packet"; onClicked: screen.send() }
                     Body { visible: screen.errorText.length > 0; text: screen.errorText; color: Theme.warning }

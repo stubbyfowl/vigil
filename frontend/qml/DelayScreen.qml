@@ -52,13 +52,15 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 1
+                surface: true
                 title: "Astronaut"
                 Body {
-                    font.pixelSize: 25
+                    font.pixelSize: 24
+                    font.weight: Font.Medium
                     visible: screen.phase !== "vigil"
                     text: screen.phase === "idle" ? "Resting heart rate is up. Sleep is down. Is this serious? Choose how to find out." : screen.done ? "Reply received. The condition had time to change." : "Waiting for Earth. No guidance yet."
                 }
-                Text { visible: screen.phase === "waiting"; text: screen.mmss(screen.minutes); font.family: Theme.body; font.bold: true; font.pixelSize: 96; color: Theme.ink }
+                Text { visible: screen.phase === "waiting"; text: screen.mmss(screen.minutes); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 96; font.letterSpacing: -3; font.features: { "tnum": 1 }; color: Theme.ink }
                 Note { visible: screen.phase === "waiting"; text: "Time since asking" }
                 Repeater {
                     model: screen.phase === "vigil" ? screen.vigilSteps : []
@@ -66,11 +68,11 @@ Item {
                         required property string modelData
                         required property int index
                         spacing: 10
-                        Text { text: index < screen.steps ? "Done" : "..."; font.family: Theme.mono; font.pixelSize: 20; color: index < screen.steps ? Theme.nominal : Theme.ink2; Layout.preferredWidth: 60 }
+                        Text { text: index < screen.steps ? "Done" : "..."; font.family: Theme.body; font.features: { "tnum": 1 }; font.pixelSize: 20; color: index < screen.steps ? Theme.nominal : Theme.ink2; Layout.preferredWidth: 60 }
                         Body { text: modelData; font.pixelSize: 20; color: index < screen.steps ? Theme.ink : Theme.ink2 }
                     }
                 }
-                Annunciator { visible: screen.phase === "vigil" && screen.steps === screen.vigilSteps.length; status: "green"; label: "Acting now, no wait" }
+                StatusPill { visible: screen.phase === "vigil" && screen.steps === screen.vigilSteps.length; status: "green"; label: "Acting now, no wait" }
             }
             ColumnLayout {
                 Layout.fillWidth: false
@@ -82,7 +84,7 @@ Item {
                 Rectangle {
                     id: track
                     Layout.fillWidth: true
-                    implicitHeight: 3
+                    implicitHeight: 2
                     color: Theme.rule
                     Rectangle {
                         visible: screen.phase === "waiting" && !screen.thinking && !screen.done
@@ -90,7 +92,8 @@ Item {
                         y: -8
                         width: 18
                         height: 18
-                        color: Theme.caution
+                        radius: 9
+                        color: Theme.flag
                     }
                 }
             }
@@ -98,9 +101,11 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 1
+                surface: true
                 title: "Ground"
                 Body {
-                    font.pixelSize: 25
+                    font.pixelSize: 24
+                    font.weight: Font.Medium
                     text: screen.phase === "idle" ? "Earth has no idea yet."
                         : screen.phase === "vigil" ? "A summary will arrive in " + screen.oneWay + " minutes. The astronaut already has a plan."
                         : screen.outbound ? "Message in transit." : screen.thinking ? "Flight surgeon reviews the data." : screen.done ? "Reply delivered." : "Reply in transit."

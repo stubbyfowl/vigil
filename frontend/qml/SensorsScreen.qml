@@ -27,10 +27,11 @@ Item {
                     required property var modelData
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
+                    divider: true
                     RowLayout {
                         Layout.fillWidth: true
-                        Body { text: modelData.name; font.pixelSize: 20; font.bold: true }
-                        Annunciator { compact: true; status: modelData.connected ? "green" : "yellow"; label: modelData.connected ? "Reporting" : "No reading" }
+                        Body { text: modelData.name; font.pixelSize: 20; font.weight: Font.Medium }
+                        StatusPill { compact: true; status: modelData.connected ? "green" : "yellow"; label: modelData.connected ? "Reporting" : "No reading" }
                     }
                     RowLayout {
                         Layout.fillWidth: true
@@ -38,12 +39,12 @@ Item {
                         Placard { text: "Battery" }
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 8
+                            height: 6
+                            radius: 3
                             color: Theme.panel2
-                            border.color: Theme.rule
-                            Rectangle { width: parent.width * modelData.battery / 100; height: parent.height; color: Theme.ink2 }
+                            Rectangle { width: parent.width * modelData.battery / 100; height: parent.height; radius: 3; color: Theme.action }
                         }
-                        Text { text: modelData.battery + "%"; font.family: Theme.mono; font.pixelSize: 17; color: Theme.ink }
+                        Text { text: modelData.battery + "%"; font.family: Theme.body; font.features: { "tnum": 1 }; font.pixelSize: 17; color: Theme.ink }
                         Placard { text: modelData.power; font.pixelSize: 17 }
                     }
                     Note { visible: modelData.missing.length > 0; text: "Missing today: " + modelData.missing.join(", ") }

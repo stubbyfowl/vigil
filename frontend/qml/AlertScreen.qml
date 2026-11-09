@@ -29,7 +29,7 @@ Item {
                 spacing: 10
                 BackButton {}
                 LevelBadge { level: screen.d.alert.level }
-                Placard { text: screen.d.alert.system_name; font.pixelSize: 24 }
+                Placard { text: screen.d.alert.system_name; font.pixelSize: 18 }
                 Placard { visible: screen.d.closed; text: "This alert has closed" }
                 Placard { visible: !!screen.d.alert.recovering; text: "Readings are recovering" }
                 Item { Layout.fillWidth: true }
@@ -37,15 +37,13 @@ Item {
             }
             Split {
                 Layout.fillWidth: true
+                Statement { lead: Theme.lead(screen.d.alert.message); detail: Theme.rest(screen.d.alert.message); size: 30 }
                 Panel {
                     Layout.fillWidth: true
-                    title: "What Vigil sees"
-                    Body { text: screen.d.alert.message; font.pixelSize: 25 }
-                }
-                Panel {
-                    Layout.fillWidth: true
+                    Layout.topMargin: 6
+                    divider: true
                     title: "Do this"
-                    Body { text: screen.d.alert.action; font.pixelSize: 25; font.bold: true }
+                    Body { text: screen.d.alert.action; font.pixelSize: 23; font.weight: Font.DemiBold; font.letterSpacing: -0.3 }
                     Note { text: screen.d.alert.recheck_text; font.pixelSize: 18 }
                 }
                 RowLayout {
@@ -67,6 +65,7 @@ Item {
                 Panel {
                     Layout.fillWidth: true
                     visible: !!screen.d.protocol
+                    divider: true
                     title: screen.d.protocol ? screen.d.protocol.name + " · " + screen.d.protocol.minutes + " min" : ""
                     Body { text: screen.d.protocol ? screen.d.protocol.steps.join(" ") : "" }
                     Note { text: screen.d.protocol ? "Stop and escalate if: " + screen.d.protocol.escalate_if + " " + screen.d.protocol_label : "" }
@@ -77,6 +76,7 @@ Item {
                         Panel {
                             required property int index
                             Layout.fillWidth: true
+                            surface: true
                             title: screen.d.charts[index] ? screen.d.charts[index].name : ""
                             SeriesChart { Layout.fillWidth: true; series: screen.d.charts[index]; chartHeight: index === 0 ? 240 : 150 }
                         }
@@ -100,7 +100,7 @@ Item {
         modal: true
         width: 560
         padding: 24
-        background: Rectangle { color: Theme.panel; border.color: Theme.rule; radius: 4 }
+        background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule }
         ColumnLayout {
             anchors.fill: parent
             spacing: 14
@@ -121,7 +121,9 @@ Item {
         width: Math.min(640, parent.width)
         height: parent.height
         color: Theme.panel
+        radius: Theme.radius
         border.color: Theme.rule
+        SoftShadow {}
         Behavior on x { enabled: !vigil.reduceMotion; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
         PageScroll {
             anchors { fill: parent; margins: 18 }
@@ -138,19 +140,19 @@ Item {
                     Layout.fillWidth: true
                     spacing: 6
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.rule }
-                    Body { text: modelData.name; font.bold: true; font.pixelSize: 19 }
+                    Body { text: modelData.name; font.weight: Font.DemiBold; font.pixelSize: 19 }
                     GridLayout {
                         columns: 4
                         Layout.fillWidth: true
                         columnSpacing: 10
-                        Placard { text: "Your normal"; font.pixelSize: 17; Layout.fillWidth: true; Layout.preferredWidth: 1 }
-                        Placard { text: "Now"; font.pixelSize: 17; Layout.fillWidth: true; Layout.preferredWidth: 1 }
-                        Placard { text: "Change"; font.pixelSize: 17; Layout.fillWidth: true; Layout.preferredWidth: 1 }
-                        Placard { text: "Days"; font.pixelSize: 17; Layout.fillWidth: true; Layout.preferredWidth: 1 }
-                        Body { text: modelData.baseline_low + " to " + modelData.baseline_high; font.bold: true; Layout.preferredWidth: 1 }
-                        Body { text: modelData.current + " " + modelData.unit; font.bold: true; Layout.preferredWidth: 1 }
-                        Body { text: (modelData.change > 0 ? "+" : "") + modelData.change; font.bold: true; Layout.preferredWidth: 1 }
-                        Body { text: modelData.days_of_drift; font.bold: true; Layout.preferredWidth: 1 }
+                        Placard { text: "Your normal"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
+                        Placard { text: "Now"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
+                        Placard { text: "Change"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
+                        Placard { text: "Days"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
+                        Body { text: modelData.baseline_low + " to " + modelData.baseline_high; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
+                        Body { text: modelData.current + " " + modelData.unit; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
+                        Body { text: (modelData.change > 0 ? "+" : "") + modelData.change; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
+                        Body { text: modelData.days_of_drift; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
                     }
                     Note { text: modelData.rule }
                 }

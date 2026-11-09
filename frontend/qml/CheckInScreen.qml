@@ -60,7 +60,7 @@ Item {
                         spacing: 4
                         Accessible.role: Accessible.Grouping
                         Accessible.name: modelData.label + ". " + modelData.hint + "."
-                        Placard { text: modelData.label; font.pixelSize: 21; Layout.preferredWidth: 110 }
+                        Placard { text: modelData.label; font.pixelSize: 19; color: Theme.ink; Layout.preferredWidth: 110 }
                         Repeater {
                             model: parent.modelData.high - parent.modelData.low + 1
                             VButton {
@@ -96,7 +96,7 @@ Item {
                         font.pixelSize: 18
                         color: Theme.ink
                         Accessible.name: "Journal"
-                        background: Rectangle { color: Theme.panel2; border.color: journal.activeFocus ? Theme.action : Theme.rule; radius: 4 }
+                        background: Rectangle { color: Theme.panel2; border.color: journal.activeFocus ? Theme.action : "transparent"; radius: 10 }
                         onTextChanged: if (text.length > 2000) remove(2000, text.length)
                     }
                     Toggle { id: keep; text: "Keep my words on this computer" }

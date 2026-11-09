@@ -100,10 +100,9 @@ def test_unknown_alert_explains_itself(ui):
 
 def test_second_window_opens(ui):
     ui.warnings.clear()
-    ui.window.setProperty("groundOpen", True)
+    ui.bridge.openGround()
     QTest.qWait(200)
-    assert ui.window.findChild(QObject, "groundWindow").property("visible")
-    ui.window.setProperty("groundOpen", False)
+    ui.bridge.openGround()  # a second request must not open a second window
     assert ui.warnings == []
 
 

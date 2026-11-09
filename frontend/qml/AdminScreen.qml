@@ -51,7 +51,8 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     Layout.alignment: Qt.AlignTop
-                    title: name
+                    divider: true
+                    title: name.charAt(0).toUpperCase() + name.slice(1)
                     Repeater {
                         model: Object.keys(screen.draft[group.name])
                         RowLayout {
@@ -76,7 +77,7 @@ Item {
                                 font.pixelSize: 18
                                 color: Theme.ink
                                 Accessible.name: field.key
-                                background: Rectangle { color: Theme.panel2; border.color: input.activeFocus ? Theme.action : Theme.rule }
+                                background: Rectangle { color: Theme.panel2; border.color: input.activeFocus ? Theme.action : "transparent"; radius: 9 }
                                 onEditingFinished: screen.draft[group.name][field.key] = typeof field.current === "number" ? Number(text) : text
                             }
                         }
@@ -87,6 +88,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
+                divider: true
                 title: "Signals on or off"
                 Repeater {
                     model: screen.signalList

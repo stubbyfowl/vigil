@@ -15,34 +15,37 @@ Item {
             spacing: 12
             BackButton {}
             BigTitle { text: "Radiation" }
-            Annunciator { status: screen.d.status }
+            StatusPill { status: screen.d.status }
             Item { Layout.fillWidth: true }
             VButton { visible: !screen.active; text: screen.drill ? "End drill" : "Storm drill"; onClicked: screen.drill = !screen.drill }
         }
-        Panel {
+        Statement {
+            Layout.maximumWidth: 900
+            size: 38
+            lead: "Career dose is " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " mSv."
+            detail: "On this path it reaches " + screen.d.projected_total_msv + " by the end of the mission."
+        }
+        ColumnLayout {
             Layout.fillWidth: true
-            title: "Career dose against the limit"
-            Rectangle {
+            spacing: 8
+            Item {
                 id: track
                 Layout.fillWidth: true
-                implicitHeight: 56
-                color: Theme.panel2
-                border.color: Theme.rule
+                implicitHeight: 18
                 Accessible.role: Accessible.ProgressBar
                 Accessible.name: "Career dose " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " millisieverts. Projected " + screen.d.projected_total_msv + "."
-                Rectangle { width: track.width * screen.pct(screen.d.projected_total_msv); height: parent.height; color: Theme.band; opacity: 0.45 }
-                Rectangle { width: track.width * screen.pct(screen.d.career_dose_msv); height: parent.height; color: Theme.ink }
-                Rectangle { width: track.width * screen.pct(screen.d.prior_dose_msv); height: parent.height; color: Theme.ink2 }
+                Rectangle { anchors.fill: parent; radius: 9; color: Theme.panel2 }
+                Rectangle { width: track.width * screen.pct(screen.d.projected_total_msv); height: parent.height; radius: 9; color: Theme.band; opacity: 0.3 }
+                Rectangle { width: track.width * screen.pct(screen.d.career_dose_msv); height: parent.height; radius: 9; color: Theme.action }
+                Rectangle { width: track.width * screen.pct(screen.d.prior_dose_msv); height: parent.height; radius: 9; color: Theme.ink }
             }
             RowLayout {
                 Layout.fillWidth: true
-                Placard { text: "Before this mission " + screen.d.prior_dose_msv; color: Theme.ink }
+                Note { Layout.fillWidth: false; text: "Before this mission " + screen.d.prior_dose_msv }
                 Item { Layout.fillWidth: true }
-                Placard { text: "This mission " + screen.d.mission_dose_msv; color: Theme.ink }
+                Note { Layout.fillWidth: false; text: "This mission " + screen.d.mission_dose_msv }
                 Item { Layout.fillWidth: true }
-                Placard { text: "Projected " + screen.d.projected_total_msv; color: Theme.ink }
-                Item { Layout.fillWidth: true }
-                Placard { text: "Limit " + screen.d.limit_msv + " mSv"; color: Theme.ink }
+                Note { Layout.fillWidth: false; text: "Limit " + screen.d.limit_msv + " mSv" }
             }
         }
         Split {
@@ -56,17 +59,19 @@ Item {
                         required property var modelData
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
+                        divider: true
                         title: modelData[0]
-                        Text { text: modelData[1]; font.family: Theme.body; font.bold: true; font.pixelSize: 32; color: Theme.ink }
+                        Text { text: modelData[1]; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 34; font.letterSpacing: -1; font.features: { "tnum": 1 }; color: Theme.ink }
                         Note { text: modelData[2] }
                     }
                 }
             }
             Panel {
                 Layout.fillWidth: true
+                divider: true
                 title: "Storm status"
                 Body {
-                    font.pixelSize: screen.active ? 25 : 18
+                    font.pixelSize: screen.active ? 23 : 18
                     text: screen.active ? "Solar storm in progress."
                         : screen.d.storm.phase === "passed" ? "Last storm has passed. Dose in shelter: " + screen.d.storm.shelter_dose_msv + " mSv. With no shelter: " + screen.d.storm.unsheltered_dose_msv + " mSv."
                         : "No storm flag from the solar monitor."
@@ -101,9 +106,9 @@ Item {
             }
             Note { text: "Limit and dose figures are approximate and marked must verify. The storm size and shelter factor are invented for this simulation." }
             second: [
-                Panel { Layout.fillWidth: true; visible: screen.active; title: "Shelter steps"; ShelterFlow { Layout.fillWidth: true; storm: screen.d.storm } },
-                Panel { Layout.fillWidth: true; visible: !screen.active && screen.drill; title: "Storm drill"; ShelterFlow { Layout.fillWidth: true; drill: true } },
-                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; title: "Practice"; Body { text: "Run a storm drill to rehearse the shelter steps with a timer." } }
+                Panel { Layout.fillWidth: true; visible: screen.active; surface: true; title: "Shelter steps"; ShelterFlow { Layout.fillWidth: true; storm: screen.d.storm } },
+                Panel { Layout.fillWidth: true; visible: !screen.active && screen.drill; surface: true; title: "Storm drill"; ShelterFlow { Layout.fillWidth: true; drill: true } },
+                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; surface: true; title: "Practice"; Body { text: "Run a storm drill to rehearse the shelter steps with a timer." } }
             ]
         }
     }

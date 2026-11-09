@@ -44,10 +44,11 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 1
+                    divider: true
                     title: modelData.title
                     RowLayout {
                         spacing: 8
-                        Text { text: modelData.detected + "/" + modelData.runs; font.family: Theme.body; font.bold: true; font.pixelSize: 46; color: Theme.ink }
+                        Text { text: modelData.detected + "/" + modelData.runs; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 46; font.letterSpacing: -1.4; font.features: { "tnum": 1 }; color: Theme.ink }
                         Note { text: "runs found"; Layout.fillWidth: false }
                     }
                     Note { text: modelData.id === "solar_storm" ? "Warning comes from the simulated solar monitor." : "First flag " + modelData.vigil_vs_onset.mean + " days after onset (sd " + modelData.vigil_vs_onset.sd + "). This event builds over several days." }
@@ -67,6 +68,7 @@ Item {
                     readonly property real peak: Math.max.apply(null, rows.map(function (r) { return r[1] }))
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
+                    divider: true
                     title: modelData[0]
                     Repeater {
                         model: bars.rows
@@ -76,11 +78,12 @@ Item {
                             Body { text: modelData[0]; Layout.fillWidth: false; Layout.preferredWidth: 205 }
                             Rectangle {
                                 Layout.fillWidth: true
-                                implicitHeight: 22
+                                implicitHeight: 14
+                                radius: 7
                                 color: Theme.panel2
-                                Rectangle { width: parent.width * modelData[1] / bars.peak; height: parent.height; color: Theme.band }
+                                Rectangle { width: parent.width * modelData[1] / bars.peak; height: parent.height; radius: 7; color: Theme.action }
                             }
-                            Text { text: modelData[1]; font.family: Theme.body; font.bold: true; font.pixelSize: 18; color: Theme.ink; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
+                            Text { text: modelData[1]; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 18; color: Theme.ink; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
                         }
                     }
                 }

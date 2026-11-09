@@ -28,6 +28,7 @@ Item {
         }
         Panel {
             Layout.fillWidth: true
+            surface: true
             Item {
                 id: markers
                 Layout.fillWidth: true
@@ -44,7 +45,7 @@ Item {
                         Accessible.role: Accessible.Button
                         Accessible.name: "Jump to " + modelData.title + ", day " + modelData.day
                         onClicked: Api.ask("set_clock", { day: modelData.day, running: false })
-                        background: Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 3; color: Theme.caution }
+                        background: Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 2; radius: 1; color: Theme.flag }
                         contentItem: Placard { id: mark; text: modelData.title; color: Theme.ink; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                     }
                 }
@@ -66,13 +67,13 @@ Item {
                     Accessible.role: Accessible.Graphic
                     Accessible.name: "Health status of each crew member across the whole mission."
                     Connections { target: screen; function onDChanged() { laneCanvas.requestPaint() } }
-                    Connections { target: vigil; function onPrefsChanged() { laneCanvas.requestPaint() } }
+                    Connections { target: Theme; function onModeChanged() { laneCanvas.requestPaint() } }
                     onWidthChanged: requestPaint()
                     onPaint: {
                         var c = getContext("2d")
                         c.reset()
                         var cell = width / screen.d.mission_days
-                        var color = { g: Theme.panel2, y: Theme.caution, r: Theme.warning }
+                        var color = { g: Theme.panel2, y: Theme.p.ribbonWarm[0], r: Theme.p.ribbonWarm[1] }
                         screen.d.crew.forEach(function (person, row) {
                             for (var day = 0; day < screen.d.mission_days; day++) {
                                 c.fillStyle = color[screen.worst(person, day)]
@@ -102,16 +103,21 @@ Item {
                 value: vigil.day
                 Accessible.name: "Mission day"
                 onMoved: Api.ask("set_clock", { day: Math.round(value), running: false })
-                background: Rectangle { x: scrubber.leftPadding; y: (scrubber.height - height) / 2; width: scrubber.availableWidth; height: 8; color: Theme.rule }
-                handle: Rectangle {
+                background: Rectangle { x: scrubber.leftPadding; y: (scrubber.height - height) / 2; width: scrubber.availableWidth; height: 6; radius: 3; color: Theme.panel2 }
+                handle: Item {
                     x: scrubber.leftPadding + scrubber.visualPosition * (scrubber.availableWidth - width)
                     y: 0
                     width: Theme.touch
                     height: Theme.touch
-                    radius: 4
-                    color: Theme.action
-                    border.color: scrubber.visualFocus ? Theme.ink : Theme.bg
-                    border.width: 3
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: Theme.action
+                        border.color: scrubber.visualFocus ? Theme.ink : Theme.panel
+                        border.width: 3
+                    }
                 }
             }
         }
@@ -122,7 +128,7 @@ Item {
                 columns: screen.systemKeys.length + 2
                 columnSpacing: 8
                 rowSpacing: 6
-                Placard { text: "Day " + vigil.day; Layout.preferredWidth: 150 }
+                Placard { text: "Crew on day " + vigil.day; Layout.preferredWidth: 150 }
                 Repeater { model: screen.systemKeys; Placard { required property string modelData; text: screen.d.systems[modelData]; Layout.fillWidth: true; Layout.preferredWidth: 1; elide: Text.ElideRight } }
                 Placard { text: "Level"; Layout.preferredWidth: 60 }
                 Repeater {
@@ -138,9 +144,9 @@ Item {
                     }
                 }
             }
-            Component { id: nameCell; Body { text: parent.person.name; font.bold: true } }
-            Component { id: levelCell; Text { text: parent.person.level[vigil.day - 1] || "None"; font.family: Theme.mono; font.pixelSize: 18; color: Theme.ink } }
-            Component { id: statusCell; Annunciator { compact: true; status: screen.codes[parent.person.status[screen.systemKeys[parent.column - 1]][vigil.day - 1]] } }
+            Component { id: nameCell; Body { text: parent.person.name; font.weight: Font.DemiBold } }
+            Component { id: levelCell; Text { text: parent.person.level[vigil.day - 1] || "None"; font.family: Theme.body; font.features: { "tnum": 1 }; font.pixelSize: 18; color: Theme.ink } }
+            Component { id: statusCell; StatusPill { compact: true; status: screen.codes[parent.person.status[screen.systemKeys[parent.column - 1]][vigil.day - 1]] } }
         }
     }
 }

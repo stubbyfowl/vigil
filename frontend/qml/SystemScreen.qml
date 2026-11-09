@@ -20,7 +20,7 @@ Item {
                 spacing: 12
                 BackButton {}
                 BigTitle { text: screen.d.name }
-                Annunciator { visible: !screen.d.learning; status: screen.d.status }
+                StatusPill { visible: !screen.d.learning; status: screen.d.status }
                 Item { Layout.fillWidth: true }
                 Placard { text: "Drift " + screen.d.score + " / 100 · Confidence " + Math.round(screen.d.confidence * 100) + "%" }
             }
@@ -38,23 +38,18 @@ Item {
                         readonly property var s: screen.d.signals[index]
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
+                        surface: true
                         RowLayout {
                             Layout.fillWidth: true
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
-                                Body { text: tile.s.name; font.pixelSize: 20; font.bold: true }
+                                Body { text: tile.s.name; font.pixelSize: 19; font.weight: Font.Medium }
                                 Note { visible: !tile.s.flagged_now; text: tile.s.learning ? "Learning your normal" : "Inside your normal" }
-                                Rectangle {
-                                    visible: tile.s.flagged_now
-                                    color: Theme.caution
-                                    implicitWidth: tagText.implicitWidth + 16
-                                    implicitHeight: 26
-                                    Placard { id: tagText; anchors.centerIn: parent; text: "Drifting " + tile.s.drift_days + " d"; color: Theme.onLit; font.pixelSize: 18 }
-                                }
+                                StatusPill { visible: tile.s.flagged_now; status: "yellow"; compact: true; label: "Drifting for " + tile.s.drift_days + (tile.s.drift_days === 1 ? " day" : " days") }
                             }
-                            Text { text: tile.s.current === null ? "--" : tile.s.current.toFixed(tile.s.decimals); font.family: Theme.body; font.bold: true; font.pixelSize: 30; color: Theme.ink }
-                            Placard { text: tile.s.unit; Layout.alignment: Qt.AlignBottom }
+                            Text { text: tile.s.current === null ? "--" : tile.s.current.toFixed(tile.s.decimals); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 32; font.letterSpacing: -0.8; font.features: { "tnum": 1 }; color: Theme.ink }
+                            Placard { text: tile.s.unit; Layout.alignment: Qt.AlignBottom; bottomPadding: 5 }
                         }
                         SeriesChart { Layout.fillWidth: true; series: tile.s; chartHeight: 170 }
                     }

@@ -8,8 +8,8 @@ import pytest
 PALETTES = json.loads((Path(__file__).resolve().parents[2] / "frontend/palette.json").read_text())
 PAIRS = [
     ("ink", "bg"), ("ink", "panel"), ("ink", "panel2"), ("ink2", "bg"), ("ink2", "panel"), ("ink2", "panel2"),
-    ("nominal", "panel"), ("caution", "panel"), ("warning", "panel"), ("caution", "bg"),
-    ("onLit", "caution"), ("onLit", "warning"), ("onAction", "action"), ("action", "panel"), ("bg", "ink"),
+    ("nominal", "panel"), ("caution", "panel"), ("warning", "panel"),
+    ("nominal", "nominalBg"), ("caution", "cautionBg"), ("warning", "warningBg"), ("actionText", "action"), ("action", "panel"), ("bg", "ink"),
 ]
 
 

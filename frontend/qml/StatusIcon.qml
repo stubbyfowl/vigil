@@ -4,8 +4,8 @@ Canvas {
     id: icon
     property string status: "green"
     property color tint: Theme.ink
-    implicitWidth: 18
-    implicitHeight: 18
+    implicitWidth: 16
+    implicitHeight: 16
     onStatusChanged: requestPaint()
     onTintChanged: requestPaint()
     onPaint: {
@@ -13,14 +13,16 @@ Canvas {
         c.reset()
         c.fillStyle = tint
         c.strokeStyle = tint
-        c.lineWidth = 3
+        c.lineWidth = 2.4
+        c.lineCap = "round"
+        c.lineJoin = "round"
         c.beginPath()
         if (status === "green") {
-            c.moveTo(2, 10); c.lineTo(7, 15); c.lineTo(16, 4); c.stroke()
+            c.moveTo(2, 8.5); c.lineTo(6.2, 12.5); c.lineTo(14, 3.5); c.stroke()
         } else if (status === "yellow") {
-            c.moveTo(9, 2); c.lineTo(17, 16); c.lineTo(1, 16); c.closePath(); c.fill()
+            c.moveTo(8, 2); c.lineTo(15, 14); c.lineTo(1, 14); c.closePath(); c.fill(); c.stroke()
         } else {
-            c.moveTo(9, 1); c.lineTo(17, 9); c.lineTo(9, 17); c.lineTo(1, 9); c.closePath(); c.fill()
+            c.moveTo(8, 1); c.lineTo(15, 8); c.lineTo(8, 15); c.lineTo(1, 8); c.closePath(); c.fill(); c.stroke()
         }
     }
 }

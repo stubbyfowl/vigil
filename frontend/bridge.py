@@ -15,7 +15,7 @@ QUERIES = {
     "checkin", "get_config", "put_config", "reset_config",
 }
 CHANGES_STATE = {"set_share", "call_earth", "set_link", "set_clock", "demo_start", "demo_next", "demo_stop", "checkin", "put_config", "reset_config"}
-DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False}
+DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "light", "welcomed": False, "reduce_motion": False}
 
 
 class Bridge(QObject):
@@ -32,6 +32,7 @@ class Bridge(QObject):
     def __init__(self, vigil: Vigil, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.vigil = vigil
+        self.open_ground_window = lambda: None  # set by main.py
         self._palettes = json.loads((config.FRONTEND_DIR / "palette.json").read_text())
         self._prefs = dict(DEFAULT_PREFS)
         if config.PREFS_PATH.exists():
@@ -162,6 +163,10 @@ class Bridge(QObject):
     @Slot()
     def back(self) -> None:
         self._go(self._history.pop() if self._history else "/", remember=False)
+
+    @Slot()
+    def openGround(self) -> None:
+        self.open_ground_window()
 
     # Everything else goes through one door
 

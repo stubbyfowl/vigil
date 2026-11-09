@@ -1,8 +1,9 @@
 import QtQuick
 
 Text {
-    font.family: Theme.label
-    font.pixelSize: 42
-    font.letterSpacing: 1.2
+    font.family: Theme.body
+    font.weight: Font.Medium
+    font.pixelSize: 38
+    font.letterSpacing: -0.8
     color: Theme.ink
 }

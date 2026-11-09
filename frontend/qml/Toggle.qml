@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 
-CheckBox {
+Switch {
     id: control
     implicitHeight: Theme.touch
     font.family: Theme.body
@@ -10,16 +10,23 @@ CheckBox {
     indicator: Rectangle {
         x: 0
         y: (control.height - height) / 2
-        width: 34
-        height: 34
-        radius: 4
+        width: 48
+        height: 28
+        radius: 14
         color: control.checked ? Theme.action : Theme.panel2
-        border.color: control.visualFocus ? Theme.action : Theme.rule
-        border.width: control.visualFocus ? 3 : 1
-        StatusIcon { anchors.centerIn: parent; status: "green"; tint: Theme.onAction; visible: control.checked }
+        border.color: control.visualFocus ? Theme.action : control.checked ? Theme.action : Theme.rule
+        Rectangle {
+            x: control.checked ? parent.width - width - 3 : 3
+            y: 3
+            width: 22
+            height: 22
+            radius: 11
+            color: control.checked ? Theme.actionText : Theme.ink2
+            Behavior on x { enabled: !vigil.reduceMotion; NumberAnimation { duration: 120 } }
+        }
     }
     contentItem: Text {
-        leftPadding: 46
+        leftPadding: 60
         text: control.text
         font: control.font
         color: Theme.ink

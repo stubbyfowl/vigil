@@ -6,7 +6,6 @@ import QtQuick.Window
 ApplicationWindow {
     id: win
     property bool kiosk: false
-    property bool groundOpen: false
     title: "Vigil"
     width: 1280
     height: 800
@@ -24,13 +23,28 @@ ApplicationWindow {
     })
     readonly property string section: vigil.route.split("/")[1] || ""
 
+    function driftTrend() {
+        var systems = Api.ask("astronaut", { id: vigil.astronaut, day: vigil.day, v: vigil.version }).systems
+        return systems[0].trend.map(function (_, i) { return Math.max.apply(null, systems.map(function (s) { return s.trend[i] })) })
+    }
+
     Shortcut { sequence: "Ctrl+Z"; onActivated: vigil.undo() }
     Shortcut { sequence: "Esc"; onActivated: { if (menu.opened) menu.close(); else vigil.back() } }
     Shortcut { sequence: "F11"; onActivated: win.kiosk = !win.kiosk }
     Shortcut { sequence: "Ctrl+D"; onActivated: Api.ask("demo_start") }
     Shortcut { sequence: "Ctrl+Right"; enabled: vigil.demo.active; onActivated: Api.ask("demo_next") }
     Shortcut { sequence: "Ctrl+."; enabled: vigil.demo.active; onActivated: Api.ask("demo_stop") }
-    Shortcut { sequence: "Ctrl+G"; onActivated: win.groundOpen = true }
+    Shortcut { sequence: "Ctrl+G"; onActivated: vigil.openGround() }
+
+    // The signature graphic sits behind the home screen and runs up under the top bar.
+    Ribbon {
+        visible: vigil.route === "/"
+        x: parent.width * 0.52
+        y: 0
+        width: parent.width * 0.48
+        height: 690
+        drift: visible ? win.driftTrend() : []
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -42,7 +56,7 @@ ApplicationWindow {
             Loader {
                 id: page
                 objectName: "page"
-                anchors { fill: parent; margins: 16; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: vigil.demo.active ? 100 : 16 }
+                anchors { fill: parent; topMargin: 10; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: vigil.demo.active ? 112 : 18 }
                 source: win.screens[win.section] || "NotFoundScreen.qml"
             }
         }
@@ -51,23 +65,37 @@ ApplicationWindow {
     // Demo Director: a guided flow, so it is always easy to skip or stop.
     Rectangle {
         visible: vigil.demo.active
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-        height: 96
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: 18 }
+        height: 84
+        radius: Theme.radius
         color: Theme.ink
         RowLayout {
-            anchors { fill: parent; leftMargin: Theme.gutter; rightMargin: Theme.gutter }
-            spacing: 14
-            Placard { color: Theme.bg; text: "Demo " + ((vigil.demo.index || 0) + 1) + " of " + vigil.demo.total }
+            anchors { fill: parent; leftMargin: 24; rightMargin: 14 }
+            spacing: 18
+            Text { color: Theme.bg; opacity: 0.7; text: ((vigil.demo.index || 0) + 1) + " of " + vigil.demo.total; font.family: Theme.body; font.pixelSize: 16; font.features: { "tnum": 1 } }
             Text {
                 Layout.fillWidth: true
                 text: vigil.demo.caption || ""
                 wrapMode: Text.WordWrap
-                font.family: Theme.body; font.bold: true; font.pixelSize: 24; color: Theme.bg
+                maximumLineCount: 2
+                font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 21; font.letterSpacing: -0.2; color: Theme.bg
                 Accessible.role: Accessible.StaticText
                 Accessible.name: text
             }
-            VButton { text: "Next beat"; onClicked: Api.ask("demo_next") }
-            VButton { text: "Stop"; onClicked: Api.ask("demo_stop") }
+            Repeater {
+                model: [["Next", "demo_next"], ["Stop", "demo_stop"]]
+                AbstractButton {
+                    required property var modelData
+                    implicitWidth: 86
+                    implicitHeight: Theme.touch
+                    focusPolicy: Qt.StrongFocus
+                    Accessible.role: Accessible.Button
+                    Accessible.name: modelData[0]
+                    onClicked: Api.ask(modelData[1])
+                    background: Rectangle { radius: 9; color: "transparent"; border.color: Theme.bg; opacity: 0.45 }
+                    contentItem: Text { text: parent.modelData[0]; color: Theme.bg; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                }
+            }
         }
     }
 
@@ -77,49 +105,50 @@ ApplicationWindow {
         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 110 }
         width: undoRow.implicitWidth + 32
         height: 76
-        radius: 4
-        color: Theme.panel2
-        border.color: Theme.rule
+        radius: Theme.radius
+        color: Theme.ink
         RowLayout {
             id: undoRow
             anchors.centerIn: parent
             spacing: 18
-            Body { text: vigil.undoText; Layout.fillWidth: false }
-            VButton { text: "Undo"; onClicked: vigil.undo() }
+            Body { text: vigil.undoText; Layout.fillWidth: false; color: Theme.bg }
+            VButton { kind: "primary"; text: "Undo"; onClicked: vigil.undo() }
         }
     }
 
     Popup {
         id: menu
         objectName: "menu"
-        x: parent.width - width
-        y: 76
+        x: parent.width - width - Theme.gutter
+        y: 72
         width: 420
         modal: true
         padding: 16
-        background: Rectangle { color: Theme.panel; border.color: Theme.rule }
+        background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule; SoftShadow {} }
         ColumnLayout {
             anchors.fill: parent
-            spacing: 8
+            spacing: 4
             VButton { Layout.fillWidth: true; kind: "primary"; text: "Play demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
             Repeater {
                 model: [["/", "Home"], ["/timeline", "Mission timeline"], ["/explainer", "Why personal baselines"], ["/sensors", "Sensors"], ["/delay", "Delay Theater"], ["/results", "Results"], ["/about", "About and honesty"]]
                 VButton {
                     required property var modelData
                     Layout.fillWidth: true
+                    kind: "quiet"
+                    textAlign: Text.AlignLeft
                     text: modelData[1]
                     onClicked: { vigil.navigate(modelData[0]); menu.close() }
                 }
             }
-            VButton { Layout.fillWidth: true; text: "Open Mission Control"; onClicked: { win.groundOpen = true; menu.close() } }
+            VButton { Layout.fillWidth: true; kind: "quiet"; textAlign: Text.AlignLeft; text: "Open Mission Control window"; onClicked: { vigil.openGround(); menu.close() } }
             Placard { text: "Display" }
             RowLayout {
                 Repeater {
-                    model: ["dark", "light", "night"]
+                    model: ["light", "dark", "night"]
                     VButton {
                         required property string modelData
                         Layout.fillWidth: true
-                        text: modelData
+                        text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
                         selected: vigil.theme === modelData
                         onClicked: vigil.theme = modelData
                     }
@@ -138,33 +167,15 @@ ApplicationWindow {
         closePolicy: Popup.NoAutoClose
         visible: !vigil.welcomed && !vigil.demo.active
         padding: 28
-        background: Rectangle { color: Theme.panel; border.color: Theme.rule; radius: 4 }
+        background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule }
         ColumnLayout {
             anchors.fill: parent
             spacing: 14
-            BigTitle { text: "Before you start" }
+            BigTitle { text: "Before you start"; font.pixelSize: 34 }
             Body { text: "Vigil learns your own normal and tells you when something drifts. It explains why, and it decides when to call Earth." }
             Body { text: "Every reading here is simulated. The crew are invented. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis." }
             Body { text: "Everything runs on this computer. Vigil opens no network connections. Your journal words are not stored unless you choose to keep them." }
             VButton { Layout.fillWidth: true; kind: "primary"; text: "I understand"; onClicked: vigil.acknowledgeWelcome() }
-        }
-    }
-
-    // Mission Control opens as its own window, for a second screen.
-    Window {
-        id: groundWindow
-        objectName: "groundWindow"
-        title: "Vigil Mission Control"
-        width: 1280
-        height: 800
-        visible: win.groundOpen
-        color: Theme.bg
-        onClosing: win.groundOpen = false
-        Loader {
-            anchors { fill: parent; margins: 16 }
-            active: groundWindow.visible
-            source: "GroundScreen.qml"
-            onLoaded: item.standalone = true
         }
     }
 }

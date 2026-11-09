@@ -32,12 +32,28 @@ def create_engine(app: QGuiApplication, vigil: Vigil, on_warning: Callable | Non
     for font in sorted((config.FRONTEND_DIR / "fonts").glob("*.ttf")):
         QFontDatabase.addApplicationFont(str(font))
     bridge = Bridge(vigil, app)
-    engine = QQmlApplicationEngine()
-    if on_warning:
-        engine.warnings.connect(on_warning)
-    engine.rootContext().setContextProperty("vigil", bridge)
-    engine.load(str(config.FRONTEND_DIR / "qml" / "Main.qml"))
-    return engine, bridge
+    qml = config.FRONTEND_DIR / "qml"
+
+    def load(file: str, force_theme: str) -> QQmlApplicationEngine:
+        engine = QQmlApplicationEngine()
+        if on_warning:
+            engine.warnings.connect(on_warning)
+        engine.rootContext().setContextProperty("vigil", bridge)
+        engine.rootContext().setContextProperty("forceTheme", force_theme)
+        engine.load(str(qml / file))
+        return engine
+
+    # Mission Control gets its own engine so it can stay dark whatever theme the tablet uses.
+    ground: list[QQmlApplicationEngine] = []
+
+    def open_ground() -> None:
+        if ground:
+            ground[0].rootObjects()[0].requestActivate()
+        else:
+            ground.append(load("GroundWindow.qml", "dark"))
+
+    bridge.open_ground_window = open_ground
+    return load("Main.qml", ""), bridge
 
 
 def main() -> int:
@@ -60,7 +76,8 @@ def main() -> int:
         return 1
     root = engine.rootObjects()[0]
     root.setProperty("kiosk", args.kiosk)
-    root.setProperty("groundOpen", args.ground)
+    if args.ground:
+        bridge.openGround()
     if args.demo:
         vigil.demo_start()
     bridge.tick()

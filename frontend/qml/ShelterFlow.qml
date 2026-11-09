@@ -29,14 +29,14 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        Annunciator { status: "red"; label: flow.drill ? "Drill · Shelter now" : "Shelter now" }
+        StatusPill { status: "red"; label: flow.drill ? "Drill · Shelter now" : "Shelter now" }
         Item { Layout.fillWidth: true }
         Column {
             Placard { anchors.right: parent.right; text: flow.remaining > 0 ? "Spike expected in" : "Storm is here" }
             Text {
                 anchors.right: parent.right
                 text: flow.clock(flow.remaining)
-                font.family: Theme.body; font.bold: true; font.pixelSize: 44; color: Theme.ink
+                font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 40; font.letterSpacing: -1; font.features: { "tnum": 1 }; color: Theme.ink
                 SequentialAnimation on opacity {
                     running: !flow.finished && !vigil.reduceMotion
                     loops: Animation.Infinite
@@ -56,7 +56,7 @@ ColumnLayout {
             text: (index < flow.done ? "Done  " : (index + 1) + "  ") + modelData
             kind: index === flow.done ? "primary" : "normal"
             enabled: index === flow.done
-            textSize: 21
+            textSize: 19
             textAlign: Text.AlignLeft
             onClicked: flow.done = index + 1
         }

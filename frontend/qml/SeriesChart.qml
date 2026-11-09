@@ -39,19 +39,13 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 30
         spacing: 16
-        Text { visible: root.present(root.value); text: "Day " + (root.series ? root.series.days[root.shown] : ""); font.family: Theme.body; font.bold: true; font.pixelSize: 17; color: Theme.ink }
+        Text { visible: root.present(root.value); text: "Day " + (root.series ? root.series.days[root.shown] : ""); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 17; color: Theme.ink }
         Text { visible: root.present(root.value); text: root.present(root.value) ? root.value.toFixed(root.series.decimals) + " " + root.series.unit : ""; font.family: Theme.body; font.pixelSize: 17; color: Theme.ink }
         Text {
             text: !root.present(root.value) ? "No reading on this day" : root.present(root.low) ? "Your normal " + root.low.toFixed(root.tickDecimals) + " to " + root.high.toFixed(root.tickDecimals) : "Learning your normal"
             font.family: Theme.body; font.pixelSize: 17; color: Theme.ink2
         }
-        Rectangle {
-            visible: root.shown >= 0 && root.series && root.series.flagged[root.shown]
-            color: Theme.caution
-            implicitWidth: tag.implicitWidth + 16
-            implicitHeight: 24
-            Placard { id: tag; anchors.centerIn: parent; text: "Drifting"; color: Theme.onLit; font.pixelSize: 18 }
-        }
+        StatusPill { visible: root.shown >= 0 && !!root.series && root.series.flagged[root.shown]; status: "yellow"; label: "Drifting"; compact: true }
         Item { Layout.fillWidth: true }
     }
 
@@ -67,7 +61,7 @@ ColumnLayout {
         Keys.onRightPressed: root.picked = Math.min(root.n - 1, (root.picked >= 0 ? root.picked : root.n - 1) + 1)
 
         Connections { target: root; function onSeriesChanged() { canvas.requestPaint() } function onShownChanged() { canvas.requestPaint() } }
-        Connections { target: vigil; function onPrefsChanged() { canvas.requestPaint() } }
+        Connections { target: Theme; function onModeChanged() { canvas.requestPaint() } }
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
         onActiveFocusChanged: requestPaint()
@@ -95,7 +89,7 @@ ColumnLayout {
             c.font = "16px '" + Theme.body + "'"
             c.textBaseline = "middle"
             ;[lo + (hi - lo) * 0.1, (lo + hi) / 2, hi - (hi - lo) * 0.1].forEach(function (t) {
-                c.strokeStyle = Theme.rule; c.globalAlpha = 0.45; c.lineWidth = 1
+                c.strokeStyle = Theme.rule; c.globalAlpha = 0.9; c.lineWidth = 1
                 c.beginPath(); c.moveTo(m.left, y(t)); c.lineTo(width - m.right, y(t)); c.stroke()
                 c.globalAlpha = 1; c.fillStyle = Theme.ink2; c.textAlign = "right"
                 c.fillText(t.toFixed(root.tickDecimals), m.left - 8, y(t))
@@ -104,15 +98,15 @@ ColumnLayout {
             var band = []
             for (var i = 0; i < n; i++) if (present(s.low[i]) && present(s.high[i])) band.push(i)
             if (band.length > 1) {
-                c.fillStyle = Theme.band; c.globalAlpha = 0.3
+                c.fillStyle = Theme.band; c.globalAlpha = 0.16
                 c.beginPath()
                 band.forEach(function (b, k) { k ? c.lineTo(x(b), y(s.high[b])) : c.moveTo(x(b), y(s.high[b])) })
                 band.slice().reverse().forEach(function (b) { c.lineTo(x(b), y(s.low[b])) })
                 c.closePath(); c.fill(); c.globalAlpha = 1
-                c.strokeStyle = Theme.band; c.lineWidth = 1.5; c.setLineDash([2, 5])
+                c.strokeStyle = Theme.band; c.globalAlpha = 0.6; c.lineWidth = 1.5; c.setLineDash([2, 5])
                 c.beginPath()
                 band.forEach(function (b, k) { k ? c.lineTo(x(b), y(s.median[b])) : c.moveTo(x(b), y(s.median[b])) })
-                c.stroke(); c.setLineDash([])
+                c.stroke(); c.setLineDash([]); c.globalAlpha = 1
                 if (band[0] > 0) { c.fillStyle = Theme.ink2; c.textAlign = "right"; c.fillText("Learning", x(band[0]) - 6, m.top + 12) }
             }
 
@@ -130,7 +124,7 @@ ColumnLayout {
                 if (!present(s.values[i])) continue
                 if (s.cadence > 1) { c.fillStyle = Theme.ink; c.beginPath(); c.arc(x(i), y(s.values[i]), 3.5, 0, Math.PI * 2); c.fill() }
                 if (s.flagged[i]) {
-                    c.fillStyle = Theme.caution; c.strokeStyle = Theme.panel; c.lineWidth = 2
+                    c.fillStyle = Theme.flag; c.strokeStyle = Theme.panel; c.lineWidth = 2
                     c.beginPath(); c.arc(x(i), y(s.values[i]), 5, 0, Math.PI * 2); c.fill(); c.stroke()
                 }
             }

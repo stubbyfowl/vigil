@@ -13,7 +13,7 @@ Item {
             BackButton {}
             BigTitle { text: "Crew" }
             Item { Layout.fillWidth: true }
-            Text { text: screen.d.summary; font.family: Theme.body; font.pixelSize: 25; color: Theme.ink }
+            Text { text: screen.d.summary; font.family: Theme.body; font.pixelSize: 21; color: Theme.ink2 }
         }
         Repeater {
             model: screen.d.crew.length
@@ -22,6 +22,7 @@ Item {
                 required property int index
                 readonly property var m: screen.d.crew[index]
                 Layout.fillWidth: true
+                divider: true
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 14
@@ -30,7 +31,7 @@ Item {
                         Layout.minimumWidth: 220
                         Layout.maximumWidth: 220
                         spacing: 4
-                        Body { text: row.m.name; font.pixelSize: 20; font.bold: true }
+                        Body { text: row.m.name; font.pixelSize: 20; font.weight: Font.Medium }
                         Note { text: row.m.role }
                         LevelBadge { visible: row.m.max_level > 0; level: row.m.max_level; compact: true; label: "Level " + row.m.max_level }
                     }
@@ -44,8 +45,8 @@ Item {
                             spacing: 4
                             Placard { text: s.name }
                             Note { visible: s.learning; text: "Learning" }
-                            Annunciator { visible: !s.learning; status: s.status }
-                            Sparkline { Layout.fillWidth: true; Layout.preferredHeight: 44; values: s.trend; label: row.m.name + " " + s.name }
+                            StatusPill { visible: !s.learning; status: s.status; compact: true }
+                            Sparkline { Layout.fillWidth: true; Layout.preferredHeight: 40; values: s.trend; label: row.m.name + " " + s.name; status: s.status }
                         }
                     }
                 }
