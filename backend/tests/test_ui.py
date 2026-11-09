@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from PySide6.QtCore import QObject
+from PySide6.QtCore import Q_ARG, QMetaObject, QObject, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
@@ -133,3 +133,81 @@ def test_undo_restores_a_dismissed_alert(ui):
     ui.bridge.undo()
     assert alert["id"] in [a["id"] for a in ui.vigil.astronaut("eng", day=49)["alerts"]]
     assert ui.bridge.undoText == ""
+
+
+def screen_item(ui, route, day=49):
+    ui.show(route, day)
+    return ui.window.findChild(QObject, "page").property("item")
+
+
+def call(obj, method, *args):
+    QMetaObject.invokeMethod(obj, method, Qt.DirectConnection, *[Q_ARG("QVariant", a) for a in args])
+
+
+def test_checkin_saves_through_the_screen(ui):
+    ui.warnings.clear()
+    screen = screen_item(ui, "/checkin")
+    for key, value in (("mood", 7), ("sleep_quality", 6), ("energy", 7), ("stress", 3), ("symptoms", 0)):
+        call(screen, "choose", key, value)
+    call(screen, "save")
+    QTest.qWait(100)
+    assert screen.property("saved") is not None
+    assert ui.warnings == []
+    ui.vigil.store.reset_interactive()
+    ui.bridge.tick()
+
+
+def test_alert_buttons_and_why_drawer(ui):
+    ui.warnings.clear()
+    ui.vigil.store.reset_interactive()
+    ui.bridge.navigate("/")
+    screen = screen_item(ui, "/alert/eng-immune-46")
+    screen.setProperty("showWhy", True)
+    QTest.qWait(250)
+    call(screen, "act", "snooze")
+    QTest.qWait(100)
+    assert ui.bridge.route == "/"
+    assert ui.bridge.undoText
+    ui.bridge.undo()
+    assert ui.warnings == []
+
+
+def test_call_earth_from_the_screen(ui):
+    ui.warnings.clear()
+    screen = screen_item(ui, "/earth")
+    call(screen, "send")
+    QTest.qWait(50)
+    assert screen.property("sent") is True
+    assert ui.warnings == []
+
+
+def test_delay_theater_runs_both_paths(ui):
+    ui.warnings.clear()
+    screen = screen_item(ui, "/delay")
+    call(screen, "start", "vigil")
+    QTest.qWait(1700)
+    assert screen.property("steps") == 5
+    call(screen, "start", "waiting")
+    QTest.qWait(300)
+    assert screen.property("minutes") > 0
+    assert ui.warnings == []
+
+
+def test_storm_drill_opens(ui):
+    ui.warnings.clear()
+    screen = screen_item(ui, "/radiation", day=60)
+    screen.setProperty("drill", True)
+    QTest.qWait(300)
+    assert any("Stop your task" in str(i.property("text")) for i in ui.items())
+    assert ui.warnings == []
+
+
+def test_admin_saves_and_restores(ui):
+    ui.warnings.clear()
+    screen = screen_item(ui, "/admin")
+    call(screen, "save")
+    assert "Saved" in screen.property("message")
+    call(screen, "restore")
+    QTest.qWait(100)
+    assert "restored" in screen.property("message")
+    assert ui.warnings == []
