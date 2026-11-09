@@ -1,7 +1,6 @@
 import sqlite3
 
 import pytest
-
 from app import config
 from app.views import Vigil
 

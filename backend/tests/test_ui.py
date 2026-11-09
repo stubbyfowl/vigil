@@ -56,7 +56,8 @@ def ui():
 def test_screen_renders_without_qml_errors(ui, route):
     ui.warnings.clear()
     ui.show(route)
-    assert ui.window.findChild(QObject, "page").property("status") == 1  # Loader.Ready
+    page = ui.window.findChild(QObject, "page")
+    assert page.property("progress") == 1.0 and page.property("item") is not None
     assert ui.warnings == []
 
 

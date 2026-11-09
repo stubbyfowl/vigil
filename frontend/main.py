@@ -14,10 +14,12 @@ import shiboken6  # noqa: E402
 from app import config  # noqa: E402
 from app.views import Vigil  # noqa: E402
 from bridge import Bridge  # noqa: E402
-from PySide6.QtCore import QObject  # noqa: E402
+from PySide6.QtCore import QObject, QTimer  # noqa: E402
 from PySide6.QtGui import QFontDatabase, QGuiApplication  # noqa: E402
 from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 from PySide6.QtQuick import QQuickWindow  # noqa: E402
+
+CHECK_MS = 1500
 
 
 def quick_window(obj: QObject) -> QQuickWindow:
@@ -43,6 +45,7 @@ def main() -> int:
     parser.add_argument("--demo", action="store_true", help="play the Demo Director on launch")
     parser.add_argument("--kiosk", action="store_true", help="run fullscreen, for a dedicated panel")
     parser.add_argument("--ground", action="store_true", help="also open the Mission Control window")
+    parser.add_argument("--check", action="store_true", help="load every part of the interface, report problems, and exit")
     args, qt_args = parser.parse_known_args()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -50,8 +53,10 @@ def main() -> int:
     app.setApplicationName("Vigil")
     app.setOrganizationName("Vigil")
     vigil = Vigil()
-    engine, bridge = create_engine(app, vigil)
+    problems: list[str] = []
+    engine, bridge = create_engine(app, vigil, lambda found: problems.extend(w.toString() for w in found))
     if not engine.rootObjects():
+        print("\n".join(problems), file=sys.stderr)
         return 1
     root = engine.rootObjects()[0]
     root.setProperty("kiosk", args.kiosk)
@@ -59,6 +64,11 @@ def main() -> int:
     if args.demo:
         vigil.demo_start()
     bridge.tick()
+    if args.check:
+        QTimer.singleShot(CHECK_MS, app.quit)
+        app.exec()
+        print("\n".join(problems) or "Vigil check passed.")
+        return 1 if problems else 0
     return app.exec()
 
 

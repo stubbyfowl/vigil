@@ -4,7 +4,7 @@ OFFSCREEN := QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
 .PHONY: setup dev demo kiosk data eval test lint screenshots package
 
 setup:
-	test -d .venv || python3.12 -m venv .venv
+	test -d .venv || python3 -m venv .venv
 	.venv/bin/pip install -q -r backend/requirements-dev.txt
 
 # Open the app in a window.

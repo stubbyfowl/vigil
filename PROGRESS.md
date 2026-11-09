@@ -25,3 +25,4 @@
 - Done: in-process views, bridge, all 15 QML screens, undo, Sensors screen, offscreen UI tests, screenshot tool.
 - Restore point for the web build: git tag `web-prototype`.
 - Next: full tests, Linux test in Docker, standalone package, docs.
+- Docs rewritten for the native app: README, pitch, demo script, Q&A, manual tests, design principles.

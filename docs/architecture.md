@@ -1,12 +1,12 @@
 # Architecture
 
 ```
-Generator (seeded) -> Engine (day by day) -> Store (memory + SQLite) -> FastAPI -> React PWA
+Generator (seeded) -> Engine (day by day) -> Store (memory + SQLite) -> Views -> Bridge -> Qt Quick screens
                                                  |
                                        Live clock, Demo Director, Earth link queue
 ```
 
-Everything runs on one machine with no network. The mission is computed from a seed when the server starts, in about a second. A check-in overrides that day's values and reruns that person.
+Everything runs in one native process with no server and no open ports. It runs on Linux, macOS and Windows. The mission is computed from a seed when the server starts, in about a second. A check-in overrides that day's values and reruns that person.
 
 ## Engine, per person and per day
 
@@ -67,4 +67,4 @@ All numbers live in `config/thresholds.yaml`. They are starting values, not clin
 
 ## Clock
 
-`live.py` holds one mission clock on the server, so a second window stays in step. It moves only when a client polls `/api/live`, so nothing runs in the background. The Demo Director finds each story beat from real engine output and never hard-codes an alert day.
+`live.py` holds one mission clock, so a second window stays in step. A timer in `frontend/bridge.py` advances it every 50 ms and tells the screens only when something changed. The Demo Director finds each story beat from real engine output and never hard-codes an alert day.

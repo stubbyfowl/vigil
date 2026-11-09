@@ -1,0 +1,11 @@
+.venv
+build
+dist
+dist-linux
+.git
+data/vigil.db
+data/ui.json
+**/__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache

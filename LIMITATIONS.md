@@ -18,3 +18,6 @@ All crew data in Vigil is synthetic. No real astronaut data is used. The crew me
 - The journal score uses a small word list. It misses sarcasm and context.
 - Protocols are samples, not medical advice.
 - The Earth link is a model with delay, priority and link loss. There is no real radio.
+- The noise floor comes from the same settings the generator uses. On real data it must be measured for each sensor.
+- This is a prototype, not flight software. It is not certified, and Python would not be the final language.
+- Touch is designed for but was not tested on a physical touchscreen. Fullscreen with no desktop (`--platform eglfs`) was not tested on real hardware.
