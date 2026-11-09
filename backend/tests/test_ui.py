@@ -37,7 +37,7 @@ class Ui:
         QTest.qWait(150)
 
     def items(self, item=None):
-        item = item or self.window.contentItem().parentItem()
+        item = item or self.window.contentItem()
         for child in item.childItems():
             if child.isVisible():
                 yield child
