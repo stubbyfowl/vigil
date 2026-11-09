@@ -2,9 +2,9 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from scripts import import_osdr as imp
-
 from app import config
+
+from scripts import import_osdr as imp
 
 SAMPLE = Path(__file__).resolve().parents[2] / "data" / "samples" / "osdr_style_sample.csv"
 

@@ -99,6 +99,17 @@ Item {
                         background: Rectangle { color: Theme.panel2; border.color: journal.activeFocus ? Theme.action : "transparent"; radius: 10 }
                         onTextChanged: if (text.length > 2000) remove(2000, text.length)
                     }
+                    RowLayout {
+                        visible: vigil.voiceAvailable
+                        Layout.fillWidth: true
+                        spacing: 12
+                        VButton { text: vigil.voiceListening ? "Stop" : "Speak"; kind: vigil.voiceListening ? "primary" : "normal"; onClicked: vigil.voiceToggle() }
+                        Note { text: vigil.voiceHeard || (vigil.voiceListening ? "Listening." : "Speech becomes text here. Audio is never saved.") }
+                    }
+                    Connections {
+                        target: vigil
+                        function onVoiceFinal(text) { journal.text = (journal.text + " " + text).trim() }
+                    }
                     Toggle { id: keep; text: "Keep my words on this computer" }
                 }
                 VButton { Layout.fillWidth: true; kind: "primary"; text: "Save check-in"; enabled: screen.missing.length === 0; onClicked: screen.save() }

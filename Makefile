@@ -1,7 +1,7 @@
 PY := .venv/bin/python
 OFFSCREEN := QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
 
-.PHONY: setup native dev demo kiosk data eval test lint screenshots package
+.PHONY: setup native voice dev demo kiosk data eval test lint screenshots package
 
 setup:
 	test -d .venv || python3 -m venv .venv
@@ -11,6 +11,11 @@ setup:
 # Optional C++ tracker. If a compiler is missing, Vigil uses the Python tracker with identical results.
 native:
 	c++ -std=c++17 -O2 -ffp-contract=off -shared -fPIC backend/native/vigil_fast.cpp -o backend/app/engine/_vigil_fast.so
+
+# Optional offline voice check-in. Downloads a 40 MB speech model once.
+voice:
+	.venv/bin/pip install -q -r backend/requirements-voice.txt
+	$(PY) scripts/get_voice_model.py
 
 # Open the app in a window.
 dev:

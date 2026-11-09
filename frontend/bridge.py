@@ -6,6 +6,7 @@ from typing import Any
 from app import config
 from app.views import Vigil
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
+from voice import VoiceInput, is_available
 
 CLOCK_MS = 50
 UNDO_SECONDS_MS = 8000
@@ -28,11 +29,20 @@ class Bridge(QObject):
     astronautChanged = Signal()
     prefsChanged = Signal()
     undoChanged = Signal()
+    voiceChanged = Signal()
+    voiceFinal = Signal(str, arguments=["text"])
 
     def __init__(self, vigil: Vigil, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.vigil = vigil
         self.open_ground_window = lambda: None  # set by main.py
+        self._voice = VoiceInput(self)
+        self._voice_available = is_available()
+        self._voice_on = False
+        self._voice_heard = ""
+        self._voice.partial.connect(self._on_voice_partial)
+        self._voice.finished.connect(self._on_voice_finished)
+        self._voice.failed.connect(self._on_voice_failed)
         self._palettes = json.loads((config.FRONTEND_DIR / "palette.json").read_text())
         self._prefs = dict(DEFAULT_PREFS)
         if config.PREFS_PATH.exists():
@@ -184,6 +194,46 @@ class Bridge(QObject):
         if name in CHANGES_STATE:
             self.tick()
         return json.dumps(result)
+
+    # Voice check-in
+
+    @Property(bool, constant=True)
+    def voiceAvailable(self) -> bool:
+        return self._voice_available
+
+    @Property(bool, notify=voiceChanged)
+    def voiceListening(self) -> bool:
+        return self._voice_on
+
+    @Property(str, notify=voiceChanged)
+    def voiceHeard(self) -> str:
+        return self._voice_heard
+
+    def _set_voice(self, on: bool, heard: str) -> None:
+        self._voice_on, self._voice_heard = on, heard
+        self.voiceChanged.emit()
+
+    @Slot()
+    def voiceToggle(self) -> None:
+        if self._voice_on:
+            self._voice.stop()
+        else:
+            self._set_voice(True, "")
+            self._voice.start()
+
+    @Slot(str)
+    def _on_voice_partial(self, text: str) -> None:
+        self._set_voice(True, text)
+
+    @Slot(str)
+    def _on_voice_finished(self, text: str) -> None:
+        self._set_voice(False, "")
+        if text:
+            self.voiceFinal.emit(text)
+
+    @Slot(str)
+    def _on_voice_failed(self, message: str) -> None:
+        self._set_voice(False, message)
 
     # Undo: people can take back what they just did
 

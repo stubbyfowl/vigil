@@ -3,7 +3,6 @@
 import math
 
 import pytest
-
 from app import config
 from app.engine import drift, fast
 from app.engine.drift import SignalTracker, ewma_limit

@@ -10,5 +10,6 @@ data/ui.json
 data/thresholds.yaml
 build/
 dist/
+data/voice-model/
 data/synthetic/*.csv
 .DS_Store
