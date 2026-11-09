@@ -193,7 +193,7 @@ def write_markdown(out: dict, path: Path) -> None:
     storm = next(e for e in out["events"] if e["id"] == "solar_storm")
     lines += [
         "", f"The storm warning comes from the simulated solar monitor. Vigil relays it {abs(storm['vigil_vs_onset']['mean'])} hours before onset. Vigil does not predict storms. "
-        f"A fixed dose rate alarm at twice normal fires {storm['fixed_alarm']['mean']} hours after onset.", "",
+        f"A fixed dose rate alarm at twice normal fires {storm['fixed_alarm']['mean']} hour(s) after onset.", "",
         "## Against fixed population limits", "",
         "A fixed limit is one number for everyone: population mean plus k standard deviations.",
         "**Sensitive** uses k = 2. **Quiet** uses k = 3, the fixed setting closest to Vigil's false alarm rate. "

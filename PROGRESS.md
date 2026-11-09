@@ -26,3 +26,7 @@
 - Restore point for the web build: git tag `web-prototype`.
 - Checked: 210 tests passed on macOS in a full run, including every screen. 6 more tests that drive the main screen actions were added and passed on their own. Startup to a loaded Home screen takes about 1.1 seconds. The standalone package builds (158 MB) and passes its own --check.
 - Docs rewritten for the native app: README, pitch, demo script, Q&A, manual tests, design principles.
+
+## Modern redesign (done)
+- Done: light default theme, Instrument Sans, sentence case, soft surfaces, two-tone statements, and a ribbon on Home drawn from each person's real 30-day drift. Mission Control stays dark.
+- Checked: 216 tests pass on macOS. The earlier Qt build also passed all 216 on Linux ARM64 with networking disabled.

@@ -46,7 +46,7 @@ Item {
                             Row {
                                 required property string modelData
                                 spacing: 6
-                                Placard { text: modelData; anchors.verticalCenter: parent.verticalCenter }
+                                Placard { text: modelData.charAt(0).toUpperCase() + modelData.slice(1); anchors.verticalCenter: parent.verticalCenter }
                                 StatusPill { status: screen.d.preview.systems[modelData]; compact: true }
                             }
                         }

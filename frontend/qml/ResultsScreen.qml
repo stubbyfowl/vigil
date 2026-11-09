@@ -6,7 +6,7 @@ Item {
     readonly property var d: Api.ask("results", { v: vigil.version })
 
     function verdict(e) {
-        if (e.id === "solar_storm") return "Vigil passed on the monitor's warning " + Math.abs(e.vigil_vs_onset.mean) + " hours before onset. A fixed dose alarm fires " + e.fixed_alarm.mean + " hours after onset."
+        if (e.id === "solar_storm") return "Vigil passed on the monitor's warning " + Math.abs(e.vigil_vs_onset.mean) + " hours before onset. A fixed dose alarm fires " + e.fixed_alarm.mean + (e.fixed_alarm.mean === 1 ? " hour" : " hours") + " after onset."
         var quiet = e.fixed.quiet, lead = quiet.lead_vigil_earlier, missed = quiet.missed_by_fixed_found_by_vigil
         var never = missed > 0 ? " The fixed alarm never fired in " + missed + " of " + e.runs + " runs." : ""
         if (lead.n === 0 || lead.mean === null) return "A fixed alarm never fired." + never

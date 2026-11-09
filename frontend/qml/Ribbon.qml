@@ -51,7 +51,7 @@ Canvas {
             if (!n) return 0
             var p = u * (n - 1), i = Math.floor(p), f = p - i
             var e = f * f * (3 - 2 * f)
-            return Math.min(1, (smooth[i] + (smooth[Math.min(i + 1, n - 1)] - smooth[i]) * e) / 60)
+            return Math.max(0, Math.min(1, (smooth[i] + (smooth[Math.min(i + 1, n - 1)] - smooth[i]) * e - 25) / 60))
         }
         function thickness(u) { return (70 + 130 * Math.sin(u * Math.PI)) * (1 + 0.9 * amount(u)) }
         function twist(u) { return Math.cos(u * 3.05 + 0.25) }

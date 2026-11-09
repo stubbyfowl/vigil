@@ -15,7 +15,7 @@ Delay is days after event onset until the first flag on a planted signal. Events
 | Solar particle event | all | 20/20 | -2 hours (sd 0.0) | L3: 20 | dose_rate 20 |
 | Heart drift | cmdr | 20/20 | 4.95 days (sd 1.36) | L2: 19, L3: 1 | hrv 20, ortho_rise 19, resting_hr 20 |
 
-The storm warning comes from the simulated solar monitor. Vigil relays it 2 hours before onset. Vigil does not predict storms. A fixed dose rate alarm at twice normal fires 1 hours after onset.
+The storm warning comes from the simulated solar monitor. Vigil relays it 2 hours before onset. Vigil does not predict storms. A fixed dose rate alarm at twice normal fires 1 hour(s) after onset.
 
 ## Against fixed population limits
 

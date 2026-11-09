@@ -64,7 +64,7 @@ Item {
                     columnSpacing: 6
                     rowSpacing: 8
                     Placard { text: "Crew" }
-                    Repeater { model: screen.systemKeys; Placard { required property string modelData; text: modelData } }
+                    Repeater { model: screen.systemKeys; Placard { required property string modelData; text: modelData.charAt(0).toUpperCase() + modelData.slice(1) } }
                     Placard { text: "Radiation" }
                     Repeater {
                         model: screen.d.crew.length * (screen.systemKeys.length + 2)

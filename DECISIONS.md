@@ -7,7 +7,7 @@ Choices the brief left open, and what was picked.
 3. **Python 3.12** is the runtime. It meets the 3.11+ rule and has wheels for every pinned package.
 4. **Native Qt 6 Quick through PySide6.** The team asked for real software that can run on a Linux computer aboard a vehicle, not a web page, Electron, or an Apple-only app. Qt runs on Linux, macOS and Windows. PySide6 keeps the whole team in Python, and QML is close to the JavaScript one member knows. The evaluated engine is the same code that ships.
 5. **No server.** The FastAPI layer was removed. The screens call the engine in process, so there is no open port on the vehicle and nothing separate to start. The old web build is at git tag `web-prototype`.
-6. **Fonts.** B612 was commissioned by Airbus for cockpit screens, so it fits the job. Barlow Condensed is used for placard labels. Both are bundled as files in `frontend/fonts`. Apple's San Francisco is licensed for Apple platforms only.
+6. **Font.** Instrument Sans in three weights, bundled in `frontend/fonts`. It is modern and has tabular numbers. Apple's San Francisco is licensed for Apple platforms only.
 7. **No optional C++ module.** The pure Python engine runs a full mission fast enough, so C++ would add risk with no benefit.
 8. **Tuning seeds are separate from reporting seeds.** Thresholds were tuned on seeds 1000 to 1019. `docs/results.md` uses seeds 2000 to 2019.
 9. **Debounce added to the detectors.** Daily signals need 2 readings in a row to turn a flag on or off. Without it there were about 14 false alarms per 100 days.
@@ -25,6 +25,9 @@ Choices the brief left open, and what was picked.
 21. **Streaming mission days.** The brief asked for an API endpoint. With no server, the mission clock plays days at a chosen speed through Play Mission and the Admin setting.
 22. **Sensors screen added.** The Accessory Design Guidelines led to showing connection and battery. Missing readings come from the real data gaps. Batteries are simulated.
 23. **Undo added.** Done, Snooze and Escalate can be undone for 8 seconds, or with Ctrl+Z. A packet already sent to Earth cannot be recalled, so Vigil asks before sending one.
-24. **Mission Control follows the app theme.** It is dark by default. Forcing it dark in every theme would need a second set of components.
+24. **Mission Control is always dark.** The brief asks for a dark control room, so it stays dark in every theme. Its second window runs its own interface engine for this.
 25. **Packaging with PyInstaller.** `make package` gives a folder that needs no Python. It must be built on the target operating system and CPU.
 26. **Dependencies were cut.** SciPy was unused. FastAPI, Uvicorn and Pydantic went with the server. Pandas and Matplotlib are only for scripts.
+27. **Light theme is the default.** The brief said dark first. The team then asked for a more modern look and pointed to a light reference. Dark and low-blue night themes remain in the Menu.
+28. **Visual language changed.** Sentence case, soft surfaces, and two-tone statements replaced uppercase labels, boxed panels and monospace numbers, which read as machine-made.
+29. **The ribbon is data.** It draws the last 30 days of the person's highest system drift. It is the one expressive element, in keeping with the Delight principle.

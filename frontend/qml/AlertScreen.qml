@@ -66,7 +66,7 @@ Item {
                     Layout.fillWidth: true
                     visible: !!screen.d.protocol
                     divider: true
-                    title: screen.d.protocol ? screen.d.protocol.name + " · " + screen.d.protocol.minutes + " min" : ""
+                    title: screen.d.protocol ? screen.d.protocol.name.charAt(0).toUpperCase() + screen.d.protocol.name.slice(1) + ", " + screen.d.protocol.minutes + " min" : ""
                     Body { text: screen.d.protocol ? screen.d.protocol.steps.join(" ") : "" }
                     Note { text: screen.d.protocol ? "Stop and escalate if: " + screen.d.protocol.escalate_if + " " + screen.d.protocol_label : "" }
                 }
