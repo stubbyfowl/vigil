@@ -1,0 +1,64 @@
+@import "@fontsource/b612/400.css";
+@import "@fontsource/b612/700.css";
+@import "@fontsource/b612-mono/400.css";
+@import "@fontsource/b612-mono/700.css";
+@import "@fontsource/barlow-condensed/500.css";
+@import "@fontsource/barlow-condensed/600.css";
+
+:root {
+  --font-body: "B612", system-ui, sans-serif;
+  --font-data: "B612 Mono", ui-monospace, monospace;
+  --font-label: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --touch: 56px;
+  --gutter: 20px;
+}
+
+/* Instrument panel gray, not black: a dim cabin, with lit legends for state. */
+:root[data-theme="dark"] {
+  --bg: #1a2227;
+  --panel: #232d33;
+  --panel-2: #2c383f;
+  --rule: #485a64;
+  --ink: #eef2f3;
+  --ink-2: #bccad0;
+  --band: #8fc7e8;
+  --action: #8fc7e8;
+  --on-action: #10181d;
+  --nominal: #5fdda0;
+  --caution: #ffc24a;
+  --warning: #ff8576;
+  --on-lit: #10181d;
+}
+
+:root[data-theme="light"] {
+  --bg: #dbe2e6;
+  --panel: #f3f6f7;
+  --panel-2: #e6ecef;
+  --rule: #7c8e98;
+  --ink: #10191e;
+  --ink-2: #3c4c55;
+  --band: #2a78ad;
+  --action: #1b5f8e;
+  --on-action: #ffffff;
+  --nominal: #0a6e43;
+  --caution: #7d5200;
+  --warning: #a8231b;
+  --on-lit: #ffffff;
+}
+
+/* Night: no blue light for the sleep period. */
+:root[data-theme="night"] {
+  --bg: #150d06;
+  --panel: #22160c;
+  --panel-2: #2e1e11;
+  --rule: #6b4a2c;
+  --ink: #ffd6a8;
+  --ink-2: #dca872;
+  --band: #d08442;
+  --action: #e69a52;
+  --on-action: #150d06;
+  --nominal: #c2cc6c;
+  --caution: #ffb54f;
+  --warning: #ff8450;
+  --on-lit: #150d06;
+}

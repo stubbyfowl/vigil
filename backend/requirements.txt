@@ -1,0 +1,15 @@
+fastapi==0.162.2
+uvicorn==0.54.0
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.1.1
+PyYAML==6.0.3
+pydantic==2.14.3
+# dev and scripts
+httpx==0.28.1
+pytest==9.2.0
+ruff==0.17.4
+mypy==2.4.1
+types-PyYAML==6.0.12.20261103
+pandas-stubs==3.1.0.261029
+matplotlib==3.11.2

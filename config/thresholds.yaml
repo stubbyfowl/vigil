@@ -1,0 +1,56 @@
+# Starting values, not clinical limits. Edit here or on the Admin screen.
+note: Starting values, not clinical limits.
+mission:
+  length_days: 180
+  seed: 42
+  start_day: 30
+  days_per_second: 3.0
+baseline:
+  short_window_days: 14
+  reference_window_days: 45
+  learning_days: 10
+  min_observations: 4
+  max_freeze_days: 45
+  sigma_floor: 0.8
+detector:
+  method: vote
+  votes_needed: 2
+  z_limit: 3.0
+  ewma_lambda: 0.25
+  ewma_l: 3.0
+  cusum_k: 0.5
+  cusum_h: 5.0
+fusion:
+  scale: 3.0
+  dead_zone: 0.33
+  breadth_bonus: 0.25
+  evidence_cap: 3.0
+status:
+  yellow: 30
+  red: 60
+escalation:
+  l1_two_signal_days: 3
+  l2_min_signals: 3
+  l2_long_drift_days: 5
+  l3_worsen_after_days: 3
+  l3_worsen_delta: 12
+  close_after_quiet_days: 3
+radiation:
+  career_limit_msv: 600
+  watch_fraction: 0.7
+  near_limit_fraction: 0.9
+  dose_rate_warn_usv_h: 150
+sync:
+  one_way_delay_minutes: 20
+  demo_time_scale: 60
+  bandwidth_kb_s: 40
+hard_limits:
+  spo2: {low: 90}
+  temp: {high: 38.5}
+  resting_hr: {high: 120}
+  bp_sys: {high: 160}
+  bp_dia: {high: 100}
+  crp: {high: 10}
+  sleep_hours: {low: 3.5}
+  mood: {low: 2}
+disabled_signals: []
