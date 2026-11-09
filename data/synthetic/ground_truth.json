@@ -1,0 +1,97 @@
+[
+  {
+    "id": "immune_stress",
+    "title": "Immune stress",
+    "day": 40,
+    "astronaut": "eng",
+    "system": "immune",
+    "ramp_days": 3,
+    "duration_days": 14,
+    "signals": [
+      {
+        "signal": "temp",
+        "change": 0.35
+      },
+      {
+        "signal": "crp",
+        "change": 2.5
+      },
+      {
+        "signal": "il6",
+        "change": 2.2
+      },
+      {
+        "signal": "sleep_eff",
+        "change": -6.0
+      }
+    ]
+  },
+  {
+    "id": "behavior_slide",
+    "title": "Behavioral slide",
+    "day": 90,
+    "astronaut": "plt",
+    "system": "behavior",
+    "ramp_days": 5,
+    "duration_days": 21,
+    "signals": [
+      {
+        "signal": "sleep_hours",
+        "change": -1.2
+      },
+      {
+        "signal": "mood",
+        "change": -2.0
+      },
+      {
+        "signal": "social_min",
+        "change": -45.0
+      },
+      {
+        "signal": "stress",
+        "change": 2.0
+      }
+    ]
+  },
+  {
+    "id": "solar_storm",
+    "title": "Solar particle event",
+    "day": 120,
+    "astronaut": "all",
+    "system": "radiation",
+    "ramp_days": 0,
+    "duration_days": 1.5,
+    "signals": [
+      {
+        "signal": "dose_rate",
+        "change": 900.0
+      }
+    ],
+    "warning_hour": 2860,
+    "onset_hour": 2862,
+    "end_hour": 2898
+  },
+  {
+    "id": "heart_drift",
+    "title": "Heart drift",
+    "day": 150,
+    "astronaut": "cmdr",
+    "system": "heart",
+    "ramp_days": 8,
+    "duration_days": 31,
+    "signals": [
+      {
+        "signal": "resting_hr",
+        "change": 8.0
+      },
+      {
+        "signal": "hrv",
+        "change": -16.0
+      },
+      {
+        "signal": "ortho_rise",
+        "change": 7.0
+      }
+    ]
+  }
+]
