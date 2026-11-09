@@ -1,27 +1,16 @@
 """Every text and background pair in every theme must reach 4.5:1."""
 
-import re
+import json
 from pathlib import Path
 
 import pytest
 
-TOKENS = (Path(__file__).resolve().parents[2] / "frontend/src/styles/tokens.css").read_text()
-GROUND = (Path(__file__).resolve().parents[2] / "frontend/src/styles/app.css").read_text()
+PALETTES = json.loads((Path(__file__).resolve().parents[2] / "frontend/palette.json").read_text())
 PAIRS = [
-    ("ink", "bg"), ("ink", "panel"), ("ink", "panel-2"), ("ink-2", "bg"), ("ink-2", "panel"), ("ink-2", "panel-2"),
+    ("ink", "bg"), ("ink", "panel"), ("ink", "panel2"), ("ink2", "bg"), ("ink2", "panel"), ("ink2", "panel2"),
     ("nominal", "panel"), ("caution", "panel"), ("warning", "panel"), ("caution", "bg"),
-    ("on-lit", "caution"), ("on-lit", "warning"), ("on-action", "action"), ("action", "panel"), ("bg", "ink"),
+    ("onLit", "caution"), ("onLit", "warning"), ("onAction", "action"), ("action", "panel"), ("bg", "ink"),
 ]
-
-
-def theme(name):
-    block = re.search(rf'\[data-theme="{name}"\] \{{(.*?)\}}', TOKENS, re.S).group(1)
-    return dict(re.findall(r"--([\w-]+): (#[0-9a-f]{6});", block))
-
-
-def ground():
-    block = re.search(r"\.ground \{(.*?)\}", GROUND, re.S).group(1)
-    return dict(re.findall(r"--([\w-]+): (#[0-9a-f]{6});", block))
 
 
 def luminance(color):
@@ -35,8 +24,8 @@ def contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
-@pytest.mark.parametrize("name", ["dark", "light", "night", "ground"])
+@pytest.mark.parametrize("name", PALETTES)
 @pytest.mark.parametrize("fg,bg", PAIRS)
 def test_contrast(name, fg, bg):
-    colors = ground() if name == "ground" else theme(name)
+    colors = PALETTES[name]
     assert contrast(colors[fg], colors[bg]) >= 4.5, f"{name}: {fg} on {bg}"

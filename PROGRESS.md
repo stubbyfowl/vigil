@@ -19,3 +19,9 @@
 ## Phases 4 to 6: Web UI (superseded)
 - Built and tested the React PWA: all screens, Demo Director, timeline, Delay Theater, Results. These phases landed as one commit because the screens share one router and stylesheet.
 - Tagged `web-prototype`. The team then asked for native software, not a web page, so this UI is being replaced by a SwiftUI app.
+
+## Native rebuild on Qt (in progress)
+- Decision: the team wants real software that runs on a Linux PC on the vehicle, not a web page, Electron, or an Apple-only app. The UI is now Qt 6 Quick through PySide6, in the same process as the Python engine. There is no server.
+- Done: in-process views, bridge, all 15 QML screens, undo, Sensors screen, offscreen UI tests, screenshot tool.
+- Restore point for the web build: git tag `web-prototype`.
+- Next: full tests, Linux test in Docker, standalone package, docs.

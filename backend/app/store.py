@@ -1,9 +1,8 @@
 """The finished mission in memory, plus what the astronaut has done to it."""
 
 import shutil
+from dataclasses import asdict
 from typing import Any
-
-from fastapi import HTTPException
 
 from . import config, db
 from .engine.checkin import score_text
@@ -47,14 +46,14 @@ class Store:
         self.rebuild()
 
     def restore_defaults(self) -> None:
-        shutil.copy(config.THRESHOLDS_PATH.with_name("thresholds.defaults.yaml"), config.THRESHOLDS_PATH)
+        shutil.copy(config.DEFAULTS_PATH, config.THRESHOLDS_PATH)
         self.rebuild()
 
     def who(self, astronaut: str) -> Astronaut:
         for member in CREW:
             if member.id == astronaut:
                 return member
-        raise HTTPException(404, f"No crew member named {astronaut}.")
+        raise LookupError(f"No crew member named {astronaut}.")
 
     def clamp_day(self, day: int) -> int:
         return max(1, min(day, self.mission.days))
@@ -94,6 +93,15 @@ class Store:
             con.execute("INSERT INTO alert_actions VALUES (?,?,?,?)", (alert_id, day, action, level))
         self._remember_action(alert_id, action, day, level)
 
+    def undo_action(self, alert_id: str) -> None:
+        """Take back the most recent action on this alert."""
+        with db.connect() as con:
+            con.execute("DELETE FROM alert_actions WHERE rowid = (SELECT MAX(rowid) FROM alert_actions WHERE alert_id = ?)", (alert_id,))
+            rows = con.execute("SELECT * FROM alert_actions WHERE alert_id = ? ORDER BY rowid", (alert_id,)).fetchall()
+        self.actions.pop(alert_id, None)
+        for row in rows:
+            self._remember_action(alert_id, row["action"], row["day"], row["level"])
+
     # Check-ins
 
     def _write_checkin_values(self, astronaut: str, day: int, row: dict[str, Any]) -> None:
@@ -106,7 +114,7 @@ class Store:
         """Store scores, and the text only if the astronaut asked. Then rerun that person."""
         self.who(body.astronaut)
         journal_score = score_text(body.journal)
-        row = body.model_dump() | {"journal_score": journal_score}
+        row = asdict(body) | {"journal_score": journal_score}
         with db.connect() as con:
             con.execute(
                 "INSERT OR REPLACE INTO checkins VALUES (?,?,?,?,?,?,?,?,?)",

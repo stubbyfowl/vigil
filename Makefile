@@ -1,26 +1,23 @@
 PY := .venv/bin/python
-PORT ?= 8000
+OFFSCREEN := QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
 
-.PHONY: setup dev demo build data eval test lint
+.PHONY: setup dev demo kiosk data eval test lint screenshots package
 
 setup:
 	test -d .venv || python3.12 -m venv .venv
-	.venv/bin/pip install -q -r backend/requirements.txt
-	cd frontend && npm ci
+	.venv/bin/pip install -q -r backend/requirements-dev.txt
 
-# Backend on :8000, Vite on :5173. Open http://localhost:5173
+# Open the app in a window.
 dev:
-	@trap 'kill 0' INT TERM EXIT; \
-	(cd backend && ../$(PY) -m uvicorn app.main:app --port $(PORT) --reload) & \
-	(cd frontend && npm run dev) & \
-	wait
+	$(PY) frontend/main.py --ground
 
-build:
-	cd frontend && npm run build
+# Open the app and play the Demo Director.
+demo:
+	$(PY) scripts/demo_director.py
 
-# One port, built frontend, Demo Director plays on load.
-demo: build
-	$(PY) scripts/demo_director.py serve --port $(PORT)
+# Fullscreen, for a dedicated panel. With no desktop running, add: --platform eglfs
+kiosk:
+	$(PY) frontend/main.py --kiosk
 
 data:
 	$(PY) scripts/generate_data.py
@@ -29,10 +26,15 @@ eval:
 	$(PY) scripts/evaluate_detector.py
 
 test:
-	cd backend && ../$(PY) -m pytest -q
-	cd frontend && npm test
+	cd backend && $(OFFSCREEN) ../$(PY) -m pytest -q
 
 lint:
-	.venv/bin/ruff check backend scripts
+	.venv/bin/ruff check backend frontend scripts
 	cd backend && ../.venv/bin/mypy app
-	cd frontend && npm run lint && npx tsc --noEmit
+
+screenshots:
+	$(PY) scripts/screenshots.py
+
+# Build a standalone folder in dist/vigil. Run this on the operating system you are targeting.
+package:
+	.venv/bin/pyinstaller --noconfirm packaging/vigil.spec

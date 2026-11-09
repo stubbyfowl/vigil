@@ -1,24 +1,34 @@
 """Paths and the editable thresholds file."""
 
 import os
+import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-ROOT = Path(__file__).resolve().parents[2]
+FROZEN = getattr(sys, "frozen", False)  # True inside a packaged build
+ROOT = Path(getattr(sys, "_MEIPASS")) if FROZEN else Path(__file__).resolve().parents[2]  # noqa: B009
 DATA_DIR = ROOT / "data"
 SYNTHETIC_DIR = DATA_DIR / "synthetic"
-THRESHOLDS_PATH = Path(os.environ.get("VIGIL_THRESHOLDS", ROOT / "config" / "thresholds.yaml"))
-DB_PATH = Path(os.environ.get("VIGIL_DB", DATA_DIR / "vigil.db"))
-FRONTEND_DIST = ROOT / "frontend" / "dist"
+FRONTEND_DIR = ROOT / "frontend"
+# Packaged builds are read-only, so anything the astronaut changes lives in a per-user folder.
+HOME = Path(os.environ.get("VIGIL_HOME", Path.home() / ".local" / "share" / "vigil" if FROZEN else DATA_DIR))
+DEFAULTS_PATH = ROOT / "config" / "thresholds.defaults.yaml"
+THRESHOLDS_PATH = Path(os.environ.get("VIGIL_THRESHOLDS", HOME / "thresholds.yaml" if FROZEN else ROOT / "config" / "thresholds.yaml"))
+DB_PATH = Path(os.environ.get("VIGIL_DB", HOME / "vigil.db"))
+PREFS_PATH = HOME / "ui.json"
 HEADER = "# Starting values, not clinical limits. Edit here or on the Admin screen.\n"
 
 Config = dict[str, Any]
 
 
 def load_config() -> Config:
-    """Read thresholds.yaml."""
+    """Read thresholds.yaml, creating it from the defaults on first run."""
+    if not THRESHOLDS_PATH.exists():
+        THRESHOLDS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(DEFAULTS_PATH, THRESHOLDS_PATH)
     with THRESHOLDS_PATH.open() as f:
         loaded: Config = yaml.safe_load(f)
     return loaded

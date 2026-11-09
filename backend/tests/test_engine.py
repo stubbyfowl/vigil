@@ -4,7 +4,7 @@ import re
 
 import pytest
 from app import config
-from app.engine.alerts import action_text, write_alert
+from app.engine.alerts import action_text, change_text, write_alert
 from app.engine.baseline import compute_baseline, robust_stats, window_sizes
 from app.engine.checkin import score_text
 from app.engine.drift import SignalDay, SignalTracker, combine, cusum_step, ewma_limit, ewma_step
@@ -238,6 +238,11 @@ def test_alert_has_no_empty_fields_or_placeholders(level_):
 def test_message_states_size_and_time():
     alert = write_alert("cmdr", "heart", 150, 154, 1, "Reason.", [(BY_ID["resting_hr"], sample_day(68.0))], 30)
     assert alert["message"].startswith("Resting heart rate rose 8 bpm over 4 days.")
+
+
+def test_singular_unit_reads_correctly():
+    day = SignalDay(1.0, 1.0, 0.0, 0.5, 0.0, False, 2.0, ("ewma",), True, 2, 1.5)
+    assert change_text(BY_ID["symptoms"], day) == "rose 1 point"
 
 
 def test_one_action_changes_with_level():

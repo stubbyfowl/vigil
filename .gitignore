@@ -4,8 +4,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-node_modules/
-frontend/dist/
 data/vigil.db
+data/ui.json
+data/thresholds.yaml
+build/
+dist/
 data/synthetic/*.csv
 .DS_Store

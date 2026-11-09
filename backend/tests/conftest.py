@@ -1,4 +1,4 @@
-"""Point the app at a throwaway database and config before anything imports it."""
+"""Point the app at a throwaway home folder before anything imports it."""
 
 import os
 import shutil
@@ -7,7 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 tmp = Path(tempfile.mkdtemp(prefix="vigil-test-"))
-for name in ("thresholds.yaml", "thresholds.defaults.yaml"):
-    shutil.copy(ROOT / "config" / name, tmp / name)
-os.environ["VIGIL_DB"] = str(tmp / "test.db")
+shutil.copy(ROOT / "config" / "thresholds.yaml", tmp / "thresholds.yaml")
+os.environ["VIGIL_HOME"] = str(tmp)
 os.environ["VIGIL_THRESHOLDS"] = str(tmp / "thresholds.yaml")
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+os.environ.setdefault("QT_QUICK_BACKEND", "software")

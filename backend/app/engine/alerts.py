@@ -39,7 +39,10 @@ def change_text(sig: Signal, day: SignalDay) -> str:
     if sig.id in PERCENT_SIGNALS and day.median:
         return f"{verb} {abs(delta) / abs(day.median) * 100:.0f}%"
     size = f"{abs(delta):.{min(sig.decimals, 2)}f}"
-    return f"{verb} {size} {UNIT_WORDS.get(sig.unit, sig.unit)}".rstrip()
+    unit = UNIT_WORDS.get(sig.unit, sig.unit)
+    if size == "1" and sig.unit in UNIT_WORDS:
+        unit = unit.removesuffix("s")
+    return f"{verb} {size} {unit}".rstrip()
 
 
 def _rule_text(day: SignalDay) -> str:
