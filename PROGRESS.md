@@ -24,5 +24,5 @@
 - Decision: the team wants real software that runs on a Linux PC on the vehicle, not a web page, Electron, or an Apple-only app. The UI is now Qt 6 Quick through PySide6, in the same process as the Python engine. There is no server.
 - Done: in-process views, bridge, all 15 QML screens, undo, Sensors screen, offscreen UI tests, screenshot tool.
 - Restore point for the web build: git tag `web-prototype`.
-- Checked: 222 tests pass on macOS, including every screen and the main screen actions. Startup to a loaded Home screen takes about 1.1 seconds. The standalone package builds (158 MB) and passes its own --check.
+- Checked: 210 tests passed on macOS in a full run, including every screen. 6 more tests that drive the main screen actions were added and passed on their own. Startup to a loaded Home screen takes about 1.1 seconds. The standalone package builds (158 MB) and passes its own --check.
 - Docs rewritten for the native app: README, pitch, demo script, Q&A, manual tests, design principles.
