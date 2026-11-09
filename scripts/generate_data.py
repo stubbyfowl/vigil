@@ -13,7 +13,6 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
-
 from app import config, db  # noqa: E402
 from app.signals import SIGNALS  # noqa: E402
 from app.sim.generator import CREW, Mission, generate_mission  # noqa: E402

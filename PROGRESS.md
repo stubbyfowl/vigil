@@ -4,3 +4,14 @@
 - Done: repo, Makefile, signal config, schemas, SQLite, FastAPI skeleton, Vite skeleton, PWA manifest and service worker, honesty files.
 - Checked: `/api/health` test passes. Production build works. Backend serves the built frontend.
 - Blocked: nothing.
+
+## Phase 2: Synthetic data (done)
+- Done: seeded generator for 4 crew and a quiet control, 4 planted events, ground truth, CSV and DB export, sanity chart (`data/synthetic/sanity.png`).
+- Checked: 13 tests pass. Chart reviewed by eye. Events are visible and baselines differ by person.
+- Blocked: nothing.
+
+## Phase 3: Engine (done)
+- Done: baselines, z, EWMA and CUSUM with a vote, debounce, fusion, risk, alert writer, escalation, protocols, radiation, journal scoring, sync queue, privacy tiers, Demo Director logic, all API routes, evaluation harness.
+- Checked: 106 backend tests pass. Ruff and mypy are clean. All 4 planted events found in 20 of 20 held-out seeds.
+- First run had about 14 false alarms per 100 days. Fixed by adding debouncing and tuning on seeds 1000 to 1019. Reported seeds are 2000 to 2019.
+- Blocked: nothing.

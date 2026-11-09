@@ -1,5 +1,4 @@
 import numpy as np
-
 from app.signals import DRIFT_SIGNALS, SIGNALS
 from app.sim.generator import CREW, generate_mission
 

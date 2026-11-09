@@ -11,15 +11,17 @@ baseline:
   learning_days: 10
   min_observations: 4
   max_freeze_days: 45
-  sigma_floor: 0.8
+  sigma_floor: 1.0
 detector:
   method: vote
   votes_needed: 2
   z_limit: 3.0
   ewma_lambda: 0.25
-  ewma_l: 3.0
+  ewma_l: 4.0
   cusum_k: 0.5
   cusum_h: 5.0
+  persist_readings: 2
+  release_readings: 2
 fusion:
   scale: 3.0
   dead_zone: 0.33
@@ -33,7 +35,7 @@ escalation:
   l2_min_signals: 3
   l2_long_drift_days: 5
   l3_worsen_after_days: 3
-  l3_worsen_delta: 12
+  l3_worsen_delta: 20
   close_after_quiet_days: 3
 radiation:
   career_limit_msv: 600
@@ -44,6 +46,7 @@ sync:
   one_way_delay_minutes: 20
   demo_time_scale: 60
   bandwidth_kb_s: 40
+  scale_time: true
 hard_limits:
   spo2: {low: 90}
   temp: {high: 38.5}

@@ -1,0 +1,38 @@
+{
+  "_label": "Sample protocols, not medical advice.",
+  "sleep_reset": {
+    "name": "sleep reset", "minutes": 30,
+    "steps": ["Stop screens 60 minutes before sleep.", "Keep the same sleep time tonight.", "Dim the sleep station light.", "Write down what is on your mind."],
+    "escalate_if": "Sleep stays low for 3 more nights."
+  },
+  "light_exposure": {
+    "name": "light exposure routine", "minutes": 20,
+    "steps": ["Set cabin light to bright white after waking.", "Spend 20 minutes under it.", "Rate your mood after."],
+    "escalate_if": "Mood keeps falling for 3 more days."
+  },
+  "hydration": {
+    "name": "fluid plan", "minutes": 10,
+    "steps": ["Drink your planned fluid now.", "Stand up slowly.", "Repeat the stand test in 4 hours."],
+    "escalate_if": "You feel faint, or the stand test gets worse."
+  },
+  "exercise_adjustment": {
+    "name": "exercise adjustment", "minutes": 45,
+    "steps": ["Check the device setup.", "Finish your missed loading block.", "Log the load used."],
+    "escalate_if": "You have pain, or load falls for 5 more days."
+  },
+  "social_call": {
+    "name": "social call", "minutes": 20,
+    "steps": ["Pick one crew member.", "Share a meal or a 20 minute talk.", "Queue a message to family."],
+    "escalate_if": "You feel unsafe, or feel worse after 3 days."
+  },
+  "breathing": {
+    "name": "breathing exercise", "minutes": 5,
+    "steps": ["Sit and strap in.", "Breathe in for 4 seconds.", "Breathe out for 6 seconds.", "Repeat for 5 minutes."],
+    "escalate_if": "You have chest pain or feel short of breath."
+  },
+  "rest_day": {
+    "name": "rest protocol", "minutes": 60,
+    "steps": ["Drop optional tasks today.", "Drink your planned fluid.", "Take your temperature every 6 hours.", "Sleep at your normal time."],
+    "escalate_if": "Temperature keeps rising, or new symptoms start."
+  }
+}

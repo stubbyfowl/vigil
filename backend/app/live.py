@@ -1,0 +1,200 @@
+"""The shared mission clock, packets it produces, and the Demo Director."""
+
+from dataclasses import asdict, dataclass
+from typing import Any
+
+from .sim.generator import CREW
+from .store import Store
+from .sync.privacy import ground_card
+from .sync.queue import PRIORITY_LEVEL3, PRIORITY_NORMAL, SyncQueue
+
+DIRECTOR_DAYS_PER_SECOND = 6.0
+SUMMARY_EVERY_DAYS = 7
+LEVEL3_PACKET_KB = 48.0
+SUMMARY_PACKET_KB = 16.0
+
+
+@dataclass(frozen=True)
+class Beat:
+    day: int
+    astronaut: str
+    route: str
+    caption: str
+    hold: float
+
+
+def _first_alert(store: Store, event_id: str) -> dict[str, Any] | None:
+    """Find the planted event's first alert in the real engine output. Prefer Level 2 or more."""
+    ev = next((e for e in store.mission.ground_truth if e["id"] == event_id), None)
+    if not ev:
+        return None
+    window = store.runs[ev["astronaut"]].alerts[ev["day"] - 1: ev["day"] + ev["duration_days"]]
+    found = [a for day in window for a in day if a["system"] == ev["system"]]
+    return next((a for a in found if a["level"] >= 2), found[0] if found else None)
+
+
+def build_beats(store: Store) -> list[Beat]:
+    """The story, with every day taken from what the engine actually flagged."""
+    beats = [
+        Beat(1, "eng", "/", "Day 1. Vigil knows nothing yet. It is learning each person's normal.", 7),
+        Beat(11, "eng", "/", "Day 11. Baselines are ready. Each number now means something for this person.", 5),
+    ]
+    immune = _first_alert(store, "immune_stress")
+    if immune:
+        beats += [
+            Beat(immune["day"], "eng", "/", f"Day {immune['day']}. Lena feels fine. Vigil sees several small changes move together.", 6),
+            Beat(immune["day"], "eng", f"/alert/{immune['id']}", "Plain words. How much, how long, and one thing to do. Earth was never asked.", 9),
+        ]
+    slide = _first_alert(store, "behavior_slide")
+    if slide:
+        beats.append(Beat(slide["day"], "plt", f"/alert/{slide['id']}", "Slow slides are easy to miss in yourself. Vigil names it and tells the Medical Officer.", 9))
+    if store.mission.storm:
+        beats += [
+            Beat(120, "eng", "/radiation", "Solar storm. A warning comes 2 hours ahead. Shelter steps start now, not after a call home.", 9),
+            Beat(120, "eng", "/ground", "Earth gets a priority packet. It is still 20 minutes away. Level 3 goes first.", 8),
+        ]
+    heart = _first_alert(store, "heart_drift")
+    if heart:
+        beats += [
+            Beat(heart["day"], "cmdr", f"/alert/{heart['id']}", "The Commander's heart rate is still under any population limit. It is not normal for this person.", 8),
+            Beat(heart["day"], "cmdr", "/explainer", "Same heart rate. One person is fine. One is not. Only a personal baseline can tell.", 12),
+        ]
+    beats.append(Beat(store.mission.days, "eng", "/results", "Measured on 20 simulated missions, with false alarms counted. Simulated data only.", 10))
+    return beats
+
+
+class Live:
+    def __init__(self, store: Store, now: float) -> None:
+        self.store = store
+        self.day_float = float(store.cfg["mission"]["start_day"])
+        self.running = False
+        self.days_per_second = float(store.cfg["mission"]["days_per_second"])
+        self.last_time = now
+        self.packeted: set[tuple[str, int]] = set()
+        self.beats: list[Beat] = []
+        self.beat_index = -1
+        self.holding = False
+        self.hold_until = 0.0
+        self.finished = False
+        self.queue = self._new_queue()
+
+    def _new_queue(self) -> SyncQueue:
+        s = self.store.cfg["sync"]
+        scale = s["demo_time_scale"] if s.get("scale_time", True) else 1
+        return SyncQueue(s["one_way_delay_minutes"] * 60 / scale, s["bandwidth_kb_s"])
+
+    @property
+    def day(self) -> int:
+        return self.store.clamp_day(int(self.day_float))
+
+    # Clock
+
+    def set_day(self, day: int, now: float) -> None:
+        """Jump without creating packets. Used by the scrubber."""
+        self.tick(now)
+        self.day_float = float(self.store.clamp_day(day))
+
+    def tick(self, now: float) -> None:
+        """Move time forward to now. Nothing runs in the background."""
+        elapsed = now - self.last_time
+        self.last_time = now
+        if self.beat_index >= 0:
+            self._tick_director(elapsed, now)
+        elif self.running:
+            self._advance(elapsed * self.days_per_second, now)
+            if self.day_float >= self.store.mission.days:
+                self.running = False
+        self.queue.update(now)
+
+    def _advance(self, days: float, now: float, limit: float | None = None) -> None:
+        before = self.day
+        cap = float(self.store.mission.days if limit is None else limit)
+        self.day_float = min(self.day_float + days, cap)
+        for day in range(before + 1, self.day + 1):
+            self._emit_packets(day, now)
+
+    def _emit_packets(self, day: int, now: float) -> None:
+        """Level 3 alerts go straight to the queue. Each person sends a weekly summary."""
+        store = self.store
+        for who in CREW:
+            alerts = store.alerts(who.id, day, include_hidden=True)
+            for alert in alerts:
+                self.queue_level3(alert, day, now)
+            if day % SUMMARY_EVERY_DAYS == 0 and not who.control:
+                card = ground_card(store.runs[who.id], day, alerts, store.share(who.id)["share_ground"])
+                self.queue.enqueue(now, "summary", who.id, f"{who.tag} weekly summary", PRIORITY_NORMAL, SUMMARY_PACKET_KB, day, card)
+
+    def queue_level3(self, alert: dict[str, Any], day: int, now: float) -> None:
+        key = (alert["id"], 3)
+        if alert["level"] >= 3 and key not in self.packeted:
+            self.packeted.add(key)
+            payload = {"system": alert["system_name"], "level": 3, "reason": alert["level_reason"]}
+            tag = self.store.who(alert["astronaut"]).tag
+            self.queue.enqueue(now, "level3", alert["astronaut"], f"{tag} {alert['system_name']} Level 3", PRIORITY_LEVEL3, LEVEL3_PACKET_KB, day, payload)
+
+    # Demo Director
+
+    def start_demo(self, now: float) -> None:
+        self.store.reset_interactive()
+        self.queue = self._new_queue()
+        self.packeted = set()
+        self.beats = build_beats(self.store)
+        self.beat_index, self.holding, self.finished, self.running = 0, False, False, False
+        self.day_float = 1.0
+        self.last_time = now
+
+    def stop_demo(self) -> None:
+        self.beat_index, self.holding = -1, False
+
+    def next_beat(self, now: float) -> None:
+        """Skip ahead: finish the move, or end the current hold."""
+        if self.beat_index < 0:
+            return
+        if self.holding:
+            self._leave_beat()
+        else:
+            self._advance(max(self.beats[self.beat_index].day - self.day_float, 0), now, self.beats[self.beat_index].day)
+            self._arrive(now)
+
+    def _leave_beat(self) -> None:
+        self.holding = False
+        self.beat_index += 1
+        if self.beat_index >= len(self.beats):
+            self.beat_index, self.finished = -1, True
+
+    def _arrive(self, now: float) -> None:
+        self.holding = True
+        self.hold_until = now + self.beats[self.beat_index].hold
+
+    def _tick_director(self, elapsed: float, now: float) -> None:
+        if self.holding:
+            if now >= self.hold_until:
+                self._leave_beat()
+            return
+        beat = self.beats[self.beat_index]
+        self._advance(elapsed * DIRECTOR_DAYS_PER_SECOND, now, beat.day)
+        if self.day_float >= beat.day:
+            self._arrive(now)
+
+    def demo_view(self) -> dict[str, Any]:
+        active = self.beat_index >= 0
+        view: dict[str, Any] = {"active": active, "finished": self.finished, "total": len(self.beats)}
+        if active:
+            beat = self.beats[self.beat_index]
+            view |= asdict(beat) | {"index": self.beat_index, "holding": self.holding}
+            if not self.holding:
+                view["route"] = "/"  # the home screen plays while time moves
+                view["caption"] = f"Mission day {self.day}"
+        return view
+
+    def snapshot(self, now: float) -> dict[str, Any]:
+        self.tick(now)
+        return {
+            "day": self.day, "mission_days": self.store.mission.days, "running": self.running,
+            "days_per_second": self.days_per_second, "version": self.store.version,
+            "link_up": self.queue.link_up, "demo": self.demo_view(),
+            "delay_minutes": self.store.cfg["sync"]["one_way_delay_minutes"],
+            "flight_seconds": self.queue.delay_s,
+        }
+
+
