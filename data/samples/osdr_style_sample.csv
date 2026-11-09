@@ -1,0 +1,28 @@
+Source Name,Timepoint,Analyte,Value,Units
+SUBJ-A,L-92,CRP,0.9,mg/L
+SUBJ-A,L-44,CRP,1.1,mg/L
+SUBJ-A,L-30,CRP,1.0,mg/L
+SUBJ-A,L-14,CRP,0.8,mg/L
+SUBJ-A,L-3,CRP,1.0,mg/L
+SUBJ-A,FD3,CRP,4.6,mg/L
+SUBJ-A,R+1,CRP,3.9,mg/L
+SUBJ-A,R+45,CRP,1.2,mg/L
+SUBJ-A,L-92,IL-6,1.7,pg/mL
+SUBJ-A,L-44,IL-6,1.9,pg/mL
+SUBJ-A,L-30,IL-6,1.6,pg/mL
+SUBJ-A,L-14,IL-6,1.8,pg/mL
+SUBJ-A,L-3,IL-6,2.0,pg/mL
+SUBJ-A,FD3,IL-6,2.1,pg/mL
+SUBJ-A,R+1,IL-6,1.9,pg/mL
+SUBJ-A,R+45,IL-6,1.8,pg/mL
+SUBJ-A,L-92,Lymphocytes,33,%
+SUBJ-A,L-44,Lymphocytes,35,%
+SUBJ-A,L-30,Lymphocytes,32,%
+SUBJ-A,L-14,Lymphocytes,34,%
+SUBJ-A,L-3,Lymphocytes,33,%
+SUBJ-B,L-92,C-Reactive Protein,0.11,mg/dL
+SUBJ-B,L-44,C-Reactive Protein,0.09,mg/dL
+SUBJ-B,L-3,C-Reactive Protein,0.10,mg/dL
+SUBJ-B,L-3,Albumin,4.3,g/dL
+SUBJ-B,FD3,IL-6,not measured,pg/mL
+SUBJ-B,FD3,CRP,900,mg/L
