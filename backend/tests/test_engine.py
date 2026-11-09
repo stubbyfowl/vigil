@@ -146,8 +146,11 @@ def test_score_is_zero_with_no_evidence_and_bounded():
     assert drift_score([3] * 20, CFG) <= 100
 
 
+YELLOW, RED = CFG["status"]["yellow"], CFG["status"]["red"]
+
+
 @pytest.mark.parametrize("score,level,expected", [
-    (10, 0, "green"), (30, 0, "yellow"), (60, 0, "red"), (10, 2, "yellow"), (10, 3, "red"),
+    (YELLOW - 1, 0, "green"), (YELLOW, 0, "yellow"), (RED, 0, "red"), (10, 2, "yellow"), (10, 3, "red"),
 ])
 def test_status(score, level, expected):
     assert status_for(score, level, CFG) == expected

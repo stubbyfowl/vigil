@@ -24,11 +24,11 @@ detector:
   release_readings: 2
 fusion:
   scale: 3.0
-  dead_zone: 0.33
+  dead_zone: 0.5
   breadth_bonus: 0.25
-  evidence_cap: 3.0
+  evidence_cap: 2.0
 status:
-  yellow: 30
+  yellow: 35
   red: 60
 escalation:
   l1_two_signal_days: 3

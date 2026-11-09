@@ -34,8 +34,8 @@
       "unit": "days",
       "detected": 20,
       "levels": {
-        "3": 5,
-        "2": 15
+        "3": 6,
+        "2": 14
       },
       "vigil_vs_onset": {
         "mean": 2.8,
@@ -254,8 +254,8 @@
         "n": 20
       },
       "l3": {
-        "mean": 0.04,
-        "sd": 0.06,
+        "mean": 0.02,
+        "sd": 0.05,
         "n": 20
       },
       "fixed_sensitive": {

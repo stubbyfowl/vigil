@@ -73,11 +73,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     const poll = () =>
-      get<Live>("/api/live")
-        .then((data) => {
+      fetch("/api/live")
+        .then(async (res) => {
+          if (!res.ok) throw new Error("live");
+          const data = (await res.json()) as Live;
           if (!alive) return;
           setLive(data);
-          setDisconnected(false);
+          setDisconnected(res.headers.get("X-Vigil-Offline") === "1");
         })
         .catch(() => alive && setDisconnected(true));
     poll();

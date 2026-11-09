@@ -63,13 +63,14 @@ def timeline() -> dict[str, Any]:
     crew = []
     for who in CREW:
         run = store.runs[who.id]
+        status = {k: "".join(STATUS_CODE[d["status"]] for d in run.systems[k]) for k in SYSTEMS}
+        status["radiation"] = "".join(STATUS_CODE[d["status"]] for d in run.radiation)
         crew.append({
-            "id": who.id, "tag": who.tag, "name": who.name, "control": who.control,
-            "status": {k: "".join(STATUS_CODE[d["status"]] for d in run.systems[k]) for k in SYSTEMS},
+            "id": who.id, "tag": who.tag, "name": who.name, "control": who.control, "status": status,
             "level": [max((a["level"] for a in day), default=0) for day in run.alerts],
         })
     events = [{k: e[k] for k in ("id", "title", "day", "astronaut", "system")} for e in store.mission.ground_truth]
-    return {"mission_days": store.mission.days, "systems": SYSTEMS, "crew": crew, "events": events}
+    return {"mission_days": store.mission.days, "systems": {**SYSTEMS, "radiation": "Radiation"}, "crew": crew, "events": events}
 
 
 def _explainer_day() -> tuple[int, str, str, float] | None:

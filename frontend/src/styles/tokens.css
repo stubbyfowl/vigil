@@ -8,6 +8,7 @@
 :root {
   --font-body: "B612", system-ui, sans-serif;
   --font-data: "B612 Mono", ui-monospace, monospace;
+  --font-num: "B612", system-ui, sans-serif;
   --font-label: "Barlow Condensed", "Arial Narrow", sans-serif;
   --touch: 56px;
   --gutter: 20px;

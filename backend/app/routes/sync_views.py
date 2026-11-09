@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api")
 def crew_view(day: int | None = None) -> dict[str, Any]:
     d = resolve_day(day)
     cards = [crew_card(store.runs[w.id], d, store.alerts(w.id, d), store.share(w.id)["share_crew"]) for w in CREW if not w.control]
-    watching = sum(any(s["status"] != "green" for s in c["systems"]) for c in cards)
+    watching = sum(c["max_level"] > 0 or any(s["status"] != "green" for s in c["systems"]) for c in cards)
     summary = "All crew inside their normal." if not watching else f"{watching} of {len(cards)} crew need attention."
     return {"day": d, "crew": cards, "summary": summary}
 

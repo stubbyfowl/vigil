@@ -16,7 +16,7 @@ from app.sim.generator import CREW, Mission, generate_mission  # noqa: E402
 
 # Thresholds were tuned on seeds 1000 to 1019. These 20 were held out and used only for reporting.
 SEEDS = list(range(2000, 2020))
-# sensitive: mean plus 2 sd, many false alarms. quiet: mean plus 3 sd, a false alarm rate close to Vigil's.
+# sensitive: mean plus 2 sd, many false alarms. quiet: mean plus 3 sd, the setting closest to Vigil's false alarm rate.
 FIXED_VARIANTS = {"sensitive": 2.0, "quiet": 3.0}
 METHODS = ["z", "ewma", "cusum", "vote"]
 HOURS = 24
@@ -83,12 +83,9 @@ def excluded_days(who: str, truth: list[dict]) -> set[int]:
 
 
 def merge_alarms(days: list[int]) -> list[int]:
-    merged: list[int] = []
-    for d in sorted(days):
-        if not merged or d - last > MERGE_GAP:
-            merged.append(d)
-        last = d
-    return merged
+    """Alarm days close to the previous alarm day count as the same alarm."""
+    ordered = sorted(days)
+    return [d for i, d in enumerate(ordered) if i == 0 or d - ordered[i - 1] > MERGE_GAP]
 
 
 def false_alarms(mission: Mission, runs: dict[str, AstronautRun], who: str) -> dict:
@@ -199,7 +196,8 @@ def write_markdown(out: dict, path: Path) -> None:
         f"A fixed dose rate alarm at twice normal fires {storm['fixed_alarm']['mean']} hours after onset.", "",
         "## Against fixed population limits", "",
         "A fixed limit is one number for everyone: population mean plus k standard deviations.",
-        "**Sensitive** uses k = 2. **Quiet** uses k = 3, which has a false alarm rate closer to Vigil's. A positive lead means Vigil flagged first.", "",
+        "**Sensitive** uses k = 2. **Quiet** uses k = 3, the fixed setting closest to Vigil's false alarm rate. "
+        f"It still raises {fa['non_event']['fixed_quiet']['mean'] / fa['non_event']['l1']['mean']:.1f} times as many false alarms as Vigil. A positive lead means Vigil flagged first.", "",
         "| Event | Limit | Fixed found | Fixed delay | Vigil earlier by | Fixed missed, Vigil found |", "|---|---|---|---|---|---|",
     ]
     for e in out["events"]:

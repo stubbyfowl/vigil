@@ -18,23 +18,22 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  const isLive = url.pathname === "/api/live";
   const networkFirst = url.pathname.startsWith("/api/") || e.request.mode === "navigate";
-  e.respondWith(
-    networkFirst ? fromNetwork(e.request, isLive) : fromCache(e.request),
-  );
+  e.respondWith(networkFirst ? fromNetwork(e.request) : fromCache(e.request));
 });
 
-async function fromNetwork(request, skipStore) {
+async function fromNetwork(request) {
   const cache = await caches.open(CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok && !skipStore) cache.put(request, response.clone());
+    if (response.ok) cache.put(request, response.clone());
     return response;
   } catch (err) {
     const fallback = (await cache.match(request)) || (request.mode === "navigate" ? await cache.match("/index.html") : null);
-    if (fallback) return fallback;
-    throw err;
+    if (!fallback) throw err;
+    const headers = new Headers(fallback.headers);
+    headers.set("X-Vigil-Offline", "1");
+    return new Response(fallback.body, { status: fallback.status, headers });
   }
 }
 

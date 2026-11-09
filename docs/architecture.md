@@ -27,7 +27,7 @@ The default method is a vote: 2 of 3 must agree. Daily signals need 2 readings i
 **3. Fusion (`engine/fusion.py`).** Each signal gets evidence e:
 
 ```
-e = clamp((w / limit - 0.33) / 0.67, 0, 3)     and e is at least 1 when the signal is flagged
+e = clamp((w / limit - 0.5) / 0.5, 0, 2)     and e is at least 1 when the signal is flagged
 ```
 
 Ordinary noise gives e near 0. A signal at its EWMA limit gives e = 1. The system drift score is:
@@ -39,7 +39,7 @@ score = 100 x (1 - exp(-B / 3))
 
 The breadth term is why three small shifts score more than one shift of the same total size.
 
-**4. Risk (`engine/risk.py`).** Score below 30 is green, 30 to 59 is yellow, and 60 or more is red. Level 2 forces at least yellow. Level 3 forces red. Confidence is recent data completeness times baseline maturity, averaged over the system's signals.
+**4. Risk (`engine/risk.py`).** Score below 35 is green, 35 to 59 is yellow, and 60 or more is red. Level 2 forces at least yellow. Level 3 forces red. Confidence is recent data completeness times baseline maturity, averaged over the system's signals.
 
 **5. Escalation (`engine/escalation.py`).** Each stretch of drift in one system is an episode. Levels only go up inside an episode. An episode closes after 3 quiet days.
 

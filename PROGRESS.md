@@ -15,3 +15,7 @@
 - Checked: 106 backend tests pass. Ruff and mypy are clean. All 4 planted events found in 20 of 20 held-out seeds.
 - First run had about 14 false alarms per 100 days. Fixed by adding debouncing and tuning on seeds 1000 to 1019. Reported seeds are 2000 to 2019.
 - Blocked: nothing.
+
+## Phases 4 to 6: Web UI (superseded)
+- Built and tested the React PWA: all screens, Demo Director, timeline, Delay Theater, Results. These phases landed as one commit because the screens share one router and stylesheet.
+- Tagged `web-prototype`. The team then asked for native software, not a web page, so this UI is being replaced by a SwiftUI app.

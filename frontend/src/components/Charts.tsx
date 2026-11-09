@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { Series } from "../api/types";
 
 function useWidth(initial: number) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(initial);
-  useEffect(() => {
-    if (!ref.current || typeof ResizeObserver === "undefined") return;
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    if (ref.current.clientWidth > 0) setWidth(Math.max(120, ref.current.clientWidth));
+    if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(([entry]) => setWidth(Math.max(120, entry.contentRect.width)));
     observer.observe(ref.current);
     return () => observer.disconnect();

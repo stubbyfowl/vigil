@@ -10,7 +10,7 @@ Delay is days after event onset until the first flag on a planted signal. Events
 
 | Event | Who | Found | Delay after onset | Highest level reached (runs) | Signals that fired (runs) |
 |---|---|---|---|---|---|
-| Immune stress | eng | 20/20 | 2.8 days (sd 1.2) | L2: 15, L3: 5 | crp 20, il6 19, sleep_eff 20, temp 18 |
+| Immune stress | eng | 20/20 | 2.8 days (sd 1.2) | L2: 14, L3: 6 | crp 20, il6 19, sleep_eff 20, temp 18 |
 | Behavioral slide | plt | 20/20 | 4.75 days (sd 0.91) | L2: 20 | mood 20, sleep_hours 19, social_min 18, stress 19 |
 | Solar particle event | all | 20/20 | -2 hours (sd 0.0) | L3: 20 | dose_rate 20 |
 | Heart drift | cmdr | 20/20 | 4.95 days (sd 1.36) | L2: 19, L3: 1 | hrv 20, ortho_rise 19, resting_hr 20 |
@@ -20,7 +20,7 @@ The storm warning comes from the simulated solar monitor. Vigil relays it 2 hour
 ## Against fixed population limits
 
 A fixed limit is one number for everyone: population mean plus k standard deviations.
-**Sensitive** uses k = 2. **Quiet** uses k = 3, which has a false alarm rate closer to Vigil's. A positive lead means Vigil flagged first.
+**Sensitive** uses k = 2. **Quiet** uses k = 3, the fixed setting closest to Vigil's false alarm rate. It still raises 1.9 times as many false alarms as Vigil. A positive lead means Vigil flagged first.
 
 | Event | Limit | Fixed found | Fixed delay | Vigil earlier by | Fixed missed, Vigil found |
 |---|---|---|---|---|---|
@@ -36,7 +36,7 @@ A fixed limit is one number for everyone: population mean plus k standard deviat
 | Group | Vigil any alert | Vigil Level 2 or more | Vigil Level 3 | Fixed sensitive | Fixed quiet |
 |---|---|---|---|---|---|
 | Quiet control | 1.31 (sd 0.96) | 0.75 (sd 0.81) | 0.0 (sd 0.0) | 7.86 (sd 2.37) | 3.19 (sd 1.91) |
-| Non-event days, all crew | 1.54 (sd 0.48) | 0.7 (sd 0.35) | 0.04 (sd 0.06) | 8.48 (sd 1.05) | 2.94 (sd 0.72) |
+| Non-event days, all crew | 1.54 (sd 0.48) | 0.7 (sd 0.35) | 0.02 (sd 0.05) | 8.48 (sd 1.05) | 2.94 (sd 0.72) |
 
 ## Detector comparison
 
