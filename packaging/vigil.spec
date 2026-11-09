@@ -4,9 +4,12 @@ from pathlib import Path
 
 root = Path(SPECPATH).parent
 
+native = root / "backend" / "app" / "engine" / "_vigil_fast.so"
+
 analysis = Analysis(
     [str(root / "frontend" / "main.py")],
     pathex=[str(root / "backend"), str(root / "frontend")],
+    binaries=[(str(native), "app/engine")] if native.exists() else [],
     datas=[
         (str(root / "frontend" / "qml"), "frontend/qml"),
         (str(root / "frontend" / "fonts"), "frontend/fonts"),

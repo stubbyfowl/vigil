@@ -11,7 +11,7 @@ from ..signals import DRIFT_SIGNALS, SYSTEMS, Signal
 from ..sim.generator import CREW, Astronaut, Mission
 from .alerts import write_alert
 from .baseline import window_sizes
-from .drift import SignalDay, SignalTracker
+from .drift import SignalDay, track_signal
 from .escalation import Facts, decide
 from .fusion import drift_score
 from .radiation import radiation_alert, radiation_day
@@ -109,8 +109,7 @@ def run_astronaut(who: Astronaut, mission: Mission, cfg: Config, method: str | N
     """Walk one person through the mission."""
     active = [s for s in DRIFT_SIGNALS if s.id not in cfg.get("disabled_signals", [])]
     series = mission.series[who.id]
-    trackers = {s.id: SignalTracker(s, cfg, method) for s in active}
-    signal_days: dict[str, list[SignalDay]] = {s.id: [] for s in active}
+    signal_days: dict[str, list[SignalDay]] = {s.id: track_signal(s, series[s.id], cfg, method) for s in active}
     system_days: dict[str, list[dict[str, Any]]] = {k: [] for k in SYSTEMS}
     open_eps: dict[str, Episode] = {}
     episodes: list[Episode] = []
@@ -119,9 +118,7 @@ def run_astronaut(who: Astronaut, mission: Mission, cfg: Config, method: str | N
 
     for d in range(mission.days):
         day = d + 1
-        today = {sid: t.update(float(series[sid][d])) for sid, t in trackers.items()}
-        for sid, state in today.items():
-            signal_days[sid].append(state)
+        today = {sid: states[d] for sid, states in signal_days.items()}
         alerts: list[dict[str, Any]] = []
         for system in SYSTEMS:
             primary, _ = _members(system, active)

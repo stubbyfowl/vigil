@@ -3,8 +3,11 @@
 from dataclasses import dataclass
 from math import isnan, sqrt
 
+import numpy as np
+
 from ..config import Config
 from ..signals import Signal
+from . import fast
 from .baseline import compute_baseline
 from .fusion import evidence
 
@@ -105,3 +108,20 @@ class SignalTracker:
             flagged=flagged, drift_days=self.day - self.flag_start + 1 if self.flag_start else 0,
             evidence=evidence(self.ewma, self.limit, flagged, self.cfg),
         )
+
+
+def track_signal(sig: Signal, values: np.ndarray, cfg: Config, method: str | None = None) -> list[SignalDay]:
+    """Run one signal over a whole mission, in C++ if it is built and in Python if not."""
+    chosen = method or cfg["detector"]["method"]
+    if not fast.available():
+        tracker = SignalTracker(sig, cfg, chosen)
+        return [tracker.update(float(v)) for v in values]
+    d = cfg["detector"]
+    out = fast.track(sig, values, cfg, chosen, ewma_limit(d["ewma_lambda"], d["ewma_l"]))
+    return [
+        SignalDay(value=v, last_value=lv, median=m, sigma=sg, short_median=sm, learning=le, ewma=ew, fired=fi, flagged=fl, drift_days=dd, evidence=ev)
+        for v, lv, m, sg, sm, le, ew, fi, fl, dd, ev in zip(
+            out["value"], out["last_value"], out["median"], out["sigma"], out["short_median"], out["learning"],
+            out["ewma"], out["fired"], out["flagged"], out["drift_days"], out["evidence"], strict=True,
+        )
+    ]
