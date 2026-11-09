@@ -19,7 +19,7 @@ Sometimes. Against the quieter fixed limit, Vigil flagged heart drift about 7 da
 An astronaut has to trust and check the answer. Each alert shows which signals moved, by how much, for how long and which rule fired. A small statistical method also runs on modest hardware and needs no training data, which we do not have.
 
 **Why would this run on a spacecraft?**
-It is one native program with no server, no browser and no network connections. It runs on Linux on x86-64 or ARM64. It could draw straight to a display with no desktop running, but we have not tested that mode. It is a prototype. It is not flight certified, and Python would not be the final language for flight software.
+It is one native program with no server, no browser and no network connections. It runs on Linux on x86-64 or ARM64. It could draw straight to a display with no desktop running, but we have not tested that mode. It is a prototype and is not flight certified. Python would not be the final language for flight software, so the detector core also exists in C++, with a test that requires it to match the Python version exactly.
 
 **Did you predict the solar storm?**
 No. The warning comes from a simulated solar monitor. Vigil passes it on and starts the shelter steps. Vigil does not predict storms.
@@ -35,6 +35,12 @@ A missing reading lowers the confidence score. It never counts as a health chang
 
 **How was the interface designed?**
 It follows the principles in `docs/design-principles.md`. Status never relies on color alone, targets are at least 56 px for gloves, and a low-blue night theme protects sleep.
+
+**Does voice check-in send anything anywhere?**
+No. Speech becomes text on the computer using an offline model. Audio is never saved. The astronaut can edit the text before saving it.
+
+**Did you use real OSDR data?**
+No. The importer reads tables in that general shape, but we tested it only on a sample we invented, because our rule is to use no real people's data.
 
 **What would you build next?**
 Flight surgeon review, real analog mission data, real sensors, and clinically grounded thresholds.

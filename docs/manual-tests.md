@@ -1,6 +1,6 @@
 # Manual tests
 
-`make test` already covers these automatically: every screen loads with no QML errors, targets are at least 56 px, the simulated badge is present, all themes load, contrast is at least 4.5:1, Undo works, and the second window opens.
+`make test` covers these automatically: every screen loads with no QML errors, targets are at least 56 px, the simulated badge is present, all themes load, contrast is at least 4.5:1, Undo works, and the second window opens.
 
 The checks below need a person and a real screen.
 
@@ -27,6 +27,14 @@ Visit every item in the Menu and confirm nothing is cut off. Compare with the im
 ## Themes
 
 Open Menu and try dark, light and night. Confirm text stays readable. Close and reopen Vigil and confirm the theme is remembered.
+
+## Voice check-in
+
+Run `make voice` first.
+
+1. Open Check-in and tap **Speak**. Allow microphone access if asked.
+2. Say a sentence, tap **Stop**, and confirm the words appear in the journal and can be edited.
+3. Turn off Wi-Fi and repeat.
 
 ## Keyboard only
 

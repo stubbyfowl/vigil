@@ -37,7 +37,8 @@ Touch nothing. Use **Next beat** to skip ahead and **Stop** to end.
 | A storm rehearsal | Radiation, then **Storm drill** |
 | Lost link | Mission Control, then **Drop link** |
 | Privacy | Crew. Note that only trends and status appear. |
-| Night mode | Menu, then **night** |
+| Night mode | Menu, then **Night** |
+| Calm against drifting | On Home, switch between Kai and Lena and watch the ribbon |
 
 ## If something goes wrong
 

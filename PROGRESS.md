@@ -30,3 +30,9 @@
 ## Modern redesign (done)
 - Done: light default theme, Instrument Sans, sentence case, soft surfaces, two-tone statements, and a ribbon on Home drawn from each person's real 30-day drift. Mission Control stays dark.
 - Checked: 216 tests pass on macOS. The earlier Qt build also passed all 216 on Linux ARM64 with networking disabled.
+
+## Previously skipped features (done)
+- C++ tracker: matches Python exactly on 3 seeds, 4 methods, all crew and signals. About 1.5 times faster for a full mission.
+- OSDR-style import: tested on an invented sample. Not run on a real OSDR download.
+- Voice check-in: offline with Vosk. Tested on a recorded phrase. A live microphone is not tested.
+- Checked: 245 tests pass on macOS.

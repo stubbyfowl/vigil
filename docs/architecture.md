@@ -55,6 +55,8 @@ The breadth term is why three small shifts score more than one shift of the same
 
 All numbers live in `config/thresholds.yaml`. They are starting values, not clinical limits.
 
+**8. C++ tracker (optional).** `backend/native/vigil_fast.cpp` is a second implementation of steps 1 and 2. `make native` builds it and `engine/fast.py` loads it. If it is missing, the Python tracker runs instead. `tests/test_native.py` requires both to agree exactly.
+
 ## Sync
 
 `sync/queue.py` models one transmitter. Level 3 packets leave first. Packets wait while the link is down. `sync/privacy.py` is the only code that builds crew and ground views. Raw values appear only if the astronaut turns on sharing.

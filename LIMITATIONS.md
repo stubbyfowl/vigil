@@ -20,4 +20,6 @@ All crew data in Vigil is synthetic. No real astronaut data is used. The crew me
 - The Earth link is a model with delay, priority and link loss. There is no real radio.
 - The noise floor comes from the same settings the generator uses. On real data it must be measured for each sensor.
 - This is a prototype, not flight software. It is not certified, and Python would not be the final language.
+- Voice check-in was tested on a recorded phrase. A live microphone has not been tested. The small speech model makes mistakes, so the astronaut can edit the text before saving.
+- The OSDR-style import was tested on an invented sample only, not on a real OSDR download.
 - Touch is designed for but was not tested on a physical touchscreen. Fullscreen with no desktop (`--platform eglfs`) was not tested on real hardware.

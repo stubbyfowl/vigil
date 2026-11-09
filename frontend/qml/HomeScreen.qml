@@ -116,7 +116,7 @@ Item {
                     }
                     RowLayout {
                         spacing: 8
-                        Text { text: card.s.learning ? "–" : card.s.score; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 54; font.letterSpacing: -1.6; font.features: { "tnum": 1 }; color: Theme.ink }
+                        Text { text: card.s.learning ? "-" : card.s.score; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 54; font.letterSpacing: -1.6; font.features: { "tnum": 1 }; color: Theme.ink }
                         Note { text: "drift of 100"; Layout.fillWidth: false; Layout.alignment: Qt.AlignBottom; bottomPadding: 11 }
                         Item { Layout.fillWidth: true }
                         Note { text: Math.round(card.s.confidence * 100) + "% confidence"; Layout.fillWidth: false; Layout.alignment: Qt.AlignBottom; bottomPadding: 11 }

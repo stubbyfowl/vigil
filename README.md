@@ -6,6 +6,8 @@ A message to Mars can take about 20 minutes each way, so the astronaut cannot wa
 
 ![Home screen](docs/screens/home.png)
 
+The ribbon on Home is the last 30 days of this person's drift. It stays cool and narrow when all is well, and it swells and warms as they move away from their own normal.
+
 **All crew data is synthetic. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.** See [LIMITATIONS.md](LIMITATIONS.md).
 
 Built for the NASA Space Apps Challenge 2026, Phoenix.
@@ -31,6 +33,8 @@ make demo
 | `make dev` | Opens Vigil and the Mission Control window |
 | `make demo` | Opens Vigil and plays the Demo Director, about 2 minutes |
 | `make kiosk` | Runs fullscreen for a dedicated panel |
+| `make native` | Builds the optional C++ tracker. `make setup` tries this for you |
+| `make voice` | Adds optional offline voice check-in. Downloads a 41 MB speech model once |
 | `make test` | Runs all tests, including every screen, with no display needed |
 | `make eval` | Reruns the 20-mission evaluation and updates `docs/results.md` |
 | `make package` | Builds a standalone folder in `dist/vigil` that needs no Python |
@@ -44,7 +48,7 @@ Ubuntu 24.04 needs these system libraries:
 sudo apt-get install -y python3-venv make libegl1 libgl1 libopengl0 libglib2.0-0t64 libdbus-1-3 libfontconfig1 libfreetype6 libxkbcommon0
 ```
 
-`make package` also needs `libpython3.12` and `binutils`.
+`make package` also needs `libpython3.12` and `binutils`. `make native` needs `g++`. `make voice` needs `libportaudio2`.
 
 A computer with no desktop environment can draw straight to the display:
 
@@ -85,9 +89,21 @@ The hidden Admin screen opens after five taps on the VIGIL wordmark.
 | Plain-language alerts with a Why? view | `backend/app/engine/alerts.py` |
 | Earth link with delay, priority and lost-link handling, and privacy tiers | `backend/app/sync` |
 | Screen data, in process | `backend/app/views.py` |
+| Optional C++ version of the tracker, tested to match Python exactly | `backend/native/vigil_fast.cpp` |
+| Optional offline speech to text for the journal | `frontend/voice.py` |
 | Interface | `frontend/qml` |
 
 Details are in [docs/architecture.md](docs/architecture.md). Design choices are in [docs/design-principles.md](docs/design-principles.md).
+
+## Importing a table
+
+`scripts/import_osdr.py` reads a long-format CSV into Vigil's readings table and runs the same detector on it. It explains every row it leaves out.
+
+```bash
+.venv/bin/python scripts/import_osdr.py data/samples/osdr_style_sample.csv
+```
+
+The sample file is invented. See `data/samples/README.md`.
 
 ## Results
 
