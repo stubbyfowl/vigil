@@ -4,7 +4,7 @@
 # To copy the Linux build out:
 #   docker run --rm -v "$PWD/dist-linux:/out" vigil-linux cp -r dist/vigil /out/
 FROM ubuntu:24.04
-RUN apt-get update -qq && apt-get install -y -qq python3 python3-venv make binutils \
+RUN apt-get update -qq && apt-get install -y -qq python3 python3-venv libpython3.12 make binutils \
     libegl1 libgl1 libopengl0 libglib2.0-0t64 libdbus-1-3 libfontconfig1 libfreetype6 libxkbcommon0 >/dev/null
 WORKDIR /vigil
 COPY backend/requirements.txt backend/requirements-dev.txt backend/

@@ -44,6 +44,8 @@ Ubuntu 24.04 needs these system libraries:
 sudo apt-get install -y python3-venv make libegl1 libgl1 libopengl0 libglib2.0-0t64 libdbus-1-3 libfontconfig1 libfreetype6 libxkbcommon0
 ```
 
+`make package` also needs `libpython3.12` and `binutils`.
+
 A computer with no desktop environment can draw straight to the display:
 
 ```bash
