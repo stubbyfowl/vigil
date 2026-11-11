@@ -7,7 +7,8 @@ Item {
     signal menuRequested
     implicitHeight: 72
     property int taps: 0
-    readonly property var crew: Api.ask("crew", {}).crew
+    readonly property var crew: vigil.role === "presenter" ? Api.ask("crew", { v: [vigil.version, vigil.mode, vigil.signedIn] }).crew : []
+    readonly property bool commands: vigil.role === "commander" || vigil.role === "presenter"
     readonly property bool onHome: vigil.route === "/"
 
     Rectangle { anchors.fill: parent; color: Theme.bg; visible: !bar.onHome }
@@ -22,10 +23,10 @@ Item {
             implicitHeight: Theme.touch
             Accessible.name: "Vigil home"
             Accessible.role: Accessible.Button
-            // Five taps open the hidden Admin screen.
+            // Five taps open the thresholds screen, for whoever commands.
             onClicked: {
                 bar.taps += 1
-                if (bar.taps >= 5) { bar.taps = 0; vigil.navigate("/admin") } else vigil.navigate("/")
+                if (bar.taps >= 5 && bar.commands) { bar.taps = 0; vigil.navigate("/admin") } else vigil.navigate("/")
             }
             contentItem: Text { id: word; text: "Vigil"; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 28; font.letterSpacing: -0.9; color: Theme.ink; verticalAlignment: Text.AlignVCenter }
             background: Item {}
@@ -63,9 +64,28 @@ Item {
             }
         }
 
+        AbstractButton {
+            visible: vigil.role !== "presenter"
+            implicitWidth: me.implicitWidth + 16
+            implicitHeight: Theme.touch
+            focusPolicy: Qt.StrongFocus
+            Accessible.role: Accessible.Button
+            Accessible.name: "Signed in as " + (vigil.session.name || "") + ". Open your account."
+            onClicked: vigil.navigate("/profile")
+            background: Item {}
+            contentItem: RowLayout {
+                id: me
+                spacing: 10
+                Avatar { size: 36; name: vigil.session.name || ""; initials: vigil.session.tag || "" }
+                Text { text: (vigil.session.name || "").split(" ")[0]; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 18; color: Theme.ink }
+                Note { Layout.fillWidth: false; text: vigil.session.role_name || "" }
+            }
+        }
+
         Item { Layout.fillWidth: true }
 
         Rectangle {
+            visible: vigil.isDemo
             implicitWidth: badge.implicitWidth + 24
             implicitHeight: 34
             radius: 17
@@ -75,7 +95,7 @@ Item {
 
         Text {
             Layout.leftMargin: 8
-            text: (vigil.linkUp ? "Link up" : "Link lost") + ", " + vigil.delayMinutes + " min"
+            text: vigil.isDemo ? (vigil.linkUp ? "Link up" : "Link lost") + ", " + vigil.delayMinutes + " min" : "Earth " + vigil.delayMinutes + " min away"
             font.family: Theme.body; font.pixelSize: 16; color: vigil.linkUp ? Theme.ink2 : Theme.warning
         }
 
@@ -85,7 +105,7 @@ Item {
             focusPolicy: Qt.StrongFocus
             Accessible.name: "Mission day " + vigil.day + " of " + vigil.missionDays + ". Open mission timeline."
             Accessible.role: Accessible.Button
-            onClicked: vigil.navigate("/timeline")
+            onClicked: if (vigil.isDemo) vigil.navigate("/timeline")
             background: Item {}
             contentItem: Text {
                 id: dayText
@@ -97,6 +117,7 @@ Item {
             }
         }
 
+        VButton { text: "Lock"; Accessible.name: "Lock the screen"; onClicked: vigil.lock() }
         VButton { text: "Menu"; onClicked: bar.menuRequested() }
     }
 }

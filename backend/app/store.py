@@ -1,10 +1,18 @@
-"""The finished mission in memory, plus what the astronaut has done to it."""
+"""The mission in memory, plus what the crew has done to it.
 
+A demo mission is generated from a seed. A live mission is built from what people entered.
+"""
+
+import json
 import shutil
+import time
+from collections.abc import Callable
 from dataclasses import asdict
+from datetime import date
+from pathlib import Path
 from typing import Any
 
-from . import config, db
+from . import auth, config, db, mission
 from .engine.checkin import score_text
 from .engine.pipeline import AstronautRun, run_astronaut, run_mission
 from .models import CheckIn
@@ -12,35 +20,66 @@ from .signals import BY_ID
 from .sim.generator import CREW, Astronaut, Mission, generate_mission
 
 HIDE_NOTHING: dict[str, Any] = {}
+RECENT_ENTRIES = 40
 
 
 class Store:
-    def __init__(self) -> None:
+    def __init__(self, mode: str = "demo", path: Path | None = None, today: Callable[[], date] = date.today) -> None:
+        self.mode = mode
+        self.db_path = path or config.DB_PATH
+        self.today = today
         self.version = 0
         self.actions: dict[str, dict[str, int]] = {}
         self.cfg: config.Config = {}
+        self.info: dict[str, Any] = {}
+        self.crew: tuple[Astronaut, ...] = CREW
         self.mission: Mission
         self.runs: dict[str, AstronautRun] = {}
         self.rebuild()
 
+    # Which day it is, and who is aboard
+
+    def current_day(self) -> int:
+        """Live missions follow the calendar. Day 1 is the start date."""
+        start = date.fromisoformat(self.info["start_date"])
+        return max(1, min(mission.mission_day(start, self.today()), self.info["length_days"]))
+
+    def _live_crew(self) -> tuple[Astronaut, ...]:
+        with db.connect(self.db_path) as con:
+            rows = con.execute("SELECT * FROM members WHERE active = 1 ORDER BY created_at").fetchall()
+        return tuple(
+            Astronaut(r["id"], r["name"], auth.ROLES[r["role"]], r["tag"], float(r["prior_dose"]))
+            for r in rows if r["role"] in auth.CREW_ROLES
+        )
+
     def rebuild(self) -> None:
-        """Regenerate from the seed, reapply check-ins, and run the engine."""
+        """Rebuild the mission, reapply check-ins, and run the engine."""
         self.cfg = config.load_config()
-        m = self.cfg["mission"]
-        self.mission = generate_mission(m["seed"], m["length_days"])
-        with db.connect() as con:
+        if self.mode == "live":
+            with db.connect(self.db_path) as con:
+                self.info = {r["key"]: json.loads(r["value"]) for r in con.execute("SELECT * FROM settings")}
+            self.crew = self._live_crew()
+            with db.connect(self.db_path) as con:
+                self.mission = mission.build(con, self.crew, self.current_day())
+        else:
+            m = self.cfg["mission"]
+            self.crew = CREW
+            self.mission = generate_mission(m["seed"], m["length_days"])
+        with db.connect(self.db_path) as con:
             rows = con.execute("SELECT * FROM checkins").fetchall()
             self.actions = {}
             for row in con.execute("SELECT * FROM alert_actions"):
                 self._remember_action(row["alert_id"], row["action"], row["day"], row["level"])
+        known = {w.id for w in self.crew}
         for row in rows:
-            self._write_checkin_values(row["astronaut"], row["day"], dict(row))
-        self.runs = run_mission(self.mission, self.cfg)
+            if row["astronaut"] in known and row["day"] <= self.mission.days:
+                self._write_checkin_values(row["astronaut"], row["day"], dict(row))
+        self.runs = run_mission(self.mission, self.cfg, crew=self.crew)
         self.version += 1
 
     def reset_interactive(self) -> None:
         """Forget check-ins, alert actions and share choices. Used before each demo."""
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             for table in ("checkins", "alert_actions", "share_prefs"):
                 con.execute(f"DELETE FROM {table}")
         self.rebuild()
@@ -50,7 +89,7 @@ class Store:
         self.rebuild()
 
     def who(self, astronaut: str) -> Astronaut:
-        for member in CREW:
+        for member in self.crew:
             if member.id == astronaut:
                 return member
         raise LookupError(f"No crew member named {astronaut}.")
@@ -89,13 +128,13 @@ class Store:
         return out
 
     def record_action(self, alert_id: str, action: str, day: int, level: int) -> None:
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             con.execute("INSERT INTO alert_actions VALUES (?,?,?,?)", (alert_id, day, action, level))
         self._remember_action(alert_id, action, day, level)
 
     def undo_action(self, alert_id: str) -> None:
         """Take back the most recent action on this alert."""
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             con.execute("DELETE FROM alert_actions WHERE rowid = (SELECT MAX(rowid) FROM alert_actions WHERE alert_id = ?)", (alert_id,))
             rows = con.execute("SELECT * FROM alert_actions WHERE alert_id = ? ORDER BY rowid", (alert_id,)).fetchall()
         self.actions.pop(alert_id, None)
@@ -115,7 +154,7 @@ class Store:
         self.who(body.astronaut)
         journal_score = score_text(body.journal)
         row = asdict(body) | {"journal_score": journal_score}
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             con.execute(
                 "INSERT OR REPLACE INTO checkins VALUES (?,?,?,?,?,?,?,?,?)",
                 (body.astronaut, day, body.mood, body.sleep_quality, body.energy, body.stress, body.symptoms,
@@ -126,17 +165,51 @@ class Store:
         self.version += 1
         return journal_score
 
+    def checked_in(self, astronaut: str, day: int) -> bool:
+        with db.connect(self.db_path) as con:
+            return con.execute("SELECT 1 FROM checkins WHERE astronaut = ? AND day = ?", (astronaut, day)).fetchone() is not None
+
+    # Readings people enter or import (live missions)
+
+    def add_entries(self, member: str, rows: list[tuple[str, float, int]], source: str, entered_by: str) -> int:
+        """Store readings that were already checked, then rerun the engine."""
+        self.who(member)
+        now = time.time()
+        with db.connect(self.db_path) as con:
+            con.executemany(
+                "INSERT INTO entries (member, signal, value, day, source, entered_by, created_at) VALUES (?,?,?,?,?,?,?)",
+                [(member, signal, value, day, source, entered_by, now) for signal, value, day in rows],
+            )
+        self.rebuild()
+        return len(rows)
+
+    def delete_entry(self, member: str, entry_id: int) -> None:
+        with db.connect(self.db_path) as con:
+            gone = con.execute("DELETE FROM entries WHERE id = ? AND member = ?", (entry_id, member)).rowcount
+        if not gone:
+            raise LookupError("That reading is already gone.")
+        self.rebuild()
+
+    def entries(self, member: str, limit: int = RECENT_ENTRIES) -> list[dict[str, Any]]:
+        with db.connect(self.db_path) as con:
+            rows = con.execute("SELECT * FROM entries WHERE member = ? ORDER BY day DESC, id DESC LIMIT ?", (member, limit)).fetchall()
+        return [dict(r) | {"name": BY_ID[r["signal"]].name, "unit": BY_ID[r["signal"]].unit} for r in rows]
+
+    def days_with_readings(self, member: str) -> int:
+        with db.connect(self.db_path) as con:
+            return con.execute("SELECT COUNT(DISTINCT day) FROM entries WHERE member = ?", (member,)).fetchone()[0]
+
     # Sharing
 
     def share(self, astronaut: str) -> dict[str, bool]:
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             row = con.execute("SELECT * FROM share_prefs WHERE astronaut = ?", (astronaut,)).fetchone()
         return {"share_crew": bool(row and row["share_crew"]), "share_ground": bool(row and row["share_ground"])}
 
     def set_share(self, astronaut: str, crew: bool | None, ground: bool | None) -> dict[str, bool]:
         now = self.share(astronaut)
         merged = (astronaut, int(now["share_crew"] if crew is None else crew), int(now["share_ground"] if ground is None else ground))
-        with db.connect() as con:
+        with db.connect(self.db_path) as con:
             con.execute("INSERT OR REPLACE INTO share_prefs (astronaut, share_crew, share_ground) VALUES (?,?,?)", merged)
         return self.share(astronaut)
 

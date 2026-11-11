@@ -10,6 +10,7 @@ Item {
         Api.ask("crew", {}).signals.forEach(function (s) { out[s.id] = s.name })
         return out
     }
+    readonly property var notices: (Api.ask("notices", { id: vigil.astronaut, v: [vigil.version, vigil.day] }).notices || []).slice(0, 3)
     readonly property var watching: d.systems.filter(function (s) { return s.status !== "green" }).map(function (s) { return s.name })
     readonly property var topAlert: d.alerts.length ? d.alerts[0] : null
     readonly property int worst: {
@@ -57,6 +58,24 @@ Item {
                 visible: home.d.alerts.length > 1
                 text: "and " + (home.d.alerts.length - 1) + " more"
                 font.family: Theme.body; font.pixelSize: 16; color: Theme.ink2
+            }
+        }
+
+        // What is due today, and anyone who needs the Medical Officer.
+        Flow {
+            Layout.topMargin: 14
+            Layout.fillWidth: true
+            Layout.maximumWidth: 760
+            visible: home.notices.length > 0 && !vigil.demo.active
+            spacing: 10
+            Repeater {
+                model: home.notices
+                VButton {
+                    required property var modelData
+                    text: modelData.title + "  ›"
+                    kind: modelData.kind === "crew" ? "danger" : "normal"
+                    onClicked: vigil.navigate(modelData.route)
+                }
             }
         }
 
@@ -137,7 +156,8 @@ Item {
             visible: !vigil.demo.active
             spacing: 12
             Repeater {
-                model: [["/checkin", "Check-in", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "primary"]]
+                model: vigil.isDemo ? [["/checkin", "Check-in", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "primary"]]
+                                    : [["/checkin", "Check-in", "normal"], ["/log", "Log readings", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "primary"]]
                 VButton {
                     required property var modelData
                     Layout.fillWidth: true

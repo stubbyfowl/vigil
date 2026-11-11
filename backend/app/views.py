@@ -1,20 +1,30 @@
-"""Everything the screens read and do. One process, no server, no open ports."""
+"""Everything the screens read and do. One process, no server, no open ports.
 
+Screens never call these methods directly. They go through request(), which checks who is signed in.
+"""
+
+import csv
+import html
 import json
 import re
+import shutil
 import time
 from collections.abc import Callable
+from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-from . import config
+from . import auth, config, db, mission
+from .auth import CREW_ROLES, AuthError
 from .engine.alerts import PROTOCOLS
-from .live import Live
+from .live import Live, MissionClock
 from .models import CheckIn
-from .signals import DRIFT_SIGNALS, SIGNALS, SYSTEMS
+from .signals import BY_ID, DRIFT_SIGNALS, SIGNALS, SYSTEMS
 from .sim.generator import CREW
 from .store import Store, series_payload
+from .sync.outbox import Outbox
 from .sync.privacy import crew_card, ground_card
 from .sync.queue import PRIORITY_LEVEL3, PRIORITY_NORMAL
 
@@ -42,6 +52,43 @@ SENSORS = (
 BATTERY_DRAIN_PER_DAY = 7
 BATTERY_RANGE = 80
 BATTERY_CHARGING_BELOW = 30
+
+DEMO_PIN = "2026"  # shown on the sign-in screen of the demo mission only
+DEMO_PIN_ITERATIONS = 1000  # the demo PIN is public, so its hash need not be slow
+DEMO_ROLES = {"cmdr": "commander", "plt": "crew", "mo": "medical", "eng": "crew", "ctl": "crew"}
+DEFAULT_AUTO_LOCK_MINUTES = 5
+AUTO_LOCK_CHOICES = (1, 2, 5, 10, 15, 30)
+MISSION_NAME_LIMIT = 60
+MAX_MISSION_DAYS = 1100
+AUDIT_LIMIT = 300
+
+# Who may make which request. Everything is checked here, not only hidden on screen.
+PUBLIC = {"members", "mission_info", "about"}
+OWN = {  # request name -> the argument that names whose data it is
+    "astronaut": "id", "system_detail": "id", "alert_detail": "id", "radiation": "id", "sensors": "id", "get_share": "id",
+    "set_share": "id", "earth_decision": "id", "call_earth": "astronaut", "checkin": "astronaut", "notices": "id",
+    "log_form": "id", "log_readings": "id", "entries": "id", "delete_entry": "id", "import_file": "id", "export_data": "id",
+    "report": "id", "alert_action": "id", "undo_alert_action": "id",
+}
+MEDICAL_MAY = {"log_form", "log_readings", "entries", "delete_entry", "import_file"}  # the Medical Officer enters lab results
+CREW_TIER = {"crew", "crew_view", "import_files"}
+GROUND_TIER = {"ground"}
+DEMO_ONLY = {"set_clock", "demo_start", "demo_next", "demo_stop", "timeline", "explainer", "results", "set_link"}
+LIVE_ONLY = {"log_form", "log_readings", "entries", "delete_entry", "import_files", "import_file", "archive_mission"}
+COMMAND = {
+    "get_config", "put_config", "reset_config", "accounts_admin", "add_member", "update_member", "reset_member_pin",
+    "unlock_member", "set_auto_lock", "audit_log", "backup", "archive_mission",
+}
+REQUESTS = PUBLIC | set(OWN) | CREW_TIER | GROUND_TIER | DEMO_ONLY | LIVE_ONLY | COMMAND
+STATION_ROLES = {"vehicle": CREW_ROLES | {"presenter"}, "ground": {"ground", "presenter"}}
+
+
+def stamp() -> str:
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def _finite(value: float) -> float | None:
+    return None if value != value else round(float(value), 3)
 
 
 def _identity(who: Any) -> dict[str, Any]:
@@ -71,10 +118,175 @@ def _merge(base: dict[str, Any], new: dict[str, Any], path: str = "") -> None:
 class Vigil:
     """One mission, one clock. Every public method returns plain data for a screen."""
 
-    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
-        self.clock = clock
-        self.store = Store()
-        self.live = Live(self.store, clock())
+    store: Store
+    live: Live | MissionClock
+    accounts: auth.Accounts
+
+    def __init__(self, clock: Callable[[], float] = time.monotonic, mode: str = "demo",
+                 today: Callable[[], date] = date.today, wall: Callable[[], float] = time.time) -> None:
+        self.clock, self.today, self.wall = clock, today, wall
+        self.actor, self.actor_role = "system", "system"
+        self.open(mode)
+
+    # Which mission is open
+
+    @staticmethod
+    def mission_exists() -> bool:
+        return config.MISSION_DB_PATH.exists() and db.get_setting(config.MISSION_DB_PATH, "start_date") is not None
+
+    def open(self, mode: str) -> None:
+        """Open the demo mission or the real one. They live in separate databases and never mix."""
+        if mode == "live":
+            if not self.mission_exists():
+                raise LookupError("No mission has been set up on this computer yet.")
+            self.store = Store("live", config.MISSION_DB_PATH, self.today)
+            sync = self.store.cfg["sync"]
+            outbox = Outbox(config.MISSION_DB_PATH, config.OUTBOX_DIR, sync["one_way_delay_minutes"], sync["bandwidth_kb_s"])
+            self.live = MissionClock(self.store, self.clock(), outbox)
+        elif mode == "demo":
+            self.store = Store()
+            self.live = Live(self.store, self.clock())
+        else:
+            raise ValueError(f"Unknown mission: {mode}")
+        self.mode = mode
+        self.accounts = auth.Accounts(self.store.db_path, self.wall)
+        if mode == "demo" and not self.accounts.exists():
+            self._seed_demo_accounts()
+
+    def _seed_demo_accounts(self) -> None:
+        for who in CREW:
+            self.accounts.create(who.name, DEMO_ROLES[who.id], DEMO_PIN, who.prior_dose, must_change=False,
+                                 member_id=who.id, tag=who.tag, iterations=DEMO_PIN_ITERATIONS)
+        self.accounts.create("Presenter", "presenter", DEMO_PIN, must_change=False, member_id="presenter", tag="DEMO", iterations=DEMO_PIN_ITERATIONS)
+        self.accounts.create("Flight Surgeon", "ground", DEMO_PIN, must_change=False, member_id="surgeon", tag="MCC", iterations=DEMO_PIN_ITERATIONS)
+
+    def setup_mission(self, name: str, start_date: str, length_days: int, commander: str, pin: str, prior_dose: float = 0.0) -> dict[str, Any]:
+        """Create a real mission and its first Commander, then open it."""
+        if self.mission_exists():
+            raise ValueError("A mission is already set up on this computer.")
+        name = " ".join(str(name).split())
+        if not name or len(name) > MISSION_NAME_LIMIT:
+            raise ValueError(f"Give the mission a name of 1 to {MISSION_NAME_LIMIT} characters.")
+        try:
+            start = date.fromisoformat(str(start_date).strip())
+        except ValueError:
+            raise ValueError("Write the start date as year-month-day, for example 2026-11-14.") from None
+        if not isinstance(length_days, int) or not 1 <= length_days <= MAX_MISSION_DAYS:
+            raise ValueError(f"Mission length must be a whole number of days from 1 to {MAX_MISSION_DAYS}.")
+        if start > self.today():
+            raise ValueError("The start date cannot be in the future. Set the mission up on launch day or later.")
+        if mission.mission_day(start, self.today()) > length_days:
+            raise ValueError("That start date and length would mean the mission is already over.")
+        problem = auth.pin_problem(str(pin))
+        if problem:
+            raise ValueError(problem)
+        config.MISSION_DB_PATH.unlink(missing_ok=True)  # a half-made file from an earlier try
+        accounts = auth.Accounts(config.MISSION_DB_PATH, self.wall)
+        try:
+            boss = accounts.create(commander, "commander", str(pin), float(prior_dose), must_change=False)
+        except AuthError:
+            config.MISSION_DB_PATH.unlink(missing_ok=True)
+            raise
+        for key, value in (("name", name), ("start_date", start.isoformat()), ("length_days", length_days),
+                           ("auto_lock_minutes", DEFAULT_AUTO_LOCK_MINUTES), ("created_at", self.wall())):
+            db.set_setting(config.MISSION_DB_PATH, key, value)
+        db.audit(config.MISSION_DB_PATH, boss["id"], "mission_created", name, f"starts {start.isoformat()}, {length_days} days")
+        self.open("live")
+        return {"member": boss}
+
+    def archive_mission(self, confirm: bool = False) -> dict[str, Any]:
+        """Put the mission's file aside, so this computer can start another. Nothing is deleted."""
+        if not confirm:
+            raise ValueError("Confirm before archiving the mission.")
+        db.audit(self.store.db_path, self.actor, "mission_archived")
+        target = db.backup(self.store.db_path, config.BACKUP_DIR, f"archived-{stamp()}")
+        config.MISSION_DB_PATH.unlink()
+        self.open("demo")
+        return {"archived_to": str(target)}
+
+    # Sign-in. The bridge calls these with what was typed, never with a stored session.
+
+    def sign_in(self, member: str, pin: str, station: str = "vehicle") -> dict[str, Any]:
+        try:
+            role = self.accounts.get(member)["role"]
+            if role not in STATION_ROLES[station]:
+                raise AuthError("This account signs in at Mission Control." if role == "ground" else "This account signs in on the vehicle.")
+            user = self.accounts.sign_in(member, pin)
+        except AuthError as err:
+            db.audit(self.store.db_path, member, "sign_in_refused", station, str(err))
+            raise
+        db.audit(self.store.db_path, member, "signed_in", station)
+        return user
+
+    def unlock(self, member: str, pin: str) -> dict[str, Any]:
+        try:
+            user = self.accounts.sign_in(member, pin)
+        except AuthError as err:
+            db.audit(self.store.db_path, member, "unlock_refused", "", str(err))
+            raise
+        db.audit(self.store.db_path, member, "unlocked")
+        return user
+
+    def change_pin(self, member: str, old: str, new: str) -> None:
+        self.accounts.change_pin(member, old, new)
+        db.audit(self.store.db_path, member, "pin_changed", member)
+
+    def note_session(self, member: str, action: str) -> None:
+        """Record sign-out and screen locks."""
+        if action in ("signed_out", "locked", "auto_locked"):
+            db.audit(self.store.db_path, member, action)
+
+    def request(self, session: dict[str, Any] | None, name: str, args: dict[str, Any]) -> Any:
+        """The one door every screen uses. Checks the signed-in member, then runs the request."""
+        if name not in REQUESTS:
+            raise LookupError(f"Unknown request: {name}")
+        if name in PUBLIC:
+            return getattr(self, name)(**args)
+        if session is None:
+            raise PermissionError("Sign in first.")
+        role, me = session["role"], session["id"]
+        if name in DEMO_ONLY and self.mode != "demo":
+            raise PermissionError("That is part of the demo mission only.")
+        if name in LIVE_ONLY and self.mode != "live":
+            raise PermissionError("The demo mission uses simulated readings. Set up a mission to record real ones.")
+        if name in ("demo_start", "demo_next", "demo_stop") and role != "presenter":
+            raise PermissionError("Sign in as the Presenter to play the demo.")
+        if role != "presenter":
+            if name in COMMAND and role != "commander":
+                raise PermissionError("Only the Commander can do that.")
+            if name in GROUND_TIER and role != "ground":
+                raise PermissionError("That is the Mission Control view.")
+            if (name in CREW_TIER or name in OWN) and role not in CREW_ROLES:
+                raise PermissionError("That is for the crew on board.")
+            if name in OWN:
+                target = args.setdefault(OWN[name], me)
+                if target != me and not (role == "medical" and name in MEDICAL_MAY):
+                    raise PermissionError("You can only open your own health data. Others can choose to share theirs with the crew.")
+        self.actor, self.actor_role = me, role
+        try:
+            return getattr(self, name)(**args)
+        finally:
+            self.actor, self.actor_role = "system", "system"
+
+    def _audit(self, action: str, target: str = "", detail: str = "") -> None:
+        db.audit(self.store.db_path, self.actor, action, target, detail)
+
+    def members(self, station: str = "vehicle") -> dict[str, Any]:
+        """Who can sign in here. Names and roles only."""
+        allowed = STATION_ROLES.get(station, set())
+        return {"members": [m for m in self.accounts.list() if m["role"] in allowed]}
+
+    def mission_info(self) -> dict[str, Any]:
+        live = self.mode == "live"
+        info = self.store.info
+        return {
+            "mode": self.mode, "live_exists": self.mission_exists(),
+            "name": info.get("name", "") if live else "Demo mission",
+            "start_date": info.get("start_date") if live else None,
+            "length_days": info.get("length_days") if live else self.store.mission.days,
+            "day": self._day(None), "demo_pin": None if live else DEMO_PIN,
+            "auto_lock_minutes": db.get_setting(self.store.db_path, "auto_lock_minutes", DEFAULT_AUTO_LOCK_MINUTES),
+        }
 
     def _day(self, day: int | None) -> int:
         return self.store.clamp_day(day) if day is not None else self.live.snapshot(self.clock())["day"]
@@ -83,7 +295,7 @@ class Vigil:
 
     def crew(self) -> dict[str, Any]:
         return {
-            "crew": [_identity(w) for w in CREW], "systems": SYSTEMS,
+            "crew": [_identity(w) for w in self.store.crew], "systems": SYSTEMS,
             "signals": [{"id": s.id, "name": s.name, "unit": s.unit, "system": s.system} for s in SIGNALS],
         }
 
@@ -143,7 +355,9 @@ class Vigil:
             self.live.queue_level3(updated, d, self.clock())
         return {"alert": updated, "action": action}
 
-    def undo_alert_action(self, alert_id: str) -> dict[str, Any]:
+    def undo_alert_action(self, alert_id: str, id: str | None = None) -> dict[str, Any]:
+        if id is not None and self.actor_role not in ("presenter", "system") and not alert_id.startswith(f"{id}-"):
+            raise PermissionError("You can only undo your own actions.")
         self.store.undo_action(alert_id)
         return {"undone": alert_id}
 
@@ -167,6 +381,8 @@ class Vigil:
         self.store.who(id)
         d = self._day(day)
         series = self.store.mission.series[id]
+        if self.mode == "live":
+            return self._sources(id, d)
         rows = []
         for index, (name, signals) in enumerate(SENSORS):
             missing = [s for s in signals if np.isnan(series[s][d - 1])]
@@ -177,6 +393,19 @@ class Vigil:
                 "missing": [next(x.name for x in SIGNALS if x.id == s) for s in missing],
             })
         return {"day": d, "sensors": rows, "reporting": sum(r["connected"] for r in rows)}
+
+    def _sources(self, id: str, d: int) -> dict[str, Any]:
+        """Live missions: which kinds of reading arrived today, and when each last did."""
+        series = self.store.mission.series[id]
+        rows = []
+        for name, signals in SENSORS:
+            have = [s for s in signals if not np.isnan(series[s][d - 1])]
+            seen = [i + 1 for s in signals for i in np.flatnonzero(~np.isnan(series[s][:d]))]
+            rows.append({
+                "name": name, "connected": bool(have), "battery": None, "power": "",
+                "missing": [BY_ID[s].name for s in signals if s not in have], "last_day": int(max(seen)) if seen else None,
+            })
+        return {"day": d, "sensors": rows, "reporting": sum(r["connected"] for r in rows), "live": True}
 
     def get_share(self, id: str) -> dict[str, bool]:
         self.store.who(id)
@@ -215,7 +444,7 @@ class Vigil:
     def crew_view(self, day: int | None = None) -> dict[str, Any]:
         d = self._day(day)
         store = self.store
-        cards = [crew_card(store.runs[w.id], d, store.alerts(w.id, d), store.share(w.id)["share_crew"]) for w in CREW if not w.control]
+        cards = [crew_card(store.runs[w.id], d, store.alerts(w.id, d), store.share(w.id)["share_crew"]) for w in store.crew if not w.control]
         watching = sum(c["max_level"] > 0 or any(s["status"] != "green" for s in c["systems"]) for c in cards)
         summary = "All crew inside their normal." if not watching else f"{watching} of {len(cards)} crew need attention."
         return {"day": d, "crew": cards, "summary": summary}
@@ -223,11 +452,32 @@ class Vigil:
     def ground(self, day: int | None = None) -> dict[str, Any]:
         d = self._day(day)
         store = self.store
-        cards = [ground_card(store.runs[w.id], d, store.alerts(w.id, d, include_hidden=True), store.share(w.id)["share_ground"]) for w in CREW]
+        if self.mode == "live":
+            return self._ground_from_packets(d)
+        cards = [ground_card(store.runs[w.id], d, store.alerts(w.id, d, include_hidden=True), store.share(w.id)["share_ground"]) for w in store.crew]
         return {
+            "system_keys": list(SYSTEMS), "live": False,
             "day": d, "crew": cards, "level3": [a | {"astronaut": c["tag"]} for c in cards for a in c["level3"]],
             "packets": self.live.queue.view(self.clock()), "link_up": self.live.queue.link_up,
             "delay_minutes": store.cfg["sync"]["one_way_delay_minutes"], "flight_seconds": self.live.queue.delay_s,
+        }
+
+    def _ground_from_packets(self, d: int) -> dict[str, Any]:
+        """What Earth knows is only what the packets carried. Latest status per person, Level 3 reasons."""
+        outbox = self.live.queue
+        rows = outbox.rows(200)
+        latest: dict[str, dict[str, Any]] = {}
+        level3 = []
+        tags = {m["id"]: m["tag"] for m in self.accounts.list(include_inactive=True)}
+        for row in reversed(rows):  # oldest first, so newer packets win
+            if row["kind"] in ("summary", "call") and "systems" in row["payload"]:
+                latest[row["member"]] = row["payload"] | {"mission_day": row["day"]}
+            elif row["kind"] == "level3" and row["day"] > d - 7:
+                level3.append(row["payload"] | {"astronaut": tags.get(row["member"], row["member"])})
+        return {
+            "system_keys": list(SYSTEMS), "live": True, "day": d, "crew": list(latest.values()), "level3": level3,
+            "packets": outbox.view(self.clock()), "link_up": True, "outbox": str(config.OUTBOX_DIR),
+            "delay_minutes": self.store.cfg["sync"]["one_way_delay_minutes"], "flight_seconds": outbox.delay_s,
         }
 
     def set_link(self, up: bool) -> dict[str, bool]:
@@ -265,7 +515,7 @@ class Vigil:
     def timeline(self) -> dict[str, Any]:
         """Compact health state for every person and day, so scrubbing needs no recalculation."""
         crew = []
-        for who in CREW:
+        for who in self.store.crew:
             run = self.store.runs[who.id]
             status = {k: "".join(STATUS_CODE[d["status"]] for d in run.systems[k]) for k in SYSTEMS}
             status["radiation"] = "".join(STATUS_CODE[d["status"]] for d in run.radiation)
@@ -280,11 +530,11 @@ class Vigil:
         """Find a real day when a flagged person and an unflagged person read the same heart rate."""
         series = self.store.mission.series
         best = None
-        for flagged_who in CREW:
+        for flagged_who in self.store.crew:
             for i, state in enumerate(self.store.runs[flagged_who.id].signals["resting_hr"]):
                 if not state.flagged or state.value != state.value:
                     continue
-                for other in CREW:
+                for other in self.store.crew:
                     peer = self.store.runs[other.id].signals["resting_hr"][i]
                     if other.id == flagged_who.id or peer.flagged or peer.learning or other.control:
                         continue
@@ -325,14 +575,19 @@ class Vigil:
         return {
             "sources": [{"name": n, "use": u, "status": s} for n, u, s in rows],
             "must_verify_count": sum(v["status"] == "must_verify" for g in groups for v in ranges[g].values()),
-            "statement": "All crew data in Vigil is synthetic. Thresholds are starting values, not clinical limits. "
-                         "Vigil gives decision support, not a diagnosis.",
+            "mode": self.mode,
+            "statement": ("Readings come from what your crew enters and imports on this computer. " if self.mode == "live"
+                          else "All crew data in the demo mission is synthetic. ")
+                         + "Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.",
         }
 
     # Admin
 
     def _apply_runtime(self) -> None:
         sync = self.store.cfg["sync"]
+        if self.mode == "live":
+            self.live.queue.delay_s = sync["one_way_delay_minutes"] * 60
+            return
         scale = sync["demo_time_scale"] if sync.get("scale_time", True) else 1
         self.live.queue.delay_s = sync["one_way_delay_minutes"] * 60 / scale
         self.live.queue.bandwidth = sync["bandwidth_kb_s"]
@@ -349,6 +604,7 @@ class Vigil:
         if not set(updated["disabled_signals"]) <= {s.id for s in DRIFT_SIGNALS}:
             raise ValueError("disabled_signals names an unknown signal.")
         config.save_config(updated)
+        self._audit("thresholds_changed", "", ", ".join(sorted(values)))
         try:
             self.store.rebuild()
         except Exception as err:
@@ -362,3 +618,229 @@ class Vigil:
         self.store.restore_defaults()
         self._apply_runtime()
         return {"config": self.store.cfg}
+
+    # What needs this person today
+
+    def notices(self, id: str) -> dict[str, Any]:
+        """Short prompts for the home screen: what is due, and who needs the Medical Officer."""
+        d = self._day(None)
+        out = []
+        if self.mode == "live":
+            if not self.store.checked_in(id, d):
+                out.append({"kind": "checkin", "title": "Check in for today", "route": "/checkin"})
+            series = self.store.mission.series[id]
+            if all(np.isnan(series[s.id][d - 1]) for s in mission.LOGGABLE):
+                out.append({"kind": "log", "title": "Log today's readings", "route": "/log"})
+            needed = self.store.cfg["baseline"]["learning_days"]
+            have = self.store.days_with_readings(id)
+            if have < needed:
+                out.append({"kind": "learning", "title": f"Learning your normal: {have} of {needed} days", "route": "/log"})
+        role = self.accounts.get(id)["role"] if self.actor_role == "system" else self.actor_role
+        if role in ("medical", "commander", "presenter"):
+            for card in self.crew_view(d)["crew"]:
+                if card["id"] != id and card["max_level"] >= 2:
+                    out.append({"kind": "crew", "title": f"{card['name']} has a Level {card['max_level']} alert", "route": "/crew"})
+        return {"day": d, "notices": out}
+
+    # Readings people enter (live missions)
+
+    def log_form(self, id: str) -> dict[str, Any]:
+        who = self.store.who(id)
+        d = self._day(None)
+        series = self.store.mission.series[id]
+        groups: dict[str, list[dict[str, Any]]] = {}
+        for sig in mission.LOGGABLE:
+            past = np.flatnonzero(~np.isnan(series[sig.id][:d]))
+            groups.setdefault(SYSTEMS.get(sig.system, "Radiation"), []).append({
+                "id": sig.id, "name": sig.name, "unit": sig.unit, "low": sig.low, "high": sig.high, "decimals": sig.decimals,
+                "cadence": sig.cadence, "today": _finite(series[sig.id][d - 1]),
+                "last": _finite(series[sig.id][past[-1]]) if len(past) else None, "last_day": int(past[-1]) + 1 if len(past) else None,
+            })
+        start = date.fromisoformat(self.store.info["start_date"])
+        return {
+            "member": _identity(who), "day": d, "date": mission.day_date(start, d).isoformat(),
+            "groups": [{"name": k, "signals": v} for k, v in groups.items()],
+            "days_with_readings": self.store.days_with_readings(id), "learning_days": self.store.cfg["baseline"]["learning_days"],
+            "crew": [_identity(w) for w in self.store.crew] if self.actor_role in ("medical", "system") else [],
+        }
+
+    def log_readings(self, id: str, values: dict[str, Any]) -> dict[str, Any]:
+        """Check every value first. Save nothing unless all of them are usable."""
+        self.store.who(id)
+        d = self._day(None)
+        allowed = {s.id for s in mission.LOGGABLE}
+        errors, rows = {}, []
+        for signal, value in values.items():
+            if value is None or str(value).strip() == "":
+                continue
+            try:
+                rows.append((signal, mission.check_value(signal, value, allowed), d))
+            except ValueError as err:
+                errors[signal] = str(err)
+        if errors or not rows:
+            return {"saved": 0, "errors": errors or {"_": "Enter at least one reading."}}
+        self.store.add_entries(id, rows, "manual", self.actor)
+        self._audit("readings_logged", id, f"{len(rows)} readings for day {d}")
+        return {"saved": len(rows), "errors": {}, "day": d}
+
+    def entries(self, id: str) -> dict[str, Any]:
+        self.store.who(id)
+        start = date.fromisoformat(self.store.info["start_date"])
+        rows = self.store.entries(id)
+        return {"entries": [r | {"date": mission.day_date(start, r["day"]).isoformat()} for r in rows]}
+
+    def delete_entry(self, id: str, entry: int) -> dict[str, Any]:
+        self.store.delete_entry(id, int(entry))
+        self._audit("reading_deleted", id, f"entry {entry}")
+        return {"deleted": entry}
+
+    def import_files(self) -> dict[str, Any]:
+        """CSV files waiting in the import folder, for example copied from a USB drive."""
+        folder = config.IMPORT_DIR
+        folder.mkdir(parents=True, exist_ok=True)
+        files = sorted(folder.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+        return {"folder": str(folder), "files": [{"name": f.name, "kb": round(f.stat().st_size / 1024, 1)} for f in files]}
+
+    def import_file(self, id: str, file: str) -> dict[str, Any]:
+        """Import one CSV. A crew member imports only their own rows. The Medical Officer may import for anyone."""
+        path = config.IMPORT_DIR / file
+        if Path(file).name != file or path.suffix.lower() != ".csv" or not path.is_file():
+            raise LookupError("That file is not in the import folder.")
+        self.store.who(id)
+        anyone = self.actor_role in ("medical", "commander", "system")
+        crew = self.store.crew if anyone else tuple(w for w in self.store.crew if w.id == id)
+        names = {w.id: w.id for w in crew} | {w.name.lower(): w.id for w in crew} | {w.tag.lower(): w.id for w in crew}
+        start = date.fromisoformat(self.store.info["start_date"])
+        result = mission.read_import(path, start, self._day(None), names, id)
+        by_member: dict[str, list[tuple[str, float, int]]] = {}
+        for member, signal, value, day in result.rows:
+            by_member.setdefault(member, []).append((signal, value, day))
+        for member, rows in by_member.items():
+            self.store.add_entries(member, rows, f"import:{file}", self.actor)
+        if result.rows:
+            done = config.IMPORT_DIR / "imported"
+            done.mkdir(exist_ok=True)
+            shutil.move(path, done / f"{stamp()}-{file}")  # so the same file cannot be imported twice by mistake
+        self._audit("readings_imported", ",".join(sorted(by_member)), f"{len(result.rows)} rows from {file}, {result.skipped_count} skipped")
+        return {"imported": len(result.rows), "skipped": result.skipped_count, "reasons": result.skipped, "members": sorted(by_member)}
+
+    # Taking data out
+
+    def export_data(self, id: str) -> dict[str, Any]:
+        """Everything Vigil holds about one person, as a CSV they can hand to a flight surgeon."""
+        who = self.store.who(id)
+        d = self._day(None)
+        config.EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        path = config.EXPORT_DIR / f"vigil-{mission.safe_name(id)}-{stamp()}.csv"
+        series = self.store.mission.series[id]
+        with path.open("w", newline="") as f:
+            out = csv.writer(f)
+            out.writerow(["kind", "day", "item", "value", "unit", "note"])
+            for sig in SIGNALS:
+                for i in np.flatnonzero(~np.isnan(series[sig.id][:d])):
+                    out.writerow(["reading", int(i) + 1, sig.name, round(float(series[sig.id][i]), 3), sig.unit, ""])
+            with db.connect(self.store.db_path) as con:
+                for row in con.execute("SELECT * FROM checkins WHERE astronaut = ? ORDER BY day", (id,)):
+                    for key in ("mood", "sleep_quality", "energy", "stress", "symptoms", "journal_score"):
+                        out.writerow(["check-in", row["day"], key.replace("_", " "), row[key], "", ""])
+                    if row["journal_text"]:
+                        out.writerow(["check-in", row["day"], "journal", "", "", row["journal_text"]])
+            for ep in self.store.runs[id].episodes:
+                out.writerow(["alert", ep.open_day, SYSTEMS[ep.system], f"Level {ep.level}", "", ep.reason])
+        self._audit("data_exported", id)
+        return {"path": str(path), "name": who.name}
+
+    def report(self, id: str) -> dict[str, Any]:
+        """A one-page health summary. The bridge turns it into a PDF."""
+        data = self.astronaut(id)
+        d = data["day"]
+        e = html.escape
+        mode_note = "Readings entered by the crew." if self.mode == "live" else "Simulated data. Demo mission."
+        rows = "".join(
+            f"<tr><td>{e(s['name'])}</td><td>{'Learning' if s['learning'] else e(s['status'].title())}</td>"
+            f"<td>{'' if s['learning'] else s['score']}</td><td>{round(s['confidence'] * 100)}%</td></tr>"
+            for s in data["systems"]
+        )
+        alerts = "".join(f"<li><b>Level {a['level']}, {e(a['system_name'])}.</b> {e(a['message'])} {e(a['level_reason'])}</li>" for a in data["alerts"])
+        readings = ""
+        for sid in [s.id for s in DRIFT_SIGNALS if s.id in self.store.runs[id].signals]:
+            p = series_payload(self.store, id, sid, d)
+            if p["current"] is None:
+                continue
+            normal = "Learning" if p["learning"] or p["median"][-1] is None else f"{p['low'][-1]:.{p['decimals']}f} to {p['high'][-1]:.{p['decimals']}f}"
+            readings += f"<tr><td>{e(p['name'])}</td><td>{p['current']:.{p['decimals']}f} {e(p['unit'])}</td><td>{normal}</td><td>{'Yes' if p['flagged_now'] else ''}</td></tr>"
+        rad = data["radiation"]
+        self._audit("report_made", id)
+        return {
+            "file": str(config.EXPORT_DIR / f"vigil-report-{mission.safe_name(id)}-{stamp()}.pdf"),
+            "html": (
+                f"<h1>Vigil health summary</h1><p>{e(data['astronaut']['name'])}, {e(data['astronaut']['role'])}. Mission day {d}. "
+                f"Printed {datetime.now():%Y-%m-%d %H:%M}. {mode_note}</p>"
+                f"<h2>Systems</h2><table border='1' cellpadding='4'><tr><th>System</th><th>Status</th><th>Drift of 100</th><th>Confidence</th></tr>{rows}</table>"
+                f"<h2>Alerts</h2>{'<ul>' + alerts + '</ul>' if alerts else '<p>No active alerts.</p>'}"
+                f"<h2>Latest readings against this person's normal</h2><table border='1' cellpadding='4'>"
+                f"<tr><th>Reading</th><th>Latest</th><th>Personal normal</th><th>Drifting</th></tr>{readings}</table>"
+                f"<h2>Radiation</h2><p>Career dose {rad['career_dose_msv']} mSv of {rad['limit_msv']} mSv.</p>"
+                "<p><i>Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.</i></p>"
+            ),
+        }
+
+    # The Commander's tools
+
+    def accounts_admin(self) -> dict[str, Any]:
+        roles = [k for k in auth.ROLES if k != "presenter" or self.mode == "demo"]
+        return {
+            "members": self.accounts.list(include_inactive=True), "roles": [{"id": k, "name": auth.ROLES[k]} for k in roles],
+            "auto_lock_minutes": db.get_setting(self.store.db_path, "auto_lock_minutes", DEFAULT_AUTO_LOCK_MINUTES),
+            "auto_lock_choices": list(AUTO_LOCK_CHOICES), "mode": self.mode,
+            "folders": {"outbox": str(config.OUTBOX_DIR), "import": str(config.IMPORT_DIR), "exports": str(config.EXPORT_DIR),
+                        "backups": str(config.BACKUP_DIR)},
+        }
+
+    def add_member(self, name: str, role: str, pin: str, prior_dose: float = 0.0) -> dict[str, Any]:
+        if self.mode == "demo":
+            raise ValueError("The demo crew is fixed. Set up a real mission to add people.")
+        if role == "presenter":
+            raise ValueError("A live mission has no presenter account.")
+        member = self.accounts.create(name, role, str(pin), float(prior_dose), must_change=True)
+        self._audit("member_added", member["id"], member["role_name"])
+        self.store.rebuild()
+        return {"member": member}
+
+    def update_member(self, member: str, name: str | None = None, role: str | None = None,
+                      prior_dose: float | None = None, active: bool | None = None) -> dict[str, Any]:
+        if self.mode == "demo" and member in DEMO_ROLES and (role is not None or active is False):
+            raise ValueError("The demo crew keep their roles. Set up a mission to manage a real crew.")
+        updated = self.accounts.update(member, name, role, prior_dose, active)
+        changed = ", ".join(k for k, v in (("name", name), ("role", role), ("prior dose", prior_dose), ("active", active)) if v is not None)
+        self._audit("member_changed", member, changed)
+        self.store.rebuild()
+        return {"member": updated}
+
+    def reset_member_pin(self, member: str, pin: str) -> dict[str, Any]:
+        self.accounts.set_pin(member, str(pin), must_change=True)
+        self._audit("pin_reset", member)
+        return {"member": self.accounts.get(member)}
+
+    def unlock_member(self, member: str) -> dict[str, Any]:
+        self.accounts.unlock(member)
+        self._audit("member_unlocked", member)
+        return {"member": self.accounts.get(member)}
+
+    def set_auto_lock(self, minutes: int) -> dict[str, Any]:
+        if minutes not in AUTO_LOCK_CHOICES:
+            raise ValueError(f"Choose one of {', '.join(map(str, AUTO_LOCK_CHOICES))} minutes.")
+        db.set_setting(self.store.db_path, "auto_lock_minutes", minutes)
+        self._audit("auto_lock_changed", "", f"{minutes} minutes")
+        return {"auto_lock_minutes": minutes}
+
+    def audit_log(self, limit: int = AUDIT_LIMIT) -> dict[str, Any]:
+        names = {m["id"]: m["name"] for m in self.accounts.list(include_inactive=True)}
+        rows = db.audit_log(self.store.db_path, min(int(limit), AUDIT_LIMIT))
+        return {"events": [r | {"when": datetime.fromtimestamp(r["at"]).strftime("%Y-%m-%d %H:%M:%S"),
+                                "who": names.get(r["actor"], r["actor"]), "about": names.get(r["target"], r["target"])} for r in rows]}
+
+    def backup(self) -> dict[str, Any]:
+        path = db.backup(self.store.db_path, config.BACKUP_DIR, stamp())
+        self._audit("backup_made", "", path.name)
+        return {"path": str(path)}

@@ -11,11 +11,11 @@ Item {
             Layout.fillWidth: true
             spacing: 12
             BackButton {}
-            BigTitle { text: "Sensors" }
+            BigTitle { text: screen.d.live ? "Data sources" : "Sensors" }
             Item { Layout.fillWidth: true }
             Placard { text: screen.d.reporting + " of " + screen.d.sensors.length + " reported today" }
         }
-        Note { text: "A missing reading lowers confidence. It never counts as a health change. These wearables and their batteries are simulated." }
+        Note { text: screen.d.live ? "Which kinds of reading arrived today. A missing reading lowers confidence. It never counts as a health change. Log readings by hand or import a device export." : "A missing reading lowers confidence. It never counts as a health change. These wearables and their batteries are simulated." }
         GridLayout {
             Layout.fillWidth: true
             columns: 2
@@ -33,7 +33,9 @@ Item {
                         Body { text: modelData.name; font.pixelSize: 20; font.weight: Font.Medium }
                         StatusPill { compact: true; status: modelData.connected ? "green" : "yellow"; label: modelData.connected ? "Reporting" : "No reading" }
                     }
+                    Note { visible: modelData.battery === null; text: modelData.last_day ? "Last reading on day " + modelData.last_day : "No readings yet" }
                     RowLayout {
+                        visible: modelData.battery !== null
                         Layout.fillWidth: true
                         spacing: 10
                         Placard { text: "Battery" }
@@ -42,7 +44,7 @@ Item {
                             height: 6
                             radius: 3
                             color: Theme.panel2
-                            Rectangle { width: parent.width * modelData.battery / 100; height: parent.height; radius: 3; color: Theme.action }
+                            Rectangle { width: parent.width * (modelData.battery || 0) / 100; height: parent.height; radius: 3; color: Theme.action }
                         }
                         Text { text: modelData.battery + "%"; font.family: Theme.body; font.features: { "tnum": 1 }; font.pixelSize: 17; color: Theme.ink }
                         Placard { text: modelData.power; font.pixelSize: 17 }

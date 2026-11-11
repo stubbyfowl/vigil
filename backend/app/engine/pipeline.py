@@ -157,6 +157,6 @@ def run_astronaut(who: Astronaut, mission: Mission, cfg: Config, method: str | N
     return AstronautRun(who, signal_days, system_days, alerts_by_day, episodes, rad_days)
 
 
-def run_mission(mission: Mission, cfg: Config, method: str | None = None) -> dict[str, AstronautRun]:
+def run_mission(mission: Mission, cfg: Config, method: str | None = None, crew: tuple[Astronaut, ...] = CREW) -> dict[str, AstronautRun]:
     """Run every crew member."""
-    return {who.id: run_astronaut(who, mission, cfg, method) for who in CREW}
+    return {who.id: run_astronaut(who, mission, cfg, method) for who in crew}

@@ -87,7 +87,8 @@ def _alert(who: Astronaut, open_day: int, today: int, message: str, action: str,
 def radiation_alert(mission: Mission, who: Astronaut, day: int, state: dict[str, Any], cfg: Config) -> dict | None:
     """Return a Level 3 alert during a storm, or when dose nears the limit."""
     limit = cfg["radiation"]["career_limit_msv"]
-    base = float(np.nanmedian(mission.series[who.id]["dose_rate"][: max(day - 1, 1)]))
+    earlier = mission.series[who.id]["dose_rate"][: max(day - 1, 1)]
+    base = float(np.nanmedian(earlier)) if np.any(~np.isnan(earlier)) else 0.0  # no dosimeter reading yet
     row = {
         "signal": "dose_rate", "name": "Dose rate", "unit": "uSv/h", "baseline_median": round(base, 1),
         "baseline_low": round(base * 0.9, 1), "baseline_high": round(base * 1.1, 1),

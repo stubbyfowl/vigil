@@ -61,7 +61,7 @@ Item {
                         Layout.preferredWidth: 1
                         divider: true
                         title: modelData[0]
-                        Text { text: modelData[1]; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 34; font.letterSpacing: -1; font.features: { "tnum": 1 }; color: Theme.ink }
+                        Text { text: modelData[1] === null ? "No reading" : modelData[1]; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 34; font.letterSpacing: -1; font.features: { "tnum": 1 }; color: Theme.ink }
                         Note { text: modelData[2] }
                     }
                 }

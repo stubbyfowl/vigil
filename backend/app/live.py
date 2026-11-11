@@ -3,7 +3,6 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from .sim.generator import CREW
 from .store import Store
 from .sync.privacy import ground_card
 from .sync.queue import PRIORITY_LEVEL3, PRIORITY_NORMAL, SyncQueue
@@ -116,7 +115,7 @@ class Live:
     def _emit_packets(self, day: int, now: float) -> None:
         """Level 3 alerts go straight to the queue. Each person sends a weekly summary."""
         store = self.store
-        for who in CREW:
+        for who in store.crew:
             alerts = store.alerts(who.id, day, include_hidden=True)
             for alert in alerts:
                 self.queue_level3(alert, day, now)
@@ -198,3 +197,66 @@ class Live:
         }
 
 
+
+
+class MissionClock:
+    """A live mission follows the calendar. Level 3 alerts and weekly summaries go to the outbox by themselves."""
+
+    def __init__(self, store: Store, now: float, outbox: Any) -> None:
+        self.store = store
+        self.queue = outbox
+        self.running = False
+        self.days_per_second = 0.0
+        self._seen = (-1, -1)
+        self.tick(now)
+
+    @property
+    def day(self) -> int:
+        return self.store.mission.days
+
+    def tick(self, now: float) -> None:
+        """Rebuild when the date changes. Send what today requires, once."""
+        if self.store.current_day() != self.store.mission.days:
+            self.store.rebuild()
+        seen = (self.store.mission.days, self.store.version)
+        if seen != self._seen:
+            self._seen = seen
+            self._emit_packets(self.day, now)
+
+    def _emit_packets(self, day: int, now: float) -> None:
+        store = self.store
+        for who in store.crew:
+            alerts = store.alerts(who.id, day, include_hidden=True)
+            for alert in alerts:
+                self.queue_level3(alert, day, now)
+            if day % SUMMARY_EVERY_DAYS == 0:
+                card = ground_card(store.runs[who.id], day, alerts, store.share(who.id)["share_ground"])
+                self.queue.enqueue(now, "summary", who.id, f"{who.tag} weekly summary", PRIORITY_NORMAL, SUMMARY_PACKET_KB, day, card,
+                                   ref=f"summary:{who.id}:{day}")
+
+    def queue_level3(self, alert: dict[str, Any], day: int, now: float) -> None:
+        if alert["level"] >= 3:
+            tag = self.store.who(alert["astronaut"]).tag
+            payload = {"system": alert["system_name"], "level": 3, "reason": alert["level_reason"]}
+            self.queue.enqueue(now, "level3", alert["astronaut"], f"{tag} {alert['system_name']} Level 3", PRIORITY_LEVEL3, LEVEL3_PACKET_KB,
+                               day, payload, ref=f"level3:{alert['id']}")
+
+    def set_day(self, day: int, now: float) -> None:
+        raise ValueError("A live mission follows the calendar. Only the demo mission can jump in time.")
+
+    def start_demo(self, now: float) -> None:
+        raise ValueError("The Demo Director runs only in the demo mission.")
+
+    def next_beat(self, now: float) -> None:
+        return None
+
+    def stop_demo(self) -> None:
+        return None
+
+    def snapshot(self, now: float) -> dict[str, Any]:
+        self.tick(now)
+        return {
+            "day": self.day, "mission_days": self.store.info["length_days"], "running": False, "days_per_second": 0.0,
+            "version": self.store.version, "link_up": True, "demo": {"active": False, "finished": False, "total": 0},
+            "delay_minutes": self.store.cfg["sync"]["one_way_delay_minutes"], "flight_seconds": self.queue.delay_s,
+        }

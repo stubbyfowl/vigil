@@ -12,13 +12,13 @@ from PySide6.QtTest import QTest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "frontend"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
-from app.views import Vigil  # noqa: E402
+from app.views import DEMO_PIN, Vigil  # noqa: E402
 from main import create_engine, quick_window  # noqa: E402
 
 TARGETS = ("QQuickAbstractButton", "QQuickTextField", "QQuickSlider", "QQuickTextArea")
 ROUTES = [
     "/", "/alert/eng-immune-46", "/system/immune", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors",
-    "/timeline", "/explainer", "/delay", "/results", "/about", "/admin",
+    "/timeline", "/explainer", "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit",
 ]
 
 
@@ -49,6 +49,7 @@ def ui():
     built = Ui()
     assert built.engine.rootObjects(), built.warnings
     built.bridge.acknowledgeWelcome()
+    assert built.bridge.signIn("presenter", DEMO_PIN) == ""
     return built
 
 
@@ -210,3 +211,72 @@ def test_admin_saves_and_restores(ui):
     QTest.qWait(100)
     assert "restored" in screen.property("message")
     assert ui.warnings == []
+
+
+def small_targets(ui):
+    return [
+        (i.metaObject().className(), round(i.width()), round(i.height()))
+        for i in ui.items() if isinstance(i, QQuickItem) and any(i.inherits(t) for t in TARGETS) and (i.width() < 55.5 or i.height() < 55.5)
+    ]
+
+
+def find_named(ui, name):
+    return next((i for i in ui.items() if i.objectName() == name), None)
+
+
+def test_sign_in_screen_renders_and_refuses_a_wrong_pin(ui):
+    ui.warnings.clear()
+    ui.bridge.signOut()
+    QTest.qWait(150)
+    assert ui.bridge.stage in ("signin", "welcome")
+    if ui.bridge.stage == "welcome":
+        ui.bridge.chooseDemo()
+        QTest.qWait(150)
+    assert find_named(ui, "signin") is not None
+    assert small_targets(ui) == []
+    assert "Wrong PIN" in ui.bridge.signIn("eng", "9999")
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+    assert ui.bridge.stage == "app"
+    assert ui.warnings == []
+
+
+def test_lock_hides_everything_until_the_pin(ui):
+    ui.warnings.clear()
+    ui.show("/")
+    ui.bridge.lock()
+    QTest.qWait(150)
+    assert ui.bridge.locked and find_named(ui, "lock") is not None
+    assert "error" in ui.bridge.ask("astronaut", "{}")
+    assert small_targets(ui) == []
+    assert ui.bridge.unlock("0000") != ""
+    assert ui.bridge.unlock(DEMO_PIN) == ""
+    assert not ui.bridge.locked
+    assert ui.warnings == []
+
+
+def test_crew_member_sees_only_their_own_data(ui):
+    ui.bridge.signOut()
+    assert ui.bridge.signIn("eng", DEMO_PIN) == ""
+    assert ui.bridge.astronaut == "eng"
+    ui.bridge.astronaut = "cmdr"  # ignored for crew members
+    assert ui.bridge.astronaut == "eng"
+    assert "only open your own" in ui.bridge.ask("astronaut", '{"id": "cmdr"}')
+    ui.warnings.clear()
+    ui.show("/")
+    ui.show("/profile")
+    assert ui.warnings == []
+    ui.bridge.signOut()
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+
+
+@pytest.mark.parametrize("stage", ["welcome", "setup"])
+def test_first_run_stages_render(ui, stage):
+    ui.warnings.clear()
+    ui.bridge.signOut()
+    ui.bridge._set_stage(stage)
+    QTest.qWait(150)
+    assert find_named(ui, stage + "Stage") is not None
+    assert small_targets(ui) == []
+    assert ui.warnings == []
+    ui.bridge._set_stage("signin")
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""

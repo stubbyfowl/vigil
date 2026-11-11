@@ -1,22 +1,42 @@
-"""Connects the QML screens to the engine, in the same process."""
+"""Connects the QML screens to the engine, in the same process. Holds who is signed in at this station."""
 
 import json
+import math
+import time
+from pathlib import Path
 from typing import Any
 
+import numpy as np
 from app import config
+from app.auth import CREW_ROLES, AuthError
 from app.views import Vigil
-from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
+from PySide6.QtCore import Property, QEvent, QObject, QTimer, Signal, Slot
+from PySide6.QtGui import QFont, QPageSize, QPdfWriter, QTextDocument
 from voice import VoiceInput, is_available
 
 CLOCK_MS = 50
 UNDO_SECONDS_MS = 8000
-QUERIES = {
-    "crew", "astronaut", "system_detail", "alert_detail", "radiation", "sensors", "get_share", "set_share", "earth_decision", "call_earth",
-    "crew_view", "ground", "set_link", "set_clock", "demo_start", "demo_next", "demo_stop", "timeline", "explainer", "results", "about",
-    "checkin", "get_config", "put_config", "reset_config",
+IDLE_CHECK_MS = 1000
+INPUT_EVENTS = {QEvent.Type.MouseButtonPress, QEvent.Type.KeyPress, QEvent.Type.TouchBegin, QEvent.Type.Wheel}
+CHANGES_STATE = {
+    "set_share", "call_earth", "set_link", "set_clock", "demo_start", "demo_next", "demo_stop", "checkin", "put_config", "reset_config",
+    "log_readings", "delete_entry", "import_file", "add_member", "update_member", "set_auto_lock", "archive_mission",
 }
-CHANGES_STATE = {"set_share", "call_earth", "set_link", "set_clock", "demo_start", "demo_next", "demo_stop", "checkin", "put_config", "reset_config"}
-DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "light", "welcomed": False, "reduce_motion": False}
+DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "light", "welcomed": False, "reduce_motion": False, "chose_demo": False}
+PROBLEMS = (LookupError, ValueError, TypeError, PermissionError, AuthError)
+
+
+def plain(value: Any) -> Any:
+    """JSON the screens can parse: no NaN, no numpy types."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: plain(v) for k, v in value.items()}
+    if isinstance(value, list | tuple):
+        return [plain(v) for v in value]
+    if isinstance(value, np.generic):
+        return plain(value.item())
+    return value
 
 
 class Bridge(QObject):
@@ -31,10 +51,15 @@ class Bridge(QObject):
     undoChanged = Signal()
     voiceChanged = Signal()
     voiceFinal = Signal(str, arguments=["text"])
+    sessionChanged = Signal()
+    stageChanged = Signal()
+    lockedChanged = Signal()
+    missionChanged = Signal()
 
-    def __init__(self, vigil: Vigil, parent: QObject | None = None) -> None:
+    def __init__(self, vigil: Vigil, parent: QObject | None = None, station: str = "vehicle") -> None:
         super().__init__(parent)
         self.vigil = vigil
+        self.station = station
         self.open_ground_window = lambda: None  # set by main.py
         self._voice = VoiceInput(self)
         self._voice_available = is_available()
@@ -51,23 +76,45 @@ class Bridge(QObject):
         self._route = "/"
         self._history: list[str] = []
         self._undo: dict[str, str] | None = None
+        self._session: dict[str, Any] | None = None
+        self._locked = False
+        self._stage = self._resting_stage()
+        self._store_seen = vigil.store
+        self._last_input = time.monotonic()
+        self._auto_lock_s = 0.0
         self._undo_timer = QTimer(self, singleShot=True, interval=UNDO_SECONDS_MS, timeout=self._clear_undo)
         self._timer = QTimer(self, interval=CLOCK_MS, timeout=self.tick)
         self._timer.start()
+        self._idle_timer = QTimer(self, interval=IDLE_CHECK_MS, timeout=self._check_idle)
+        self._idle_timer.start()
+        if parent is not None:
+            parent.installEventFilter(self)
+
+    def _resting_stage(self) -> str:
+        """Where this station starts when nobody is signed in."""
+        if self.station == "vehicle" and self.vigil.mode == "demo" and not self.vigil.mission_exists() and not self._prefs["chose_demo"]:
+            return "welcome"
+        return "signin"
 
     @Slot()
     def tick(self) -> None:
         """Advance the mission clock and tell the screens what changed."""
+        if self.vigil.store is not self._store_seen:  # the other window opened a different mission
+            self._mission_opened()
+            self._end_session()
+            return
         old, self._snap = self._snap, self.vigil.live_state()
         new = self._snap
         for key, signal in (("day", self.dayChanged), ("version", self.versionChanged), ("running", self.runningChanged), ("link_up", self.linkChanged)):
             if old[key] != new[key]:
                 signal.emit()
+        if old["mission_days"] != new["mission_days"]:
+            self.missionChanged.emit()
         if old["demo"] != new["demo"]:
             self.demoChanged.emit()
             demo = new["demo"]
             if demo["active"]:
-                self.astronaut = demo["astronaut"]
+                self._set_astronaut_pref(demo["astronaut"])
                 self._go(demo["route"], remember=False)
 
     def _go(self, route: str, remember: bool = True) -> None:
@@ -88,7 +135,7 @@ class Bridge(QObject):
     def day(self) -> int:
         return self._snap["day"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=missionChanged)
     def missionDays(self) -> int:
         return self._snap["mission_days"]
 
@@ -124,16 +171,198 @@ class Bridge(QObject):
     def route(self) -> str:
         return self._route
 
+    @Property(str, notify=missionChanged)
+    def mode(self) -> str:
+        return self.vigil.mode
+
+    @Property(bool, notify=missionChanged)
+    def isDemo(self) -> bool:
+        return self.vigil.mode == "demo"
+
+    @Property(str, constant=True)
+    def stationName(self) -> str:
+        return self.station
+
+    # Who is signed in
+
+    @Property("QVariant", notify=sessionChanged)
+    def session(self) -> dict:
+        return self._session or {}
+
+    @Property(bool, notify=sessionChanged)
+    def signedIn(self) -> bool:
+        return self._session is not None
+
+    @Property(str, notify=sessionChanged)
+    def role(self) -> str:
+        return self._session["role"] if self._session else ""
+
+    @Property(str, notify=stageChanged)
+    def stage(self) -> str:
+        return self._stage
+
+    @Property(bool, notify=lockedChanged)
+    def locked(self) -> bool:
+        return self._locked
+
+    def _set_stage(self, stage: str) -> None:
+        if stage != self._stage:
+            self._stage = stage
+            self.stageChanged.emit()
+
+    def _start_session(self, user: dict[str, Any]) -> None:
+        self._session = {k: user[k] for k in ("id", "name", "role", "role_name", "tag", "must_change")}
+        self._session["previous_sign_in"] = user.get("previous_sign_in")
+        self._locked = False
+        self._last_input = time.monotonic()
+        self._auto_lock_s = self.vigil.mission_info()["auto_lock_minutes"] * 60
+        self._history = []
+        self._route = "/"
+        self.sessionChanged.emit()
+        self.lockedChanged.emit()
+        self.astronautChanged.emit()
+        self.routeChanged.emit()
+        self._set_stage("app")
+
+    @Slot(str, str, result=str)
+    def signIn(self, member: str, pin: str) -> str:
+        """Returns an empty string on success, or the reason it failed."""
+        try:
+            self._start_session(self.vigil.sign_in(member, pin, self.station))
+        except PROBLEMS as err:
+            return str(err)
+        return ""
+
+    @Slot()
+    def signOut(self) -> None:
+        if self._session:
+            self.vigil.note_session(self._session["id"], "signed_out")
+            if self.vigil.mode == "demo":
+                self.vigil.live.stop_demo()
+        self._end_session()
+
+    def _end_session(self) -> None:
+        self._session = None
+        self._locked = False
+        self._clear_undo()
+        self._history = []
+        self._route = "/"
+        self.sessionChanged.emit()
+        self.lockedChanged.emit()
+        self.astronautChanged.emit()
+        self.routeChanged.emit()
+        self._set_stage(self._resting_stage())
+
+    @Slot()
+    def lock(self) -> None:
+        self._lock("locked")
+
+    def _lock(self, why: str) -> None:
+        if self._session and not self._locked:
+            self.vigil.note_session(self._session["id"], why)
+            self._locked = True
+            self.lockedChanged.emit()
+
+    @Slot(str, result=str)
+    def unlock(self, pin: str) -> str:
+        if not self._session:
+            return "Nobody is signed in."
+        try:
+            self.vigil.unlock(self._session["id"], pin)
+        except PROBLEMS as err:
+            return str(err)
+        self._locked = False
+        self._last_input = time.monotonic()
+        self.lockedChanged.emit()
+        return ""
+
+    @Slot(str, str, result=str)
+    def changePin(self, old: str, new: str) -> str:
+        if not self._session:
+            return "Nobody is signed in."
+        try:
+            self.vigil.change_pin(self._session["id"], old, new)
+        except PROBLEMS as err:
+            return str(err)
+        self._session["must_change"] = False
+        self.sessionChanged.emit()
+        return ""
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt name)
+        if event.type() in INPUT_EVENTS:
+            self._last_input = time.monotonic()
+        return False
+
+    @Slot()
+    def _check_idle(self) -> None:
+        """Lock the screen after the Commander's chosen idle time. Never during the Demo Director."""
+        idle = time.monotonic() - self._last_input
+        if self._session and not self._locked and self._auto_lock_s and not self._snap["demo"]["active"] and idle >= self._auto_lock_s:
+            self._lock("auto_locked")
+
+    # Choosing and creating a mission
+
+    @Slot()
+    def startSetup(self) -> None:
+        self._set_stage("setup")
+
+    @Slot()
+    def leaveSetup(self) -> None:
+        self._set_stage(self._resting_stage())
+
+    @Slot()
+    def chooseDemo(self) -> None:
+        self._prefs["chose_demo"] = True
+        self._save_prefs()
+        self.openMission("demo")
+
+    @Slot(str, result=str)
+    def setupMission(self, args_json: str) -> str:
+        try:
+            result = self.vigil.setup_mission(**json.loads(args_json))
+        except PROBLEMS as err:
+            return str(err)
+        self._mission_opened()
+        self._start_session(result["member"])
+        self._go("/accounts", remember=False)
+        return ""
+
+    @Slot(str)
+    def openMission(self, mode: str) -> None:
+        if self._session:
+            self.vigil.note_session(self._session["id"], "signed_out")
+        try:
+            self.vigil.open(mode)
+        except PROBLEMS:
+            return
+        self._mission_opened()
+        self._end_session()
+
+    def _mission_opened(self) -> None:
+        self._store_seen = self.vigil.store
+        self._snap = self.vigil.live_state()
+        self.missionChanged.emit()
+        self.versionChanged.emit()
+        self.dayChanged.emit()
+        self.demoChanged.emit()
+
     # Choices the person makes
 
     def _get_astronaut(self) -> str:
+        """Whose data the screens show. A crew member always sees their own. The Presenter can switch."""
+        if self._session and self._session["role"] in CREW_ROLES:
+            return self._session["id"]
         return self._prefs["astronaut"]
 
-    def _set_astronaut(self, value: str) -> None:
+    def _set_astronaut_pref(self, value: str) -> None:
         if value != self._prefs["astronaut"]:
             self._prefs["astronaut"] = value
             self._save_prefs()
             self.astronautChanged.emit()
+
+    def _set_astronaut(self, value: str) -> None:
+        if not self._session or self._session["role"] == "presenter":
+            self._set_astronaut_pref(value)
 
     astronaut = Property(str, _get_astronaut, _set_astronaut, notify=astronautChanged)
 
@@ -178,22 +407,48 @@ class Bridge(QObject):
     def openGround(self) -> None:
         self.open_ground_window()
 
-    # Everything else goes through one door
+    # Everything else goes through one door, which checks who is asking
+
+    def _request(self, name: str, args: dict[str, Any]) -> Any:
+        if self._locked:
+            raise PermissionError("The screen is locked.")
+        return self.vigil.request(self._session, name, args)
 
     @Slot(str, str, result=str)
     def ask(self, name: str, args_json: str) -> str:
         """Run one named engine call and return JSON. Errors come back as {"error": text}."""
-        if name not in QUERIES:
-            return json.dumps({"error": f"Unknown request: {name}"})
         args = json.loads(args_json)
         args.pop("v", None)  # only there so QML re-reads when the data version changes
         try:
-            result = getattr(self.vigil, name)(**args)
-        except (LookupError, ValueError, TypeError) as err:
+            result = self._request(name, args)
+        except PROBLEMS as err:
             result = {"error": str(err)}
-        if name in CHANGES_STATE:
+        if name == "set_auto_lock" and "error" not in result:
+            self._auto_lock_s = result["auto_lock_minutes"] * 60
+        if name == "archive_mission" and "error" not in result:
+            self._mission_opened()
+            self._end_session()
+        elif name in CHANGES_STATE:
             self.tick()
-        return json.dumps(result)
+        return json.dumps(plain(result))
+
+    @Slot(result=str)
+    def exportReport(self) -> str:
+        """Write a one-page PDF health summary for the person on screen."""
+        try:
+            report = self._request("report", {"id": self.astronaut})
+        except PROBLEMS as err:
+            return json.dumps({"error": str(err)})
+        path = Path(report["file"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        writer = QPdfWriter(str(path))
+        writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        writer.setTitle("Vigil health summary")
+        doc = QTextDocument()
+        doc.setDefaultFont(QFont("Instrument Sans", 10))
+        doc.setHtml(report["html"])
+        doc.print_(writer)
+        return json.dumps({"path": str(path)})
 
     # Voice check-in
 
@@ -240,11 +495,11 @@ class Bridge(QObject):
     @Slot(str, str, str, result=str)
     def alertAction(self, owner: str, alert_id: str, action: str) -> str:
         try:
-            self.vigil.alert_action(owner, alert_id, action)
-        except (LookupError, ValueError) as err:
+            self._request("alert_action", {"id": owner, "alert_id": alert_id, "action": action})
+        except PROBLEMS as err:
             return str(err)
         words = {"done": "Marked done.", "snooze": "Snoozed for 2 hours.", "escalate": "Escalated."}
-        self._undo = {"alert": alert_id, "text": words[action]}
+        self._undo = {"alert": alert_id, "owner": owner, "text": words[action]}
         self._undo_timer.start()
         self.undoChanged.emit()
         self.tick()
@@ -262,7 +517,10 @@ class Bridge(QObject):
     @Slot()
     def undo(self) -> None:
         if self._undo:
-            self.vigil.undo_alert_action(self._undo["alert"])
+            try:
+                self._request("undo_alert_action", {"alert_id": self._undo["alert"], "id": self._undo["owner"]})
+            except PROBLEMS:
+                return
             self._clear_undo()
             self.versionTouched()
 

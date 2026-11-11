@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "frontend"))
 
 import shiboken6  # noqa: E402
 from app import config  # noqa: E402
-from app.views import Vigil  # noqa: E402
+from app.views import DEMO_PIN, Vigil  # noqa: E402
 from bridge import Bridge  # noqa: E402
 from PySide6.QtCore import QObject, QTimer  # noqa: E402
 from PySide6.QtGui import QFontDatabase, QGuiApplication  # noqa: E402
@@ -34,26 +34,28 @@ def create_engine(app: QGuiApplication, vigil: Vigil, on_warning: Callable | Non
     bridge = Bridge(vigil, app)
     qml = config.FRONTEND_DIR / "qml"
 
-    def load(file: str, force_theme: str) -> QQmlApplicationEngine:
+    def load(file: str, force_theme: str, station: Bridge) -> QQmlApplicationEngine:
         engine = QQmlApplicationEngine()
         if on_warning:
             engine.warnings.connect(on_warning)
-        engine.rootContext().setContextProperty("vigil", bridge)
+        engine.rootContext().setContextProperty("vigil", station)
         engine.rootContext().setContextProperty("forceTheme", force_theme)
         engine.load(str(qml / file))
         return engine
 
-    # Mission Control gets its own engine so it can stay dark whatever theme the tablet uses.
+    # Mission Control gets its own engine and its own sign-in, and stays dark whatever theme the tablet uses.
     ground: list[QQmlApplicationEngine] = []
 
     def open_ground() -> None:
         if ground:
             ground[0].rootObjects()[0].requestActivate()
         else:
-            ground.append(load("GroundWindow.qml", "dark"))
+            station = Bridge(vigil, app, station="ground")
+            ground.append(load("GroundWindow.qml", "dark", station))
+            bridge.ground_bridge = station
 
     bridge.open_ground_window = open_ground
-    return load("Main.qml", ""), bridge
+    return load("Main.qml", "", bridge), bridge
 
 
 def main() -> int:
@@ -68,7 +70,8 @@ def main() -> int:
     app = QGuiApplication([sys.argv[0], *qt_args])
     app.setApplicationName("Vigil")
     app.setOrganizationName("Vigil")
-    vigil = Vigil()
+    # A real mission opens if this computer has one. Otherwise the demo, with a first-run choice.
+    vigil = Vigil(mode="demo" if args.demo or not Vigil.mission_exists() else "live")
     problems: list[str] = []
     engine, bridge = create_engine(app, vigil, lambda found: problems.extend(w.toString() for w in found))
     if not engine.rootObjects():
@@ -79,7 +82,8 @@ def main() -> int:
     if args.ground:
         bridge.openGround()
     if args.demo:
-        vigil.demo_start()
+        bridge.signIn("presenter", DEMO_PIN)
+        bridge.ask("demo_start", "{}")
     bridge.tick()
     if args.check:
         QTimer.singleShot(CHECK_MS, app.quit)

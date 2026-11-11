@@ -13,3 +13,8 @@ dist/
 data/voice-model/
 data/synthetic/*.csv
 .DS_Store
+data/mission.db
+data/outbox/
+data/import/
+data/exports/
+data/backups/

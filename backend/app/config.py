@@ -17,8 +17,14 @@ FRONTEND_DIR = ROOT / "frontend"
 HOME = Path(os.environ.get("VIGIL_HOME", Path.home() / ".local" / "share" / "vigil" if FROZEN else DATA_DIR))
 DEFAULTS_PATH = ROOT / "config" / "thresholds.defaults.yaml"
 THRESHOLDS_PATH = Path(os.environ.get("VIGIL_THRESHOLDS", HOME / "thresholds.yaml" if FROZEN else ROOT / "config" / "thresholds.yaml"))
-DB_PATH = Path(os.environ.get("VIGIL_DB", HOME / "vigil.db"))
+DB_PATH = Path(os.environ.get("VIGIL_DB", HOME / "vigil.db"))  # the demo mission
+MISSION_DB_PATH = Path(os.environ.get("VIGIL_MISSION_DB", HOME / "mission.db"))  # a real mission
 PREFS_PATH = HOME / "ui.json"
+# Folders a live mission reads and writes. The vehicle's comm system drains the outbox.
+OUTBOX_DIR = HOME / "outbox"
+IMPORT_DIR = HOME / "import"
+EXPORT_DIR = HOME / "exports"
+BACKUP_DIR = HOME / "backups"
 HEADER = "# Starting values, not clinical limits. Edit here or on the Admin screen.\n"
 
 Config = dict[str, Any]

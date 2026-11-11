@@ -19,26 +19,54 @@ ApplicationWindow {
         "": "HomeScreen.qml", alert: "AlertScreen.qml", system: "SystemScreen.qml", checkin: "CheckInScreen.qml",
         radiation: "RadiationScreen.qml", crew: "CrewScreen.qml", ground: "GroundScreen.qml", earth: "EarthScreen.qml",
         sensors: "SensorsScreen.qml", timeline: "TimelineScreen.qml", explainer: "ExplainerScreen.qml", delay: "DelayScreen.qml",
-        results: "ResultsScreen.qml", about: "AboutScreen.qml", admin: "AdminScreen.qml"
+        results: "ResultsScreen.qml", about: "AboutScreen.qml", admin: "AdminScreen.qml", profile: "ProfileScreen.qml",
+        accounts: "AccountsScreen.qml", audit: "AuditScreen.qml", log: "LogScreen.qml"
     })
     readonly property string section: vigil.route.split("/")[1] || ""
+    readonly property bool inApp: vigil.stage === "app"
+    readonly property bool crewRole: ["commander", "medical", "crew", "presenter"].indexOf(vigil.role) >= 0
+    readonly property bool commands: vigil.role === "commander" || vigil.role === "presenter"
+    readonly property var stages: ({ welcome: "WelcomeScreen.qml", setup: "SetupScreen.qml", signin: "SignInScreen.qml" })
+    readonly property var links: {
+        var out = [["/", "Home"]]
+        if (crewRole) {
+            out.push(["/checkin", "Daily check-in"])
+            if (!vigil.isDemo) out.push(["/log", "Log readings"])
+            out.push(["/crew", "Crew"], ["/radiation", "Radiation"], ["/earth", "Call Earth"], ["/sensors", vigil.isDemo ? "Sensors" : "Data sources"])
+        }
+        if (vigil.role === "ground" || vigil.role === "presenter") out.push(["/ground", "Mission control"])
+        out.push(["/profile", "Your account"])
+        if (commands) out.push(["/accounts", "Crew and accounts"], ["/audit", "Audit log"], ["/admin", "Thresholds"])
+        if (vigil.isDemo) out.push(["/timeline", "Mission timeline"], ["/explainer", "Why personal baselines"], ["/delay", "Delay Theater"], ["/results", "Results"])
+        out.push(["/about", "About and honesty"])
+        return out
+    }
+
+    // Before anyone signs in: first run, mission setup, or the sign-in screen.
+    Loader {
+        anchors.fill: parent
+        active: !win.inApp
+        visible: active
+        source: win.stages[vigil.stage] || ""
+    }
 
     function driftTrend() {
         var systems = Api.ask("astronaut", { id: vigil.astronaut, day: vigil.day, v: vigil.version }).systems
         return systems[0].trend.map(function (_, i) { return Math.max.apply(null, systems.map(function (s) { return s.trend[i] })) })
     }
 
-    Shortcut { sequence: "Ctrl+Z"; onActivated: vigil.undo() }
-    Shortcut { sequence: "Esc"; onActivated: { if (menu.opened) menu.close(); else vigil.back() } }
+    Shortcut { sequence: "Ctrl+Z"; enabled: win.inApp; onActivated: vigil.undo() }
+    Shortcut { sequence: "Esc"; enabled: win.inApp && !vigil.locked; onActivated: { if (menu.opened) menu.close(); else vigil.back() } }
     Shortcut { sequence: "F11"; onActivated: win.kiosk = !win.kiosk }
-    Shortcut { sequence: "Ctrl+D"; onActivated: Api.ask("demo_start") }
+    Shortcut { sequence: "Ctrl+L"; enabled: win.inApp; onActivated: vigil.lock() }
+    Shortcut { sequence: "Ctrl+D"; enabled: vigil.role === "presenter"; onActivated: Api.ask("demo_start") }
     Shortcut { sequence: "Ctrl+Right"; enabled: vigil.demo.active; onActivated: Api.ask("demo_next") }
     Shortcut { sequence: "Ctrl+."; enabled: vigil.demo.active; onActivated: Api.ask("demo_stop") }
     Shortcut { sequence: "Ctrl+G"; onActivated: vigil.openGround() }
 
     // The signature graphic sits behind the home screen and runs up under the top bar.
     Ribbon {
-        visible: vigil.route === "/"
+        visible: win.inApp && win.crewRole && vigil.route === "/"
         x: parent.width * 0.52
         y: 0
         width: parent.width * 0.48
@@ -48,6 +76,7 @@ ApplicationWindow {
 
     ColumnLayout {
         anchors.fill: parent
+        visible: win.inApp
         spacing: 0
         TopBar { Layout.fillWidth: true; onMenuRequested: menu.open() }
         Item {
@@ -57,14 +86,15 @@ ApplicationWindow {
                 id: page
                 objectName: "page"
                 anchors { fill: parent; topMargin: 10; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: vigil.demo.active ? 112 : 18 }
-                source: win.screens[win.section] || "NotFoundScreen.qml"
+                active: win.inApp
+                source: !win.inApp ? "" : !win.crewRole && win.section === "" ? "GroundScreen.qml" : win.screens[win.section] || "NotFoundScreen.qml"
             }
         }
     }
 
     // Demo Director: a guided flow, so it is always easy to skip or stop.
     Rectangle {
-        visible: vigil.demo.active
+        visible: win.inApp && vigil.demo.active
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: 18 }
         height: 84
         radius: Theme.radius
@@ -101,7 +131,7 @@ ApplicationWindow {
 
     // Undo: every action on an alert can be taken back for a few seconds, or with Ctrl+Z.
     Rectangle {
-        visible: vigil.undoText.length > 0 && !vigil.demo.active
+        visible: win.inApp && vigil.undoText.length > 0 && !vigil.demo.active
         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 110 }
         width: undoRow.implicitWidth + 32
         height: 76
@@ -121,23 +151,30 @@ ApplicationWindow {
         objectName: "menu"
         x: parent.width - width - Theme.gutter
         y: 72
-        width: 420
+        width: 560
         modal: true
         padding: 16
         background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule; SoftShadow {} }
         ColumnLayout {
             anchors.fill: parent
             spacing: 4
-            VButton { Layout.fillWidth: true; kind: "primary"; text: "Play demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
-            Repeater {
-                model: [["/", "Home"], ["/timeline", "Mission timeline"], ["/explainer", "Why personal baselines"], ["/sensors", "Sensors"], ["/delay", "Delay Theater"], ["/results", "Results"], ["/about", "About and honesty"]]
-                VButton {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    kind: "quiet"
-                    textAlign: Text.AlignLeft
-                    text: modelData[1]
-                    onClicked: { vigil.navigate(modelData[0]); menu.close() }
+            VButton { visible: vigil.role === "presenter"; Layout.fillWidth: true; kind: "primary"; text: "Play demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 2
+                columnSpacing: 4
+                rowSpacing: 2
+                Repeater {
+                    model: win.links
+                    VButton {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 1
+                        kind: "quiet"
+                        textAlign: Text.AlignLeft
+                        text: modelData[1]
+                        onClicked: { vigil.navigate(modelData[0]); menu.close() }
+                    }
                 }
             }
             VButton { Layout.fillWidth: true; kind: "quiet"; textAlign: Text.AlignLeft; text: "Open Mission Control window"; onClicked: { vigil.openGround(); menu.close() } }
@@ -155,6 +192,12 @@ ApplicationWindow {
                 }
             }
             Toggle { text: "Reduce motion"; checked: vigil.reduceMotion; onToggled: vigil.reduceMotion = checked }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                VButton { Layout.fillWidth: true; text: "Lock screen"; onClicked: { menu.close(); vigil.lock() } }
+                VButton { Layout.fillWidth: true; text: "Sign out"; onClicked: { menu.close(); vigil.signOut() } }
+            }
         }
     }
 
@@ -165,7 +208,7 @@ ApplicationWindow {
         width: 720
         modal: true
         closePolicy: Popup.NoAutoClose
-        visible: !vigil.welcomed && !vigil.demo.active
+        visible: win.inApp && !vigil.welcomed && !vigil.demo.active && !vigil.locked && !vigil.session.must_change
         padding: 28
         background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule }
         ColumnLayout {
@@ -173,9 +216,19 @@ ApplicationWindow {
             spacing: 14
             BigTitle { text: "Before you start"; font.pixelSize: 34 }
             Body { text: "Vigil learns your own normal and tells you when something drifts. It explains why, and it decides when to call Earth." }
-            Body { text: "Every reading here is simulated. The crew are invented. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis." }
+            Body { text: (vigil.isDemo ? "In the demo mission every reading is simulated and the crew are invented. " : "Readings come from what your crew enters and imports. ") + "Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis." }
             Body { text: "Everything runs on this computer. Vigil opens no network connections. Your journal words are not stored unless you choose to keep them." }
             VButton { Layout.fillWidth: true; kind: "primary"; text: "I understand"; onClicked: vigil.acknowledgeWelcome() }
         }
+    }
+
+    // Locked: everything is hidden until the PIN is entered again.
+    LockScreen { anchors.fill: parent; visible: win.inApp && vigil.locked; z: 20 }
+
+    ChangePinDialog { id: forcedPin; required: true }
+    Connections {
+        target: vigil
+        function onSessionChanged() { if (vigil.session.must_change && !forcedPin.opened) forcedPin.open() }
+        function onLockedChanged() { if (vigil.locked) menu.close() }
     }
 }
