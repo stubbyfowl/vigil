@@ -23,7 +23,7 @@ Touch nothing. Use **Next beat** to skip ahead and **Stop** to end.
 | 0:56 | 120 | Radiation | Solar storm. | "The warning came 2 hours ahead." |
 | 1:05 | 120 | Mission Control | Earth gets a priority packet. | Point at the countdown. |
 | 1:19 | 157 | Alert, Ana | Still under any population limit. | "This heart rate looks fine to any general rule." |
-| 1:27 | 157 | Same heart rate | One is fine. One is not. | **Stop talking for a moment.** This is the key image. |
+| 1:27 | 157 | Baselines explained | Normal for one of them, high for the other. | **Stop talking for a moment.** This is the key image. |
 | 1:43 | 180 | Results | Measured on 20 missions. | Read the false alarm bars. |
 
 ## If you have more time
@@ -38,7 +38,7 @@ Touch nothing. Use **Next beat** to skip ahead and **Stop** to end.
 | Lost link | Mission Control, then **Drop link** |
 | Privacy | Crew. Note that only trends and status appear. |
 | Night mode | Menu, then **Night** |
-| Calm against drifting | On Home, switch between Kai and Lena and watch the ribbon |
+| Calm against drifting | On Home, switch between Kai and Lena and compare the dials |
 
 ## If something goes wrong
 

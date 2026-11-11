@@ -18,7 +18,7 @@ ColumnLayout {
     spacing: 6
     Layout.fillWidth: true
 
-    Text { text: field.label; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 17; color: Theme.ink; visible: text.length > 0 }
+    Text { text: field.label; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 16; color: Theme.ink; visible: text.length > 0 }
     TextField {
         id: input
         Layout.fillWidth: true
@@ -37,10 +37,10 @@ ColumnLayout {
         Accessible.description: field.error || field.helper
         onAccepted: field.accepted()
         background: Rectangle {
-            radius: 9
+            radius: Theme.controlRadius
             color: Theme.panel2
-            border.width: input.activeFocus || field.error ? 2 : 0
-            border.color: field.error ? Theme.warning : Theme.action
+            border.width: input.activeFocus || field.error ? 2 : 1
+            border.color: field.error ? Theme.warning : input.activeFocus ? Theme.link : Theme.rule
         }
     }
     RegularExpressionValidator { id: digitsOnly; regularExpression: /[0-9]*/ }

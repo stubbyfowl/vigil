@@ -35,9 +35,9 @@ Item {
         BigTitle { Layout.alignment: Qt.AlignHCenter; text: screen.saved ? "Check-in saved for day " + screen.saved.day : "" }
         Body {
             horizontalAlignment: Text.AlignHCenter
-            text: screen.saved ? (journal.text ? "Journal tone score: " + screen.saved.journal_score + ". " : "No journal entry today. ") + (screen.saved.text_kept ? "Your words were kept on this computer." : "Your words were not stored. Only the score was.") : ""
+            text: screen.saved ? (journal.text ? "Journal tone score: " + screen.saved.journal_score + ". " : "No journal today. ") + (screen.saved.text_kept ? "Your words were kept on this computer." : "The score was saved and your words were deleted.") : ""
         }
-        VButton { Layout.alignment: Qt.AlignHCenter; kind: "primary"; text: "Back to home"; onClicked: vigil.navigate("/") }
+        VButton { Layout.alignment: Qt.AlignHCenter; kind: "primary"; text: "Home"; onClicked: vigil.navigate("/") }
         Item { Layout.fillHeight: true }
     }
 
@@ -45,7 +45,7 @@ Item {
         anchors.fill: parent
         visible: screen.saved === null
         spacing: 12
-        RowLayout { spacing: 12; BackButton {} BigTitle { text: "Daily check-in" } }
+        RowLayout { spacing: 12; BackButton {} BigTitle { text: "Check in" } }
         RowLayout {
             Layout.fillWidth: true
             spacing: 16
@@ -85,7 +85,7 @@ Item {
                 Panel {
                     Layout.fillWidth: true
                     title: "Journal (optional)"
-                    Note { text: "Scored on this computer with a word list. Nothing leaves it." }
+                    Note { text: "A word list on this computer scores the tone." }
                     TextArea {
                         id: journal
                         objectName: "journal"
@@ -104,7 +104,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 12
                         VButton { text: vigil.voiceListening ? "Stop" : "Speak"; kind: vigil.voiceListening ? "primary" : "normal"; onClicked: vigil.voiceToggle() }
-                        Note { text: vigil.voiceHeard || (vigil.voiceListening ? "Listening." : "Speech becomes text here. Audio is never saved.") }
+                        Note { text: vigil.voiceHeard || (vigil.voiceListening ? "Listening." : "Speak, then edit the text. Audio is not saved.") }
                     }
                     Connections {
                         target: vigil

@@ -13,7 +13,7 @@ Switch {
         width: 48
         height: 28
         radius: 14
-        color: control.checked ? Theme.action : Theme.panel2
+        color: control.checked ? Theme.nominal : Theme.panel2
         border.color: control.visualFocus ? Theme.action : control.checked ? Theme.action : Theme.rule
         Rectangle {
             x: control.checked ? parent.width - width - 3 : 3

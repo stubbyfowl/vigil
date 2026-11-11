@@ -24,7 +24,7 @@ Item {
                 Item { Layout.fillWidth: true }
                 Placard { text: "Drift " + screen.d.score + " / 100 · Confidence " + Math.round(screen.d.confidence * 100) + "%" }
             }
-            Note { text: "The shaded band is your own normal. Tap a chart to read any day." }
+            Note { text: "The shaded band is your usual range. Tap a chart to read a day." }
             GridLayout {
                 Layout.fillWidth: true
                 columns: 2
@@ -45,7 +45,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: 2
                                 Body { text: tile.s.name; font.pixelSize: 19; font.weight: Font.Medium }
-                                Note { visible: !tile.s.flagged_now; text: tile.s.learning ? "Learning your normal" : "Inside your normal" }
+                                Note { visible: !tile.s.flagged_now; text: tile.s.learning ? "Needs more readings" : "In your usual range" }
                                 StatusPill { visible: tile.s.flagged_now; status: "yellow"; compact: true; label: "Drifting for " + tile.s.drift_days + (tile.s.drift_days === 1 ? " day" : " days") }
                             }
                             Text { text: tile.s.current === null ? "--" : tile.s.current.toFixed(tile.s.decimals); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 32; font.letterSpacing: -0.8; font.features: { "tnum": 1 }; color: Theme.ink }

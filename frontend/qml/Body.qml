@@ -6,6 +6,6 @@ Text {
     font.pixelSize: 18
     color: Theme.ink
     wrapMode: Text.WordWrap
-    lineHeight: 1.08
+    lineHeight: 1.25
     Layout.fillWidth: true
 }

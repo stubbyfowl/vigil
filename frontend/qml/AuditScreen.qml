@@ -25,7 +25,7 @@ Item {
             BigTitle { text: "Audit log" }
             Placard { text: "Latest " + screen.events.length + " events" }
         }
-        Note { text: "Sign-ins, account changes, exports and data entry. Health values and journal words are never written here." }
+        Note { text: "Sign-ins, account changes, exports and data entry. Readings and journal words are kept out of it." }
         Banner { visible: screen.events.length === 0; text: "Nothing has happened yet." }
         ListView {
             Layout.fillWidth: true

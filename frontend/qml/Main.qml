@@ -30,17 +30,19 @@ ApplicationWindow {
     readonly property var links: {
         var out = [["/", "Home"]]
         if (crewRole) {
-            out.push(["/checkin", "Daily check-in"])
+            out.push(["/checkin", "Check in"])
             if (!vigil.isDemo) out.push(["/log", "Log readings"])
             out.push(["/crew", "Crew"], ["/radiation", "Radiation"], ["/earth", "Call Earth"], ["/sensors", vigil.isDemo ? "Sensors" : "Data sources"])
         }
-        if (vigil.role === "ground" || vigil.role === "presenter") out.push(["/ground", "Mission control"])
-        out.push(["/profile", "Your account"])
-        if (commands) out.push(["/accounts", "Crew and accounts"], ["/audit", "Audit log"], ["/admin", "Thresholds"])
-        if (vigil.isDemo) out.push(["/timeline", "Mission timeline"], ["/explainer", "Why personal baselines"], ["/delay", "Delay Theater"], ["/results", "Results"])
-        out.push(["/about", "About and honesty"])
+        if (vigil.role === "ground" || vigil.role === "presenter") out.push(["/ground", "Mission Control"])
+        out.push(["/profile", "My account"])
+        if (commands) out.push(["/accounts", "Accounts"], ["/audit", "Audit log"], ["/admin", "Thresholds"])
+        if (vigil.isDemo) out.push(["/timeline", "Timeline"], ["/explainer", "Baselines explained"], ["/delay", "Delay Theater"], ["/results", "Results"])
+        out.push(["/about", "About Vigil"])
         return out
     }
+
+    Backdrop { anchors.fill: parent; decor: !win.inApp }
 
     // Before anyone signs in: first run, mission setup, or the sign-in screen.
     Loader {
@@ -48,11 +50,6 @@ ApplicationWindow {
         active: !win.inApp
         visible: active
         source: win.stages[vigil.stage] || ""
-    }
-
-    function driftTrend() {
-        var systems = Api.ask("astronaut", { id: vigil.astronaut, day: vigil.day, v: vigil.version }).systems
-        return systems[0].trend.map(function (_, i) { return Math.max.apply(null, systems.map(function (s) { return s.trend[i] })) })
     }
 
     Shortcut { sequence: "Ctrl+Z"; enabled: win.inApp; onActivated: vigil.undo() }
@@ -63,16 +60,6 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+Right"; enabled: vigil.demo.active; onActivated: Api.ask("demo_next") }
     Shortcut { sequence: "Ctrl+."; enabled: vigil.demo.active; onActivated: Api.ask("demo_stop") }
     Shortcut { sequence: "Ctrl+G"; onActivated: vigil.openGround() }
-
-    // The signature graphic sits behind the home screen and runs up under the top bar.
-    Ribbon {
-        visible: win.inApp && win.crewRole && vigil.route === "/"
-        x: parent.width * 0.52
-        y: 0
-        width: parent.width * 0.48
-        height: 690
-        drift: visible ? win.driftTrend() : []
-    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -96,36 +83,31 @@ ApplicationWindow {
     Rectangle {
         visible: win.inApp && vigil.demo.active
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: 18 }
-        height: 84
+        height: 88
         radius: Theme.radius
-        color: Theme.ink
+        color: Theme.panel
+        border.width: 1
+        border.color: Theme.rule
+        Rectangle {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+            width: 4
+            color: Theme.urgent
+        }
         RowLayout {
-            anchors { fill: parent; leftMargin: 24; rightMargin: 14 }
+            anchors { fill: parent; leftMargin: 32; rightMargin: 14 }
             spacing: 18
-            Text { color: Theme.bg; opacity: 0.7; text: ((vigil.demo.index || 0) + 1) + " of " + vigil.demo.total; font.family: Theme.body; font.pixelSize: 16; font.features: { "tnum": 1 } }
+            Placard { text: "Demo " + ((vigil.demo.index || 0) + 1) + " / " + vigil.demo.total; font.features: { "tnum": 1 } }
             Text {
                 Layout.fillWidth: true
                 text: vigil.demo.caption || ""
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
-                font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 21; font.letterSpacing: -0.2; color: Theme.bg
+                font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 21; font.letterSpacing: -0.2; color: Theme.ink
                 Accessible.role: Accessible.StaticText
                 Accessible.name: text
             }
-            Repeater {
-                model: [["Next", "demo_next"], ["Stop", "demo_stop"]]
-                AbstractButton {
-                    required property var modelData
-                    implicitWidth: 86
-                    implicitHeight: Theme.touch
-                    focusPolicy: Qt.StrongFocus
-                    Accessible.role: Accessible.Button
-                    Accessible.name: modelData[0]
-                    onClicked: Api.ask(modelData[1])
-                    background: Rectangle { radius: 9; color: "transparent"; border.color: Theme.bg; opacity: 0.45 }
-                    contentItem: Text { text: parent.modelData[0]; color: Theme.bg; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                }
-            }
+            VButton { text: "Next"; onClicked: Api.ask("demo_next") }
+            VButton { text: "Stop"; kind: "quiet"; onClicked: Api.ask("demo_stop") }
         }
     }
 
@@ -158,7 +140,7 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             spacing: 4
-            VButton { visible: vigil.role === "presenter"; Layout.fillWidth: true; kind: "primary"; text: "Play demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
+            VButton { visible: vigil.role === "presenter"; Layout.fillWidth: true; kind: "primary"; text: "Play the demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
             GridLayout {
                 Layout.fillWidth: true
                 columns: 2
@@ -178,16 +160,16 @@ ApplicationWindow {
                 }
             }
             VButton { Layout.fillWidth: true; kind: "quiet"; textAlign: Text.AlignLeft; text: "Open Mission Control window"; onClicked: { vigil.openGround(); menu.close() } }
-            Placard { text: "Display" }
+            Placard { text: "Look" }
             RowLayout {
                 Repeater {
-                    model: ["light", "dark", "night"]
+                    model: [["dark", "Mission"], ["light", "Daylight"], ["night", "Night"]]
                     VButton {
-                        required property string modelData
+                        required property var modelData
                         Layout.fillWidth: true
-                        text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                        selected: vigil.theme === modelData
-                        onClicked: vigil.theme = modelData
+                        text: modelData[1]
+                        selected: vigil.theme === modelData[0]
+                        onClicked: vigil.theme = modelData[0]
                     }
                 }
             }
@@ -214,11 +196,11 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             spacing: 14
-            BigTitle { text: "Before you start"; font.pixelSize: 34 }
-            Body { text: "Vigil learns your own normal and tells you when something drifts. It explains why, and it decides when to call Earth." }
-            Body { text: (vigil.isDemo ? "In the demo mission every reading is simulated and the crew are invented. " : "Readings come from what your crew enters and imports. ") + "Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis." }
-            Body { text: "Everything runs on this computer. Vigil opens no network connections. Your journal words are not stored unless you choose to keep them." }
-            VButton { Layout.fillWidth: true; kind: "primary"; text: "I understand"; onClicked: vigil.acknowledgeWelcome() }
+            BigTitle { text: "Before you start" }
+            Body { text: "Vigil learns each person's usual readings, then measures how far every new day moves from them. When something drifts it says what changed and whether to handle it yourself, tell the Medical Officer, or call Earth." }
+            Body { text: (vigil.isDemo ? "Everything in the demo mission is simulated, including the five crew members." : "Readings come from what your crew types in or imports.") + " A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything." }
+            Body { text: "Nothing leaves this computer except the packets you send to Earth. Journal words are deleted after scoring unless you choose to keep them." }
+            VButton { Layout.fillWidth: true; kind: "primary"; text: "Continue"; onClicked: vigil.acknowledgeWelcome() }
         }
     }
 

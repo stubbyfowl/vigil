@@ -1,30 +1,35 @@
 import QtQuick
 
-// Status is never color alone: always a shape and a word.
+// A status tag, after nasa.gov's LIVE box: an outlined label with a shape and a word. It is not a button.
 Rectangle {
-    id: pill
+    id: tag
     property string status: "green"
     property string label: Theme.statusWord(status)
     property bool compact: false
-    implicitWidth: row.implicitWidth + (compact ? 18 : 24)
-    implicitHeight: compact ? 30 : 34
-    radius: height / 2
-    color: Theme.statusFill(status)
+    readonly property color tone: Theme.statusColor(status)
+    implicitWidth: row.implicitWidth + 18
+    implicitHeight: compact ? 28 : 32
+    radius: 2
+    color: "transparent"
+    border.width: 1
+    border.color: tone
     Accessible.role: Accessible.StaticText
     Accessible.name: label
 
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
-        StatusIcon { status: pill.status; tint: Theme.statusColor(pill.status); anchors.verticalCenter: parent.verticalCenter; implicitWidth: 14; implicitHeight: 14; scale: 0.8 }
+        spacing: 7
+        StatusIcon { status: tag.status; tint: tag.tone; anchors.verticalCenter: parent.verticalCenter; implicitWidth: 13; implicitHeight: 13; scale: 0.8 }
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: pill.label
-            color: Theme.statusColor(pill.status)
-            font.family: Theme.body
+            text: tag.label
+            color: tag.tone
+            font.family: Theme.mono
             font.weight: Font.Medium
-            font.pixelSize: 16
+            font.pixelSize: 13
+            font.letterSpacing: 1.8
+            font.capitalization: Font.AllUppercase
         }
     }
 }

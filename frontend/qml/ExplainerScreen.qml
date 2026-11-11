@@ -16,7 +16,7 @@ Item {
     PageScroll {
         anchors.fill: parent
         visible: screen.d.available
-        RowLayout { spacing: 12; BackButton {} BigTitle { text: "Same heart rate. Different meaning." } }
+        RowLayout { spacing: 12; BackButton {} BigTitle { text: "Two people, the same heart rate" } }
         RowLayout {
             Layout.fillWidth: true
             spacing: 16
@@ -47,11 +47,11 @@ Item {
                     SeriesChart { Layout.fillWidth: true; series: modelData.chart; chartHeight: 230 }
                     Body {
                         font.pixelSize: 21
-                        text: modelData.verdict === "alert" ? "+" + (modelData.value - modelData.median).toFixed(1) + " bpm above their own normal for " + modelData.drift_days + " days." : "Right where this person usually is."
+                        text: modelData.verdict === "alert" ? "+" + (modelData.value - modelData.median).toFixed(1) + " bpm above their own normal for " + modelData.drift_days + " days." : "Inside this person's usual range."
                     }
                 }
             }
         }
-        Note { text: "A real day from this simulated mission. One limit for everyone cannot tell these two apart. Vigil can, because it compares each person with themself." }
+        Note { text: "Both readings come from the same day of this simulated mission. A single limit for everyone treats them the same. Vigil compares each reading with that person's own range, so only one of them raises an alert." }
     }
 }

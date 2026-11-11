@@ -9,7 +9,7 @@ from .drift import PLAIN_NAMES, SignalDay
 from .escalation import days_text
 
 PROTOCOLS: dict[str, Any] = json.loads((Path(__file__).parent / "protocols.json").read_text())
-DISCLAIMER = "Decision support, not a diagnosis."
+DISCLAIMER = "Vigil does not diagnose. Check with your flight surgeon."
 PERCENT_SIGNALS = {"sleep_hours", "social_min", "exercise_min", "exercise_load", "hrv", "grip"}
 UNIT_WORDS = {
     "%": "points", "min": "minutes", "AU": "units", "index": "points", "ratio": "points",
@@ -17,12 +17,12 @@ UNIT_WORDS = {
 }
 SHORT_NAMES = {"sleep_hours": "Sleep", "ortho_rise": "Heart rate rise on standing", "journal": "Journal tone"}
 WHY_MATTERS = {
-    "immune": "These changes often come together when the body fights illness.",
-    "heart": "These changes can mean the heart is working harder than usual.",
-    "behavior": "These changes often come together under stress or isolation.",
-    "bone": "Less loading can speed up bone and muscle loss in low gravity.",
+    "immune": "Together these often mean the body is fighting an infection.",
+    "heart": "Together these can mean the heart is working harder than usual.",
+    "behavior": "This pattern is common under stress or isolation.",
+    "bone": "Less loading speeds up bone and muscle loss in low gravity.",
 }
-SINGLE_SIGNAL_NOTE = "One change alone is often nothing, but it is worth a closer look."
+SINGLE_SIGNAL_NOTE = "A single reading that moves is often noise, so recheck before changing anything."
 BY_SIGNAL = {
     "ortho_rise": "hydration", "sleep_hours": "sleep_reset", "sleep_eff": "sleep_reset",
     "social_min": "social_call", "stress": "breathing", "mood": "light_exposure", "energy": "light_exposure",

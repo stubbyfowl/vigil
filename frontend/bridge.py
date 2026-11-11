@@ -22,7 +22,8 @@ CHANGES_STATE = {
     "set_share", "call_earth", "set_link", "set_clock", "demo_start", "demo_next", "demo_stop", "checkin", "put_config", "reset_config",
     "log_readings", "delete_entry", "import_file", "add_member", "update_member", "set_auto_lock", "archive_mission",
 }
-DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "light", "welcomed": False, "reduce_motion": False, "chose_demo": False}
+DESIGN_VERSION = 2  # the aurora redesign; older saved themes reset once to the new default
+DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False, "chose_demo": False, "design": DESIGN_VERSION}
 PROBLEMS = (LookupError, ValueError, TypeError, PermissionError, AuthError)
 
 
@@ -71,7 +72,10 @@ class Bridge(QObject):
         self._palettes = json.loads((config.FRONTEND_DIR / "palette.json").read_text())
         self._prefs = dict(DEFAULT_PREFS)
         if config.PREFS_PATH.exists():
-            self._prefs |= json.loads(config.PREFS_PATH.read_text())
+            saved = json.loads(config.PREFS_PATH.read_text())
+            if saved.get("design") != DESIGN_VERSION:
+                saved |= {"theme": "dark", "design": DESIGN_VERSION}
+            self._prefs |= saved
         self._snap = vigil.live_state()
         self._route = "/"
         self._history: list[str] = []

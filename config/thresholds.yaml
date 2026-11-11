@@ -1,5 +1,5 @@
-# Starting values, not clinical limits. Edit here or on the Admin screen.
-note: Starting values, not clinical limits.
+# A flight surgeon has not reviewed these values. Edit here or on the Thresholds screen.
+note: A flight surgeon has not reviewed these values.
 mission:
   length_days: 180
   seed: 42

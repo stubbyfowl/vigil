@@ -28,7 +28,7 @@ Popup {
         BigTitle { text: dialog.required ? "Choose your own PIN" : "Change PIN"; font.pixelSize: 32 }
         Body { visible: dialog.required; color: Theme.ink2; text: "You signed in with a temporary PIN. Pick one only you know." }
         Field { id: current; label: dialog.required ? "Temporary PIN" : "Current PIN"; secret: true; digits: true; maxLength: 8 }
-        Field { id: fresh; label: "New PIN"; secret: true; digits: true; maxLength: 8; helper: "4 to 8 digits. Not 1234, not all the same digit." }
+        Field { id: fresh; label: "New PIN"; secret: true; digits: true; maxLength: 8; helper: "4 to 8 digits. Avoid 1234 and repeated digits." }
         Field { id: again; label: "New PIN again"; secret: true; digits: true; maxLength: 8; onAccepted: dialog.save() }
         Banner { tone: "error"; text: dialog.message }
         RowLayout {

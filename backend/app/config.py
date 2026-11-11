@@ -25,7 +25,7 @@ OUTBOX_DIR = HOME / "outbox"
 IMPORT_DIR = HOME / "import"
 EXPORT_DIR = HOME / "exports"
 BACKUP_DIR = HOME / "backups"
-HEADER = "# Starting values, not clinical limits. Edit here or on the Admin screen.\n"
+HEADER = "# A flight surgeon has not reviewed these values. Edit here or on the Thresholds screen.\n"
 
 Config = dict[str, Any]
 

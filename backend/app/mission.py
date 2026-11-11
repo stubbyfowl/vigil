@@ -40,7 +40,7 @@ def day_date(start: date, day: int) -> date:
 
 
 def check_value(signal_id: str, value: object, allowed: set[str] | None = None) -> float:
-    """Return the value as a number, or raise with a sentence a person can act on."""
+    """Return the value as a number, or raise with a sentence that says what to fix."""
     sig = BY_ID.get(signal_id)
     if sig is None or (allowed is not None and signal_id not in allowed):
         raise ValueError(f"{signal_id} is not a reading Vigil tracks.")

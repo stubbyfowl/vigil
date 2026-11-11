@@ -22,6 +22,6 @@ Rectangle {
             submitText: "Unlock"
             onSubmitted: function (pin) { pad.error = vigil.unlock(pin) }
         }
-        VButton { Layout.alignment: Qt.AlignHCenter; kind: "quiet"; text: "Someone else? Sign out"; onClicked: vigil.signOut() }
+        VButton { Layout.alignment: Qt.AlignHCenter; kind: "quiet"; text: "Sign out"; onClicked: vigil.signOut() }
     }
 }

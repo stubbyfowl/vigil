@@ -2,7 +2,7 @@
 
 ## Data honesty statement
 
-All crew data in Vigil is synthetic. No real astronaut data is used. The crew members are invented. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis. No flight surgeon has reviewed it.
+The demo mission's crew are invented and all their readings are synthetic. No real astronaut data is used anywhere. A real mission holds only what its crew enters or imports. A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything.
 
 ## What the results do and do not show
 

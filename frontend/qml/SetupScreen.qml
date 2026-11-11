@@ -52,7 +52,7 @@ Item {
             color: Theme.ink2
             text: screen.step === 1
                   ? "Day 1 is the start date. Vigil counts mission days from it and learns each person's normal over the first days of readings."
-                  : "The Commander adds crew members, resets PINs, and can see the audit log. Health data still stays private to each person."
+                  : "The Commander manages accounts and reads the audit log. Each person's health data stays private to them."
         }
         ColumnLayout {
             visible: screen.step === 1

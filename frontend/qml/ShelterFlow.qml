@@ -70,7 +70,7 @@ ColumnLayout {
 
     Body {
         visible: flow.finished
-        text: (flow.drill ? "Drill complete. All steps done." : "You are in the shelter.")
+        text: (flow.drill ? "Drill finished." : "You are in the shelter.")
             + (flow.storm && flow.storm.shelter_dose_msv !== undefined ? " Dose logged in shelter so far: " + flow.storm.shelter_dose_msv + " mSv. With no shelter: " + flow.storm.unsheltered_dose_msv + " mSv." : "")
     }
 }

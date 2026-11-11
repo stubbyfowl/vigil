@@ -31,13 +31,13 @@ Item {
                 divider: true
                 title: "One-way delay"
                 Text { text: screen.d.delay_minutes + " minutes"; font.family: Theme.body; font.weight: Font.Medium; font.features: { "tnum": 1 }; font.pixelSize: 40; font.letterSpacing: -1; color: Theme.ink }
-                Note { text: "Any reply takes at least " + (screen.d.delay_minutes * 2) + " minutes. Act on the checklist first." }
+                Note { text: "A reply takes at least " + (screen.d.delay_minutes * 2) + " minutes." }
             }
             second: [
                 Panel {
                     Layout.fillWidth: true
                     surface: true
-                    title: "What Earth will receive"
+                    title: "What Earth gets"
                     Flow {
                         Layout.fillWidth: true
                         spacing: 8
@@ -51,15 +51,15 @@ Item {
                             }
                         }
                     }
-                    Note { text: "Status only. No raw values and no journal text." }
+                    Note { text: "System status and your note. Raw readings go too if you share them with Earth." }
                     ShareToggle { audience: "Earth"; field: "share_ground" }
                 },
                 Panel {
                     Layout.fillWidth: true
                     surface: true
-                    title: screen.sent ? "Sent" : "Add a short note (optional)"
-                    Body { visible: screen.sent; text: "Your packet is on its way. It reaches Earth in " + screen.d.delay_minutes + " minutes." }
-                    VButton { visible: screen.sent; text: "Watch it travel"; onClicked: vigil.navigate("/ground") }
+                    title: screen.sent ? "Sent" : "Note for Earth (optional)"
+                    Body { visible: screen.sent; text: vigil.isDemo ? "It reaches Earth in " + screen.d.delay_minutes + " minutes." : "It is in the outbox for the comm system to send." }
+                    VButton { visible: screen.sent && vigil.isDemo; text: "Show in Mission Control"; onClicked: vigil.navigate("/ground") }
                     TextField {
                         id: note
                         objectName: "note"
@@ -73,7 +73,7 @@ Item {
                         Accessible.name: "Note to Earth"
                         background: Rectangle { color: Theme.panel2; border.color: note.activeFocus ? Theme.action : "transparent"; radius: 10 }
                     }
-                    VButton { visible: !screen.sent; Layout.fillWidth: true; kind: "primary"; text: screen.d.level >= 3 ? "Send priority packet" : "Send packet"; onClicked: screen.send() }
+                    VButton { visible: !screen.sent; Layout.fillWidth: true; kind: "urgent"; text: screen.d.level >= 3 ? "Send priority packet" : "Send packet"; onClicked: screen.send() }
                     Body { visible: screen.errorText.length > 0; text: screen.errorText; color: Theme.warning }
                 }
             ]

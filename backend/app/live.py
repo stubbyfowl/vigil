@@ -35,30 +35,30 @@ def _first_alert(store: Store, event_id: str) -> dict[str, Any] | None:
 def build_beats(store: Store) -> list[Beat]:
     """The story, with every day taken from what the engine actually flagged."""
     beats = [
-        Beat(1, "eng", "/", "Day 1. Vigil knows nothing yet. It is learning each person's normal.", 7),
-        Beat(11, "eng", "/", "Day 11. Baselines are ready. Each number now means something for this person.", 5),
+        Beat(1, "eng", "/", "Day 1. Vigil has no baseline for anyone yet.", 7),
+        Beat(11, "eng", "/", "Day 11. Each person now has a baseline from 10 days of readings.", 5),
     ]
     immune = _first_alert(store, "immune_stress")
     if immune:
         beats += [
-            Beat(immune["day"], "eng", "/", f"Day {immune['day']}. Lena feels fine. Vigil sees several small changes move together.", 6),
-            Beat(immune["day"], "eng", f"/alert/{immune['id']}", "Plain words. How much, how long, and one thing to do. Earth was never asked.", 9),
+            Beat(immune["day"], "eng", "/", f"Day {immune['day']}. Lena says she feels fine. Several of her immune readings have moved at once.", 6),
+            Beat(immune["day"], "eng", f"/alert/{immune['id']}", "The alert is written for Lena, with the numbers behind it one tap away.", 9),
         ]
     slide = _first_alert(store, "behavior_slide")
     if slide:
-        beats.append(Beat(slide["day"], "plt", f"/alert/{slide['id']}", "Slow slides are easy to miss in yourself. Vigil names it and tells the Medical Officer.", 9))
+        beats.append(Beat(slide["day"], "plt", f"/alert/{slide['id']}", "Tomas has slept less and rated his mood lower for two weeks. The Medical Officer is told.", 9))
     if store.mission.storm:
         beats += [
-            Beat(120, "eng", "/radiation", "Solar storm. A warning comes 2 hours ahead. Shelter steps start now, not after a call home.", 9),
-            Beat(120, "eng", "/ground", "Earth gets a priority packet. It is still 20 minutes away. Level 3 goes first.", 8),
+            Beat(120, "eng", "/radiation", "Day 120. The solar monitor warns of a storm 2 hours ahead, and the shelter checklist opens.", 9),
+            Beat(120, "eng", "/ground", "A Level 3 packet goes to the front of the queue. Earth reads it 20 minutes later.", 8),
         ]
     heart = _first_alert(store, "heart_drift")
     if heart:
         beats += [
-            Beat(heart["day"], "cmdr", f"/alert/{heart['id']}", "The Commander's heart rate is still under any population limit. It is not normal for this person.", 8),
-            Beat(heart["day"], "cmdr", "/explainer", "Same heart rate. One person is fine. One is not. Only a personal baseline can tell.", 12),
+            Beat(heart["day"], "cmdr", f"/alert/{heart['id']}", "Ana's resting heart rate is under every population limit and well above her own baseline.", 8),
+            Beat(heart["day"], "cmdr", "/explainer", "Two crew members with the same heart rate. For one of them it is normal. For the other it is high.", 12),
         ]
-    beats.append(Beat(store.mission.days, "eng", "/results", "Measured on 20 simulated missions, with false alarms counted. Simulated data only.", 10))
+    beats.append(Beat(store.mission.days, "eng", "/results", "Tested on 20 simulated missions kept out of tuning, with every false alarm counted.", 10))
     return beats
 
 

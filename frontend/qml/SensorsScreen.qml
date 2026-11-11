@@ -15,7 +15,7 @@ Item {
             Item { Layout.fillWidth: true }
             Placard { text: screen.d.reporting + " of " + screen.d.sensors.length + " reported today" }
         }
-        Note { text: screen.d.live ? "Which kinds of reading arrived today. A missing reading lowers confidence. It never counts as a health change. Log readings by hand or import a device export." : "A missing reading lowers confidence. It never counts as a health change. These wearables and their batteries are simulated." }
+        Note { text: screen.d.live ? "Which kinds of reading arrived today. Missing readings lower the confidence score and never raise an alert." : "Missing readings lower the confidence score and never raise an alert. These wearables and batteries are simulated." }
         GridLayout {
             Layout.fillWidth: true
             columns: 2

@@ -4,7 +4,7 @@ import re
 
 import pytest
 from app import config
-from app.engine.alerts import action_text, change_text, write_alert
+from app.engine.alerts import DISCLAIMER, action_text, change_text, write_alert
 from app.engine.baseline import compute_baseline, robust_stats, window_sizes
 from app.engine.checkin import score_text
 from app.engine.drift import SignalDay, SignalTracker, combine, cusum_step, ewma_limit, ewma_step
@@ -230,7 +230,7 @@ def test_alert_has_no_empty_fields_or_placeholders(level_):
     alert = write_alert("cmdr", "heart", 150, 154, level_, "A reason.", flagged, 55)
     assert all(v not in ("", None) for v in alert.values())
     assert not re.search(r"[{}]|None|nan", alert["message"] + alert["action"])
-    assert alert["disclaimer"] == "Decision support, not a diagnosis."
+    assert alert["disclaimer"] == DISCLAIMER and "diagnos" in DISCLAIMER
     row = alert["why"]["signals"][0]
     assert row["days_of_drift"] == 4 and row["current"] == 68.0 and row["rule"]
 

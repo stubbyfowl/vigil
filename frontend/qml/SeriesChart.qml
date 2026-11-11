@@ -42,7 +42,7 @@ ColumnLayout {
         Text { visible: root.present(root.value); text: "Day " + (root.series ? root.series.days[root.shown] : ""); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 17; color: Theme.ink }
         Text { visible: root.present(root.value); text: root.present(root.value) ? root.value.toFixed(root.series.decimals) + " " + root.series.unit : ""; font.family: Theme.body; font.pixelSize: 17; color: Theme.ink }
         Text {
-            text: !root.present(root.value) ? "No reading on this day" : root.present(root.low) ? "Your normal " + root.low.toFixed(root.tickDecimals) + " to " + root.high.toFixed(root.tickDecimals) : "Learning your normal"
+            text: !root.present(root.value) ? "No reading on this day" : root.present(root.low) ? "Usual range " + root.low.toFixed(root.tickDecimals) + " to " + root.high.toFixed(root.tickDecimals) : "Needs more readings"
             font.family: Theme.body; font.pixelSize: 17; color: Theme.ink2
         }
         StatusPill { visible: root.shown >= 0 && !!root.series && root.series.flagged[root.shown]; status: "yellow"; label: "Drifting"; compact: true }
@@ -107,7 +107,7 @@ ColumnLayout {
                 c.beginPath()
                 band.forEach(function (b, k) { k ? c.lineTo(x(b), y(s.median[b])) : c.moveTo(x(b), y(s.median[b])) })
                 c.stroke(); c.setLineDash([]); c.globalAlpha = 1
-                if (band[0] > 0) { c.fillStyle = Theme.ink2; c.textAlign = "right"; c.fillText("Learning", x(band[0]) - 6, m.top + 12) }
+                if (band[0] > 0) { c.fillStyle = Theme.ink2; c.textAlign = "right"; c.fillText("Baseline period", x(band[0]) - 6, m.top + 12) }
             }
 
             c.strokeStyle = Theme.ink; c.lineWidth = 2; c.lineJoin = "round"

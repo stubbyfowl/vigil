@@ -94,7 +94,7 @@ Item {
             Layout.fillWidth: true
             spacing: 12
             BackButton {}
-            BigTitle { text: "Crew and accounts" }
+            BigTitle { text: "Accounts" }
             Item { Layout.fillWidth: true }
             VButton { text: "Audit log"; onClicked: vigil.navigate("/audit") }
             VButton { text: "Back up now"; onClicked: { var out = screen.run("backup", {}, ""); if (!out.error) screen.notice = "Backup saved to " + out.path } }

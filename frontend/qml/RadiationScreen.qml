@@ -22,8 +22,8 @@ Item {
         Statement {
             Layout.maximumWidth: 900
             size: 38
-            lead: "Career dose is " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " mSv."
-            detail: "On this path it reaches " + screen.d.projected_total_msv + " by the end of the mission."
+            lead: "Career dose: " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " mSv."
+            detail: "At this rate it will be " + screen.d.projected_total_msv + " mSv when the mission ends."
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -54,7 +54,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 12
                 Repeater {
-                    model: [["Today", screen.d.today_dose_msv, "mSv"], ["Dose rate", screen.d.dose_rate_usv_h, "uSv per hour"], ["Projected at end", screen.d.projected_total_msv, "mSv career total"]]
+                    model: [["Today", screen.d.today_dose_msv, "mSv"], ["Dose rate", screen.d.dose_rate_usv_h, "uSv per hour"], ["At mission end", screen.d.projected_total_msv, "mSv career total"]]
                     Panel {
                         required property var modelData
                         Layout.fillWidth: true
@@ -74,7 +74,7 @@ Item {
                     font.pixelSize: screen.active ? 23 : 18
                     text: screen.active ? "Solar storm in progress."
                         : screen.d.storm.phase === "passed" ? "Last storm has passed. Dose in shelter: " + screen.d.storm.shelter_dose_msv + " mSv. With no shelter: " + screen.d.storm.unsheltered_dose_msv + " mSv."
-                        : "No storm flag from the solar monitor."
+                        : "The solar monitor shows no storm."
                 }
                 Canvas {
                     id: trace
@@ -104,11 +104,11 @@ Item {
                     }
                 }
             }
-            Note { text: "Limit and dose figures are approximate and marked must verify. The storm size and shelter factor are invented for this simulation." }
+            Note { text: vigil.isDemo ? "The limit and dose figures are approximate and still need checking against sources. The storm size and shelter factor are made up." : "The limit is approximate and still needs checking against sources." }
             second: [
                 Panel { Layout.fillWidth: true; visible: screen.active; surface: true; title: "Shelter steps"; ShelterFlow { Layout.fillWidth: true; storm: screen.d.storm } },
                 Panel { Layout.fillWidth: true; visible: !screen.active && screen.drill; surface: true; title: "Storm drill"; ShelterFlow { Layout.fillWidth: true; drill: true } },
-                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; surface: true; title: "Practice"; Body { text: "Run a storm drill to rehearse the shelter steps with a timer." } }
+                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; surface: true; title: "Practice"; Body { text: "A drill walks through the shelter steps with a timer." } }
             ]
         }
     }

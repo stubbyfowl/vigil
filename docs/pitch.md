@@ -44,7 +44,7 @@ Run `make demo`. Speaker 1 talks over the opening. The app plays beside you. Eve
 
 ## 2:40 The honest close (Speaker 3, 20 seconds)
 
-> All of this data is synthetic, and these thresholds are starting values, not clinical limits. The next step is review by a flight surgeon and testing on real analog mission data.
+> All of this data is synthetic, and a flight surgeon has not reviewed these thresholds yet. The next step is review by a flight surgeon and testing on real analog mission data.
 >
 > Vigil is software an astronaut could trust, because it tells you what it knows and what it does not. Thank you.
 

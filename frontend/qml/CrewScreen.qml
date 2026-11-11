@@ -54,7 +54,7 @@ Item {
         }
         RowLayout {
             Layout.fillWidth: true
-            Note { text: "The crew sees trends and status only. Raw values and journal text stay private." }
+            Note { text: "You see each person's status and 30-day trend. Raw readings appear only for people who share them with the crew." }
             ShareToggle { audience: "the crew"; field: "share_crew" }
         }
     }

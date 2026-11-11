@@ -24,7 +24,7 @@ Item {
             BackButton {}
             BigTitle { text: "Mission day " + vigil.day }
             Item { Layout.fillWidth: true }
-            VButton { text: vigil.running ? "Pause" : "Play mission"; onClicked: Api.ask("set_clock", { running: !vigil.running }) }
+            VButton { text: vigil.running ? "Pause" : "Play"; onClicked: Api.ask("set_clock", { running: !vigil.running }) }
         }
         Panel {
             Layout.fillWidth: true
@@ -46,7 +46,7 @@ Item {
                         Accessible.name: "Jump to " + modelData.title + ", day " + modelData.day
                         onClicked: Api.ask("set_clock", { day: modelData.day, running: false })
                         background: Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 2; radius: 1; color: Theme.flag }
-                        contentItem: Placard { id: mark; text: modelData.title; color: Theme.ink; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: Placard { id: mark; text: modelData.title.replace("Solar particle event", "Solar storm"); color: Theme.ink; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                     }
                 }
             }
@@ -65,7 +65,7 @@ Item {
                     width: parent.width - screen.labelWidth
                     height: parent.height
                     Accessible.role: Accessible.Graphic
-                    Accessible.name: "Health status of each crew member across the whole mission."
+                    Accessible.name: "Each crew member's status on every day of the mission."
                     Connections { target: screen; function onDChanged() { laneCanvas.requestPaint() } }
                     Connections { target: Theme; function onModeChanged() { laneCanvas.requestPaint() } }
                     onWidthChanged: requestPaint()
@@ -73,7 +73,7 @@ Item {
                         var c = getContext("2d")
                         c.reset()
                         var cell = width / screen.d.mission_days
-                        var color = { g: Theme.panel2, y: Theme.p.ribbonWarm[0], r: Theme.p.ribbonWarm[1] }
+                        var color = { g: Theme.panel2, y: Theme.caution, r: Theme.warning }
                         screen.d.crew.forEach(function (person, row) {
                             for (var day = 0; day < screen.d.mission_days; day++) {
                                 c.fillStyle = color[screen.worst(person, day)]

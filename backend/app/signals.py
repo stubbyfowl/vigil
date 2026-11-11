@@ -47,7 +47,7 @@ SIGNALS: list[Signal] = [
     S("bone_marker", "Bone marker index", "index", "bone", 14, 40, 160, 3.0, "down", 100, 10, -8.0),
     S("lean_mass", "Lean mass proxy", "kg", "bone", 7, 35, 95, 0.3, "down", 62, 8, -1.2),
     # Immune
-    S("temp", "Body temperature", "C", "immune", 1, 35, 41, 0.12, "up", 36.7, 0.2, 0, 2),
+    S("temp", "Body temperature", "°C", "immune", 1, 35, 41, 0.12, "up", 36.7, 0.2, 0, 2),
     S("crp", "CRP", "mg/L", "immune", 7, 0, 40, 0.2, "up", 1.0, 0.3, 0, 2),
     S("il6", "IL-6", "pg/mL", "immune", 7, 0, 40, 0.3, "up", 1.8, 0.4, 0, 2),
     S("lymph", "Lymphocyte ratio", "ratio", "immune", 7, 0.05, 0.7, 0.015, "down", 0.32, 0.04, 0, 3),

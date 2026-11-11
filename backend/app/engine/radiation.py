@@ -106,8 +106,7 @@ def radiation_alert(mission: Mission, who: Astronaut, day: int, state: dict[str,
     if state["near_limit"]:
         return _alert(
             who, day, day,
-            f"Your dose is {state['career_dose_msv']} mSv. That is {state['fraction'] * 100:.0f}% of the {limit} mSv limit. "
-            "More dose brings you closer to the limit.",
+            f"Your dose is {state['career_dose_msv']} mSv. That is {state['fraction'] * 100:.0f}% of the {limit} mSv limit.",
             "Send the priority packet to Earth and review your dose plan.",
             "Escalated to Level 3 because radiation is near a limit.", [row],
         )

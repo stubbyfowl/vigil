@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// One sentence in two tones: what matters first, then the detail.
+// One sentence in two tones: the main point first, then the detail.
 Text {
     property string lead: ""
     property string detail: ""
@@ -10,8 +10,8 @@ Text {
     text: "<font color='" + Theme.ink + "'>" + lead + "</font> <font color='" + Theme.ink2 + "'>" + detail + "</font>"
     textFormat: Text.StyledText
     wrapMode: Text.WordWrap
-    font.family: Theme.body
-    font.weight: Font.Medium
+    font.family: Theme.display
+    font.weight: Font.DemiBold
     font.pixelSize: size
     font.letterSpacing: -size * 0.022
     lineHeight: 1.08

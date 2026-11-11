@@ -26,21 +26,20 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 14
+            Wordmark { size: 64 }
             RowLayout {
-                spacing: 14
-                Text { text: "Vigil"; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 28; font.letterSpacing: -0.9; color: Theme.ink }
-                Placard { text: screen.ground ? "Mission Control station" : screen.info.name }
-                Placard { visible: !screen.ground; text: "Day " + screen.info.day + " of " + screen.info.length_days; font.features: { "tnum": 1 } }
+                spacing: 10
+                Placard { text: screen.ground ? "Ground station" : screen.info.name }
+                Placard { visible: !screen.ground; text: "·  Day " + screen.info.day + " / " + screen.info.length_days; font.features: { "tnum": 1 } }
             }
-            Statement {
-                Layout.topMargin: 18
-                size: 44
-                lead: screen.ground ? "Mission Control." : "Who is signing in?"
-                detail: screen.ground ? "Sign in to see what the crew has sent." : "Tap your name."
+            Text {
+                Layout.topMargin: 14
+                text: screen.ground ? "Mission Control" : "Crew sign-in"
+                font.family: Theme.display; font.weight: Font.ExtraBold; font.pixelSize: 40; font.letterSpacing: -1.2; color: Theme.ink
             }
             Banner {
                 visible: !!screen.info.demo_pin
-                text: screen.info.demo_pin ? "This is the demo mission with simulated crew. Every PIN is " + screen.info.demo_pin + ". Sign in as the Presenter to play the guided demo." : ""
+                text: screen.info.demo_pin ? "Demo mission with five simulated crew. Every PIN is " + screen.info.demo_pin + ". The Presenter account plays the guided demo." : ""
             }
             GridLayout {
                 Layout.fillWidth: true
@@ -63,9 +62,9 @@ Item {
                         onClicked: { screen.chosen = modelData; pad.error = ""; pad.pin = ""; pad.forceActiveFocus() }
                         background: Rectangle {
                             radius: Theme.radius
-                            color: tile.current ? Theme.panel : Theme.panel2
-                            border.width: tile.current || tile.visualFocus ? 2 : 0
-                            border.color: Theme.action
+                            color: tile.current ? Theme.panel2 : Theme.panel
+                            border.width: tile.current || tile.visualFocus ? 2 : 1
+                            border.color: tile.current || tile.visualFocus ? Theme.ink : Theme.rule
                             opacity: tile.down ? 0.85 : 1
                         }
                         contentItem: RowLayout {
@@ -84,7 +83,7 @@ Item {
             Banner {
                 visible: screen.members.length === 0
                 tone: "caution"
-                text: screen.ground ? "No Mission Control accounts yet. The Commander adds them on the vehicle under Accounts." : "No accounts yet."
+                text: screen.ground ? "There are no Mission Control accounts yet. The Commander adds them on the vehicle, under Accounts." : "There are no accounts yet."
             }
             Item { Layout.fillHeight: true }
             RowLayout {
@@ -114,9 +113,12 @@ Item {
         Rectangle {
             Layout.preferredWidth: 420
             Layout.fillHeight: true
+            opacity: screen.chosen !== null ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { enabled: !vigil.reduceMotion; NumberAnimation { duration: 160 } }
             radius: Theme.radius
             color: Theme.panel
-            border.color: Theme.isLight ? "transparent" : Theme.rule
+            border.color: Theme.rule
             SoftShadow { visible: Theme.isLight }
             ColumnLayout {
                 anchors { fill: parent; margins: 28 }
@@ -131,15 +133,14 @@ Item {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: screen.chosen ? screen.chosen.name : "Choose your name"
-                    font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 24; color: Theme.ink
+                    text: screen.chosen ? screen.chosen.name : "Sign in"
+                    font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 24; color: Theme.ink
                 }
-                Note { Layout.alignment: Qt.AlignHCenter; Layout.fillWidth: false; text: screen.chosen ? "Enter your PIN" : "Your PIN keeps your health data yours." }
+                Placard { Layout.alignment: Qt.AlignHCenter; text: screen.chosen ? "Enter PIN" : "Select your name" }
                 PinPad {
                     id: pad
                     Layout.alignment: Qt.AlignHCenter
-                    enabled: screen.chosen !== null
-                    opacity: enabled ? 1 : 0.4
+                    visible: screen.chosen !== null
                     onSubmitted: function (pin) { screen.signIn(pin) }
                 }
                 Item { Layout.fillHeight: true }

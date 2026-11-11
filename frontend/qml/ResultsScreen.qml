@@ -30,9 +30,9 @@ Item {
             Layout.fillWidth: true
             spacing: 12
             BackButton {}
-            BigTitle { text: "Measured, not claimed" }
+            BigTitle { text: "Results on 20 test missions" }
             Item { Layout.fillWidth: true }
-            Placard { text: (screen.d.seeds ? screen.d.seeds.length : 0) + " simulated missions · Held-out seeds · Simulated data only" }
+            Placard { text: "Seeds kept out of tuning"; Layout.fillWidth: true; elide: Text.ElideRight }
         }
         RowLayout {
             Layout.fillWidth: true
@@ -75,13 +75,13 @@ Item {
                         RowLayout {
                             required property var modelData
                             spacing: 10
-                            Body { text: modelData[0]; Layout.fillWidth: false; Layout.preferredWidth: 205 }
+                            Body { text: modelData[0]; Layout.fillWidth: false; Layout.preferredWidth: 190 }
                             Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: 14
                                 radius: 7
                                 color: Theme.panel2
-                                Rectangle { width: parent.width * modelData[1] / bars.peak; height: parent.height; radius: 7; color: Theme.action }
+                                Rectangle { width: parent.width * modelData[1] / bars.peak; height: parent.height; radius: 7; color: modelData[0].indexOf("Vigil") === 0 ? Theme.ink : Theme.ink2 }
                             }
                             Text { text: modelData[1]; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 18; color: Theme.ink; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
                         }
@@ -89,6 +89,6 @@ Item {
                 }
             }
         }
-        Note { text: "We planted these events ourselves and chose their size, so this shows the method works in simulation. It says nothing about real people. Full table: docs/results.md." }
+        Note { text: "We planted these events and chose their size, so the numbers describe simulated crew only. The full table is in docs/results.md." }
     }
 }

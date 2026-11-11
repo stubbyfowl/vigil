@@ -74,7 +74,7 @@ The breadth term is why three small shifts score more than one shift of the same
 
 **7. Radiation (`engine/radiation.py`).** Tracks career dose against the limit, projects the mission total without storm days, and runs the storm flow. It is scored directly and has no drift detectors.
 
-All numbers live in `config/thresholds.yaml`. They are starting values, not clinical limits.
+All numbers live in `config/thresholds.yaml`. A flight surgeon has not reviewed them.
 
 **8. C++ tracker (optional).** `backend/native/vigil_fast.cpp` is a second implementation of steps 1 and 2. `make native` builds it and `engine/fast.py` loads it. If it is missing, the Python tracker runs instead. `tests/test_native.py` requires both to agree exactly.
 

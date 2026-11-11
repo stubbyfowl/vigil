@@ -6,11 +6,21 @@ Item {
     property bool standalone: false
     property int tick: 0
     readonly property var raw: Api.ask("ground", { day: vigil.day, v: [vigil.version, tick, vigil.signedIn] })
-    // Signed out or locked: show an empty control room rather than stale data.
+    // Signed out or locked: show an empty control room, so no stale data appears.
     readonly property var d: raw.error ? { system_keys: [], crew: [], level3: [], packets: [], live: !vigil.isDemo, day: vigil.day, link_up: true, delay_minutes: vigil.delayMinutes, flight_seconds: Math.max(1, vigil.flightSeconds) } : raw
     readonly property real timeScale: d.delay_minutes * 60 / d.flight_seconds
     readonly property var systemKeys: d.system_keys
     readonly property int inFlight: d.packets.filter(function (p) { return p.state === "in_transit" || p.state === "sent" }).length
+    // One line per reason, listing everyone it applies to, so a storm that hits five people reads as one event.
+    readonly property var level3Groups: {
+        var groups = []
+        screen.d.level3.forEach(function (a) {
+            var g = groups.find(function (x) { return x.system === a.system && x.reason === a.reason })
+            if (g) g.people.push(a.astronaut)
+            else groups.push({ system: a.system, reason: a.reason, people: [a.astronaut] })
+        })
+        return groups
+    }
     readonly property var stateWord: ({ queued: "Queued", sent: "Sent", in_transit: "In transit", received: "Received", in_outbox: "In outbox", picked_up: "Picked up" })
 
     Timer { interval: 400; running: true; repeat: true; onTriggered: screen.tick += 1 }
@@ -26,7 +36,7 @@ Item {
             Layout.fillWidth: true
             spacing: 12
             BackButton { visible: !screen.standalone }
-            BigTitle { text: "Mission control" }
+            BigTitle { text: "Mission Control" }
             Note { Layout.fillWidth: false; text: "Earth receives this " + screen.d.delay_minutes + " minutes late" }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -46,12 +56,12 @@ Item {
             visible: screen.d.level3.length > 0
             surface: true
             Repeater {
-                model: screen.d.level3
+                model: screen.level3Groups
                 RowLayout {
                     required property var modelData
                     spacing: 14
-                    StatusPill { status: "red"; compact: true; label: modelData.astronaut + " Level 3" }
-                    Body { text: modelData.system; font.weight: Font.DemiBold; Layout.fillWidth: false }
+                    StatusPill { status: "red"; compact: true; label: "Level 3 · " + modelData.system }
+                    Placard { text: modelData.people.join("  "); color: Theme.ink }
                     Body { text: modelData.reason }
                 }
             }
@@ -90,14 +100,14 @@ Item {
                         status: parent.column === screen.systemKeys.length + 1 ? parent.person.radiation : parent.person.systems[screen.systemKeys[parent.column - 1]]
                     }
                 }
-                Note { text: "Ground sees summaries and Level 3 reasons. Raw values stay on the ship unless the astronaut shares them." }
+                Note { text: "Earth sees each person's status and any Level 3 reason. Raw readings arrive only from people who share them." }
             }
             second: [
                 Panel {
                     Layout.fillWidth: true
                     surface: true
                     title: screen.d.live ? "Packets" : "Packet timeline, " + (screen.d.link_up ? screen.inFlight + " in flight" : "Link lost. Packets wait on board.")
-                    Note { visible: screen.d.packets.length === 0; text: screen.d.live ? "No packets yet." : "No packets yet. Run the mission to send some." }
+                    Note { visible: screen.d.packets.length === 0; text: screen.d.live ? "No packets yet." : "No packets yet." }
                     Repeater {
                         model: Math.min(7, screen.d.packets.length)
                         ColumnLayout {
@@ -117,7 +127,7 @@ Item {
                                 Text {
                                     Layout.preferredWidth: 78
                                     horizontalAlignment: Text.AlignRight
-                                    text: packet.p.state === "in_transit" || packet.p.state === "sent" ? screen.eta(packet.p.seconds_left) : packet.p.state === "received" ? "Arrived" : packet.p.state === "picked_up" ? "Sent" : "Waiting"
+                                    text: packet.p.state === "in_transit" || packet.p.state === "sent" ? screen.eta(packet.p.seconds_left) : packet.p.state === "received" ? "Arrived" : packet.p.state === "picked_up" || packet.p.state === "in_outbox" ? "" : "Waiting"
                                     font.family: Theme.body; font.features: { "tnum": 1 }; font.pixelSize: 17; color: Theme.ink
                                 }
                             }

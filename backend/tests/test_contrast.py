@@ -9,7 +9,8 @@ PALETTES = json.loads((Path(__file__).resolve().parents[2] / "frontend/palette.j
 PAIRS = [
     ("ink", "bg"), ("ink", "panel"), ("ink", "panel2"), ("ink2", "bg"), ("ink2", "panel"), ("ink2", "panel2"),
     ("nominal", "panel"), ("caution", "panel"), ("warning", "panel"),
-    ("nominal", "nominalBg"), ("caution", "cautionBg"), ("warning", "warningBg"), ("actionText", "action"), ("action", "panel"), ("bg", "ink"),
+    ("nominal", "nominalBg"), ("caution", "cautionBg"), ("warning", "warningBg"), ("actionText", "action"), ("actionText", "actionEnd"), ("action", "panel"), ("bg", "ink"),
+    ("nominal", "panel2"), ("caution", "panel2"), ("warning", "panel2"), ("urgentText", "urgent"), ("link", "panel"), ("link", "panel2"), ("link", "bg"),
 ]
 
 

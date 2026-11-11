@@ -7,38 +7,38 @@ Item {
 
     PageScroll {
         anchors.fill: parent
-        RowLayout { spacing: 12; BackButton {} BigTitle { text: "About and honesty" } }
-        Statement { lead: "All crew data in Vigil is synthetic."; detail: "Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis."; size: 36 }
+        RowLayout { spacing: 12; BackButton {} BigTitle { text: "About Vigil" } }
+        Statement { lead: vigil.isDemo ? "The demo crew and all their readings are simulated." : "Readings come from what your crew enters."; detail: "A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything."; size: 36 }
         Split {
             Layout.fillWidth: true
             Panel {
                 Layout.fillWidth: true
                 divider: true
-                title: "What this is"
-                Body { text: "Vigil is a student prototype for the NASA Space Apps Challenge. No flight surgeon has reviewed it. The crew are invented. Protocols are samples, not medical advice." }
-                Note { text: screen.d.must_verify_count + " reference figures are still marked \"must verify\". See data/real_ranges.json and SOURCES.md." }
+                title: "What Vigil is"
+                Body { text: "A student project for the 2026 NASA Space Apps Challenge in Phoenix. The self-care protocols are samples the team wrote." }
+                Note { text: screen.d.must_verify_count + " reference figures still need checking against sources. The list is in SOURCES.md." }
             }
             second: [
                 Panel {
                     Layout.fillWidth: true
                     divider: true
                     title: "Privacy"
-                    Body { text: "Vigil opens no network connections and listens on no ports. Journal text is scored on this computer and is not stored unless you choose to keep it." }
-                    Note { text: "Typeface: Instrument Sans." }
+                    Body { text: "Vigil opens no network connections and listens on no ports. Journal words are scored on this computer and deleted unless you choose to keep them." }
+                    Note { text: "Typefaces: Inter, Public Sans and DM Mono, after nasa.gov." }
                 }
             ]
         }
         Panel {
             Layout.fillWidth: true
             divider: true
-            title: "Planned sources"
+            title: "Sources to check"
             GridLayout {
                 Layout.fillWidth: true
                 columns: 3
                 columnSpacing: 12
                 rowSpacing: 8
                 Placard { text: "Source"; Layout.preferredWidth: 4; Layout.fillWidth: true }
-                Placard { text: "Planned use"; Layout.preferredWidth: 4; Layout.fillWidth: true }
+                Placard { text: "Use"; Layout.preferredWidth: 4; Layout.fillWidth: true }
                 Placard { text: "Status"; Layout.preferredWidth: 1; Layout.fillWidth: true }
                 Repeater {
                     model: screen.d.sources.length * 3

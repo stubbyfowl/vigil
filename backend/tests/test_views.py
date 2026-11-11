@@ -218,7 +218,7 @@ def test_admin_rejects_unknown_and_bad_values(values):
 def test_admin_edit_then_restore():
     vigil.put_config({"status": {"yellow": 25}, "disabled_signals": ["hrv"]})
     assert store.cfg["status"]["yellow"] == 25
-    assert "Starting values" in config.THRESHOLDS_PATH.read_text()
+    assert config.THRESHOLDS_PATH.read_text().startswith(config.HEADER)
     assert "hrv" not in store.runs["cmdr"].signals
     vigil.reset_config()
     assert "hrv" in store.runs["cmdr"].signals

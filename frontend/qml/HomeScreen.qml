@@ -5,69 +5,134 @@ import QtQuick.Layouts
 Item {
     id: home
     readonly property var d: Api.ask("astronaut", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
+    readonly property var notices: (Api.ask("notices", { id: vigil.astronaut, v: [vigil.version, vigil.day] }).notices || []).slice(0, 3)
     readonly property var names: {
         var out = {}
         Api.ask("crew", {}).signals.forEach(function (s) { out[s.id] = s.name })
         return out
     }
-    readonly property var notices: (Api.ask("notices", { id: vigil.astronaut, v: [vigil.version, vigil.day] }).notices || []).slice(0, 3)
-    readonly property var watching: d.systems.filter(function (s) { return s.status !== "green" }).map(function (s) { return s.name })
+    readonly property var drifting: d.systems.filter(function (s) { return !s.learning && s.status !== "green" })
     readonly property var topAlert: d.alerts.length ? d.alerts[0] : null
+    readonly property var hottest: {
+        var best = null
+        d.systems.forEach(function (s) { if (!s.learning && (!best || s.score > best.score)) best = s })
+        return best
+    }
     readonly property int worst: {
         var best = -1, score = -1
         d.systems.forEach(function (s, i) { if (s.status !== "green" && s.score > score) { best = i; score = s.score } })
         return best
     }
+    readonly property string headline: topAlert ? topAlert.system_name + " alert"
+        : d.learning ? "Building baseline"
+        : drifting.length ? drifting.map(function (s) { return s.name }).join(" and ") + " drifting"
+        : "All systems normal"
     readonly property int cardWidth: 340
     readonly property int firstVisible: Math.round(cards.contentX / (cardWidth + 16))
     onWorstChanged: if (worst >= 0) cards.positionViewAtIndex(worst, ListView.Contain)
+
+    function signed(row) {
+        var v = Math.round(row.change * 100) / 100
+        var unit = row.unit === "C" ? "°C" : row.unit
+        return (v >= 0 ? "+" : "−") + Math.abs(v) + (unit === "%" ? "%" : " " + unit)
+    }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
         RowLayout {
-            spacing: 10
-            Layout.topMargin: 8
-            Text { text: home.d.astronaut.name; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 18; color: Theme.ink }
-            Text { text: home.d.astronaut.role; font.family: Theme.body; font.pixelSize: 18; color: Theme.ink2 }
-        }
+            Layout.fillWidth: true
+            spacing: 40
 
-        Statement {
-            Layout.topMargin: 14
-            Layout.maximumWidth: 800
-            size: (lead + detail).length < 90 ? 46 : (lead + detail).length < 145 ? 40 : 34
-            lead: home.topAlert ? Theme.lead(home.topAlert.message)
-                : home.d.learning ? "Learning your normal."
-                : home.watching.length ? "Keeping an eye on " + home.watching.join(" and ") + "."
-                : "All clear."
-            detail: home.topAlert ? Theme.rest(home.topAlert.message)
-                : home.d.learning ? "Vigil needs a few more days of readings before it can raise an alert."
-                : home.watching.length ? "No alerts. It moved a little from your normal."
-                : "Every system is inside your own normal today."
-        }
-
-        // The top alert's action, then what is due today and anyone who needs the Medical Officer. One row, so nothing below moves.
-        RowLayout {
-            Layout.topMargin: 12
-            Layout.preferredHeight: Theme.touch
-            visible: !!home.topAlert || (home.notices.length > 0 && !vigil.demo.active)
-            spacing: 12
-            VButton { visible: !!home.topAlert; kind: "primary"; text: "See what to do  ›"; onClicked: vigil.navigate("/alert/" + home.topAlert.id) }
-            LevelBadge { visible: !!home.topAlert; level: home.topAlert ? home.topAlert.level : 0 }
-            Text {
-                visible: !!home.topAlert && home.d.alerts.length > 1
-                text: "and " + (home.d.alerts.length - 1) + " more"
-                font.family: Theme.body; font.pixelSize: 16; color: Theme.ink2
-            }
-            Repeater {
-                model: vigil.demo.active ? [] : home.notices.slice(0, home.topAlert ? 1 : 3)
-                VButton {
-                    required property var modelData
-                    text: modelData.title + "  ›"
-                    kind: modelData.kind === "crew" ? "danger" : "normal"
-                    onClicked: vigil.navigate(modelData.route)
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                spacing: 10
+                Placard { Layout.topMargin: 10; text: home.d.astronaut.name + "  ·  " + home.d.astronaut.role + "  ·  Day " + home.d.day }
+                Text {
+                    text: home.headline
+                    font.family: Theme.display
+                    font.weight: Font.ExtraBold
+                    font.pixelSize: home.headline.length > 22 ? 46 : 58
+                    font.letterSpacing: -1.6
+                    color: Theme.ink
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    Accessible.role: Accessible.Heading
+                    Accessible.name: text
                 }
+                RowLayout {
+                    visible: !!home.topAlert
+                    spacing: 12
+                    LevelBadge { level: home.topAlert ? home.topAlert.level : 0 }
+                    Note { Layout.fillWidth: false; text: home.topAlert ? home.topAlert.level_reason : "" }
+                }
+                Note {
+                    visible: !home.topAlert
+                    Layout.maximumWidth: 640
+                    text: home.d.learning ? "Vigil needs about 10 days of readings before it can tell a change from this person's usual range."
+                        : home.drifting.length ? "The change is too small to raise an alert."
+                        : "Every system is inside this person's usual range."
+                }
+
+                // What changed, as a table: reading, change from usual, how long.
+                ColumnLayout {
+                    visible: !!home.topAlert
+                    Layout.topMargin: 6
+                    Layout.maximumWidth: 640
+                    spacing: 0
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.rule }
+                    Repeater {
+                        model: home.topAlert ? home.topAlert.why.signals.slice(0, 3) : []
+                        ColumnLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 0
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 40
+                                spacing: 16
+                                Body { text: modelData.name; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                                Text { text: home.signed(modelData); font.family: Theme.display; font.weight: Font.DemiBold; font.pixelSize: 18; font.features: { "tnum": 1 }; color: Theme.ink }
+                                Placard { Layout.preferredWidth: 90; horizontalAlignment: Text.AlignRight; text: modelData.days_of_drift + (modelData.days_of_drift === 1 ? " day" : " days") }
+                            }
+                            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.rule }
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.topMargin: 8
+                    spacing: 8
+                    visible: !!home.topAlert || (home.notices.length > 0 && !vigil.demo.active)
+                    VButton { visible: !!home.topAlert; kind: "primary"; text: "View alert"; onClicked: vigil.navigate("/alert/" + home.topAlert.id) }
+                    Repeater {
+                        model: vigil.demo.active ? [] : home.notices
+                        VButton {
+                            required property var modelData
+                            kind: modelData.kind === "crew" ? "danger" : "quiet"
+                            text: modelData.title
+                            onClicked: vigil.navigate(modelData.route)
+                        }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 6
+                spacing: 6
+                Gauge {
+                    Layout.alignment: Qt.AlignHCenter
+                    size: 230
+                    numberSize: 72
+                    value: home.hottest ? home.hottest.score : 0
+                    status: home.hottest ? home.hottest.status : "green"
+                    learning: !home.hottest
+                    label: "Highest drift today"
+                }
+                Placard { Layout.alignment: Qt.AlignHCenter; text: !home.hottest ? "No baseline yet" : home.hottest.score > 0 ? "Highest drift · " + home.hottest.name : "No drift today" }
             }
         }
 
@@ -75,27 +140,24 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 0
-            Text { text: "Systems"; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 18; color: Theme.ink; Layout.fillWidth: true }
+            spacing: 8
+            Placard { text: "Systems"; Layout.fillWidth: true }
             VButton { text: "‹"; textSize: 24; Accessible.name: "Previous system"; enabled: home.firstVisible > 0; onClicked: cards.positionViewAtIndex(home.firstVisible - 1, ListView.Beginning) }
-            VButton { Layout.leftMargin: 8; text: "›"; textSize: 24; Accessible.name: "Next system"; enabled: !cards.atXEnd; onClicked: cards.positionViewAtIndex(home.firstVisible + 1, ListView.Beginning) }
+            VButton { text: "›"; textSize: 24; Accessible.name: "Next system"; enabled: !cards.atXEnd; onClicked: cards.positionViewAtIndex(home.firstVisible + 1, ListView.Beginning) }
         }
 
-        // Swipe, drag or use the arrows. All four systems stay in the same order.
+        // Swipe, drag or use the arrows. All four systems stay in the same order. Each card opens its detail.
         ListView {
             id: cards
             objectName: "cards"
             Layout.fillWidth: true
-            Layout.preferredHeight: 226
-            Layout.leftMargin: -14
-            Layout.rightMargin: -14
-            leftMargin: 14
-            rightMargin: 14
+            Layout.topMargin: 8
+            Layout.preferredHeight: 214
             orientation: ListView.Horizontal
             snapMode: ListView.SnapToItem
             boundsBehavior: Flickable.StopAtBounds
             spacing: 16
-            clip: false
+            clip: true
             cacheBuffer: 2000
             model: 4
             delegate: AbstractButton {
@@ -103,40 +165,49 @@ Item {
                 required property int index
                 readonly property var s: home.d.systems[index]
                 width: home.cardWidth
-                height: 212
-                y: 2
+                height: 210
                 focusPolicy: Qt.StrongFocus
                 Accessible.role: Accessible.Button
-                Accessible.name: s.name + ". " + (s.learning ? "Learning." : Theme.statusWord(s.status) + ". Drift " + s.score + " of 100.") + " Open details."
+                Accessible.name: s.name + ". " + (s.learning ? "No baseline yet." : Theme.statusWord(s.status) + ". Drift " + s.score + " of 100.") + " Open details."
                 onClicked: vigil.navigate("/system/" + s.id)
                 background: Rectangle {
                     color: Theme.panel
                     radius: Theme.radius
-                    border.color: card.visualFocus ? Theme.action : Theme.isLight ? "transparent" : Theme.rule
-                    border.width: card.visualFocus ? 2 : Theme.isLight ? 0 : 1
+                    border.color: card.visualFocus ? Theme.link : card.hovered ? Theme.ink2 : Theme.rule
+                    border.width: card.visualFocus ? 2 : 1
+                    Rectangle {
+                        visible: !card.s.learning && card.s.status !== "green"
+                        anchors { left: parent.left; right: parent.right; top: parent.top }
+                        height: 3
+                        color: Theme.statusColor(card.s.status)
+                    }
                     SoftShadow {}
                 }
                 contentItem: ColumnLayout {
-                    spacing: 2
+                    spacing: 6
                     anchors { fill: parent; margins: 18 }
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: card.s.name; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 19; color: Theme.ink; Layout.fillWidth: true; elide: Text.ElideRight }
-                        Placard { visible: card.s.learning; text: "Learning" }
+                        Text { text: card.s.name; font.family: Theme.display; font.weight: Font.DemiBold; font.pixelSize: 18; color: Theme.ink; Layout.fillWidth: true; elide: Text.ElideRight }
                         StatusPill { visible: !card.s.learning; status: card.s.status; compact: true }
                     }
                     RowLayout {
-                        spacing: 8
-                        Text { text: card.s.learning ? "-" : card.s.score; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 54; font.letterSpacing: -1.6; font.features: { "tnum": 1 }; color: Theme.ink }
-                        Note { text: "drift of 100"; Layout.fillWidth: false; Layout.alignment: Qt.AlignBottom; bottomPadding: 11 }
-                        Item { Layout.fillWidth: true }
-                        Note { text: Math.round(card.s.confidence * 100) + "% confidence"; Layout.fillWidth: false; Layout.alignment: Qt.AlignBottom; bottomPadding: 11 }
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: 12
+                        Gauge { size: 92; numberSize: 26; value: card.s.score; status: card.s.status; learning: card.s.learning; label: card.s.name }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: 4
+                            Sparkline { Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 44; values: card.s.trend; label: card.s.name; status: card.s.learning ? "green" : card.s.status }
+                            Placard { text: "30 days  ·  " + Math.round(card.s.confidence * 100) + "% data"; font.pixelSize: 11; font.letterSpacing: 1.4 }
+                        }
                     }
-                    Sparkline { Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 40; values: card.s.trend; label: card.s.name; status: card.s.learning ? "green" : card.s.status }
                     Note {
                         maximumLineCount: 1
                         elide: Text.ElideRight
-                        text: card.s.learning ? "Learning your normal" : card.s.flagged.length ? "Moved: " + card.s.flagged.map(function (id) { return home.names[id] || id }).join(", ") : "Inside your normal"
+                        text: card.s.learning ? "Needs more readings" : card.s.flagged.length ? "Moved: " + card.s.flagged.map(function (id) { return home.names[id] || id }).join(", ") : "In the usual range"
                     }
                 }
             }
@@ -144,18 +215,18 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 12
+            Layout.topMargin: 14
             visible: !vigil.demo.active
             spacing: 12
             Repeater {
-                model: vigil.isDemo ? [["/checkin", "Check-in", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "primary"]]
-                                    : [["/checkin", "Check-in", "normal"], ["/log", "Log readings", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "primary"]]
+                model: vigil.isDemo ? [["/checkin", "Check in", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
+                                    : [["/checkin", "Check in", "normal"], ["/log", "Log readings", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
                 VButton {
                     required property var modelData
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
-                    implicitHeight: 62
-                    textSize: 20
+                    implicitHeight: 60
+                    textSize: 18
                     text: modelData[1]
                     kind: modelData[2]
                     onClicked: vigil.navigate(modelData[0])

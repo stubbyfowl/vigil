@@ -34,10 +34,10 @@ EXPLAINER_WINDOW = 50
 CALL_PACKET_KB = 32.0
 STATUS_CODE = {"green": "g", "yellow": "y", "red": "r"}
 EARTH_DECISIONS = {
-    0: ("none", "No need to call Earth.", "All systems are inside your normal. A routine summary goes out each week."),
-    1: ("self", "Handle this on board.", "A small change. Follow the self-care step and recheck. Earth does not need to wait on this."),
-    2: ("crew", "Tell the Medical Officer.", "The change is wider or longer. The crew can run a longer check before Earth could answer."),
-    3: ("earth", "Send a priority packet now.", "A Level 3 condition is active. Act on the checklist while the packet travels."),
+    0: ("none", "No call needed.", "Every system is in your usual range. A summary goes to Earth every 7 days."),
+    1: ("self", "Handle this on board.", "Follow the step on the alert and recheck in 48 hours."),
+    2: ("crew", "Tell the Medical Officer.", "They can run the longer check on board sooner than a reply from Earth could arrive."),
+    3: ("earth", "Send a priority packet now.", "Level 3 is active. Start the checklist on the alert while the packet travels."),
 }
 # Wearables are simulated. Each maps to the signals it would measure.
 SENSORS = (
@@ -577,8 +577,8 @@ class Vigil:
             "must_verify_count": sum(v["status"] == "must_verify" for g in groups for v in ranges[g].values()),
             "mode": self.mode,
             "statement": ("Readings come from what your crew enters and imports on this computer. " if self.mode == "live"
-                          else "All crew data in the demo mission is synthetic. ")
-                         + "Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.",
+                          else "The demo crew and all their readings are simulated. ")
+                         + "A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything.",
         }
 
     # Admin
@@ -627,14 +627,14 @@ class Vigil:
         out = []
         if self.mode == "live":
             if not self.store.checked_in(id, d):
-                out.append({"kind": "checkin", "title": "Check in for today", "route": "/checkin"})
+                out.append({"kind": "checkin", "title": "Check in", "route": "/checkin"})
             series = self.store.mission.series[id]
             if all(np.isnan(series[s.id][d - 1]) for s in mission.LOGGABLE):
-                out.append({"kind": "log", "title": "Log today's readings", "route": "/log"})
+                out.append({"kind": "log", "title": "Log readings", "route": "/log"})
             needed = self.store.cfg["baseline"]["learning_days"]
             have = self.store.days_with_readings(id)
             if have < needed:
-                out.append({"kind": "learning", "title": f"Learning your normal: {have} of {needed} days", "route": "/log"})
+                out.append({"kind": "learning", "title": f"Baseline: {have} of {needed} days", "route": "/log"})
         role = self.accounts.get(id)["role"] if self.actor_role == "system" else self.actor_role
         if role in ("medical", "commander", "presenter"):
             for card in self.crew_view(d)["crew"]:
@@ -792,7 +792,7 @@ class Vigil:
                 f"<h2>Latest readings against this person's normal</h2><table border='1' cellpadding='4'>"
                 f"<tr><th>Reading</th><th>Latest</th><th>Personal normal</th><th>Drifting</th></tr>{readings}</table>"
                 f"<h2>Radiation</h2><p>Career dose {rad['career_dose_msv']} mSv of {rad['limit_msv']} mSv.</p>"
-                "<p><i>Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.</i></p>"
+                "<p><i>A flight surgeon has not reviewed the thresholds. Vigil does not diagnose anything.</i></p>"
             ),
         }
 

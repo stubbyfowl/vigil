@@ -13,7 +13,7 @@ Item {
     readonly property bool outbound: minutes <= oneWay
     readonly property bool thinking: minutes > oneWay && minutes <= oneWay + thinkMinutes
     readonly property bool done: minutes >= total
-    readonly property var vigilSteps: ["Compared today with your own normal", "Wrote a plain-language alert", "Started the self-care step", "Told the Medical Officer", "Queued a summary for Earth"]
+    readonly property var vigilSteps: ["Compared today with the usual range", "Wrote the alert", "Started the self-care step", "Told the Medical Officer", "Queued a summary for Earth"]
     readonly property real position: phase !== "waiting" ? 0 : outbound ? minutes / oneWay : thinking ? 1 : 1 - (minutes - oneWay - thinkMinutes) / oneWay
 
     function start(next) { minutes = 0; steps = 0; phase = next }
@@ -72,7 +72,7 @@ Item {
                         Body { text: modelData; font.pixelSize: 20; color: index < screen.steps ? Theme.ink : Theme.ink2 }
                     }
                 }
-                StatusPill { visible: screen.phase === "vigil" && screen.steps === screen.vigilSteps.length; status: "green"; label: "Acting now, no wait" }
+                StatusPill { visible: screen.phase === "vigil" && screen.steps === screen.vigilSteps.length; status: "green"; label: "Started right away" }
             }
             ColumnLayout {
                 Layout.fillWidth: false
@@ -106,7 +106,7 @@ Item {
                 Body {
                     font.pixelSize: 24
                     font.weight: Font.Medium
-                    text: screen.phase === "idle" ? "Earth has no idea yet."
+                    text: screen.phase === "idle" ? "Earth has not heard yet."
                         : screen.phase === "vigil" ? "A summary will arrive in " + screen.oneWay + " minutes. The astronaut already has a plan."
                         : screen.outbound ? "Message in transit." : screen.thinking ? "Flight surgeon reviews the data." : screen.done ? "Reply delivered." : "Reply in transit."
                 }

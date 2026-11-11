@@ -1,5 +1,5 @@
 {
-  "_label": "Sample protocols, not medical advice.",
+  "_label": "Sample protocols written by the team. Check them with your flight surgeon.",
   "sleep_reset": {
     "name": "sleep reset", "minutes": 30,
     "steps": ["Stop screens 60 minutes before sleep.", "Keep the same sleep time tonight.", "Dim the sleep station light.", "Write down what is on your mind."],

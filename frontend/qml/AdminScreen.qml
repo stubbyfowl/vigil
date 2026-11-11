@@ -16,7 +16,7 @@ Item {
     }
     function save() {
         var result = Api.ask("put_config", { values: values() })
-        message = result.error || "Saved. The mission was recomputed."
+        message = result.error || "Saved and recalculated."
     }
     function restore() {
         var result = Api.ask("reset_config", {})
@@ -30,8 +30,8 @@ Item {
             Layout.fillWidth: true
             spacing: 12
             BackButton {}
-            BigTitle { text: "Admin" }
-            Placard { text: "Starting values, not clinical limits" }
+            BigTitle { text: "Thresholds" }
+            Placard { text: "Not reviewed by a flight surgeon" }
             Item { Layout.fillWidth: true }
             VButton { text: "Restore defaults"; onClicked: screen.restore() }
             VButton { kind: "primary"; text: "Save"; onClicked: screen.save() }
@@ -61,7 +61,7 @@ Item {
                             readonly property string key: modelData
                             readonly property var current: screen.draft[group.name][key]
                             Layout.fillWidth: true
-                            Body { text: field.key.replace(/_/g, " ") }
+                            Body { text: field.key.charAt(0).toUpperCase() + field.key.slice(1).replace(/_/g, " ") }
                             Toggle {
                                 visible: typeof field.current === "boolean"
                                 checked: field.current === true
@@ -89,7 +89,7 @@ Item {
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 divider: true
-                title: "Signals on or off"
+                title: "Signals in use"
                 Repeater {
                     model: screen.signalList
                     Toggle {

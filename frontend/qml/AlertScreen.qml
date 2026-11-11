@@ -42,7 +42,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.topMargin: 6
                     divider: true
-                    title: "Do this"
+                    title: "Next step"
                     Body { text: screen.d.alert.action; font.pixelSize: 23; font.weight: Font.DemiBold; font.letterSpacing: -0.3 }
                     Note { text: screen.d.alert.recheck_text; font.pixelSize: 18 }
                 }
@@ -68,7 +68,7 @@ Item {
                     divider: true
                     title: screen.d.protocol ? screen.d.protocol.name.charAt(0).toUpperCase() + screen.d.protocol.name.slice(1) + ", " + screen.d.protocol.minutes + " min" : ""
                     Body { text: screen.d.protocol ? screen.d.protocol.steps.join(" ") : "" }
-                    Note { text: screen.d.protocol ? "Stop and escalate if: " + screen.d.protocol.escalate_if + " " + screen.d.protocol_label : "" }
+                    Note { text: screen.d.protocol ? "Escalate if: " + screen.d.protocol.escalate_if + " " + screen.d.protocol_label : "" }
                 }
                 second: [
                     Repeater {
@@ -85,7 +85,7 @@ Item {
                         Layout.fillWidth: true
                         visible: screen.d.charts.length === 0
                         title: "Dose rate"
-                        Body { text: "Open Radiation for the storm view." }
+                        Body { text: "The storm details are on the Radiation screen." }
                         VButton { text: "Open Radiation"; onClicked: vigil.navigate("/radiation") }
                     }
                 ]
@@ -105,7 +105,7 @@ Item {
             anchors.fill: parent
             spacing: 14
             BigTitle { text: "Send to Earth?"; font.pixelSize: 32 }
-            Body { text: "Level 3 sends a priority packet. You can undo the level on this screen, but a packet already sent cannot be recalled." }
+            Body { text: "Level 3 sends a priority packet to Earth right away. Undo changes the level back. It cannot recall the packet." }
             RowLayout {
                 VButton { Layout.fillWidth: true; text: "Cancel"; onClicked: confirmEscalate.close() }
                 VButton { Layout.fillWidth: true; kind: "danger"; text: "Send to Earth"; onClicked: { confirmEscalate.close(); screen.act("escalate") } }
@@ -157,7 +157,7 @@ Item {
                     Note { text: modelData.rule }
                 }
             }
-            Note { text: (screen.d ? screen.d.alert.disclaimer : "") + " Thresholds are starting values, not clinical limits." }
+            Note { text: (screen.d ? screen.d.alert.disclaimer : "") + " A flight surgeon has not reviewed the thresholds." }
         }
     }
 }

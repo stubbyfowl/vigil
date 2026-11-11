@@ -1,7 +1,7 @@
 # Likely judge questions
 
 **Is this medically valid?**
-No. It is decision support, and the thresholds are starting values, not clinical limits. No flight surgeon has reviewed it. The next step is that review, then testing on real analog mission data.
+No. Vigil does not diagnose, and a flight surgeon has not reviewed its thresholds. The next step is that review, then testing on real analog mission data.
 
 **Is any of this real astronaut data?**
 No. Real astronaut records are restricted. All crew data is synthetic and every screen says so. We list the public sources we plan to check in `SOURCES.md`, and all of them are still marked "to verify".
@@ -49,7 +49,7 @@ Flight surgeon review, real analog mission data, real sensors, and clinically gr
 Yes, as decision support. Set up a mission, add each person with a PIN, and they enter or import readings each day. Vigil learns each person's normal over the first 10 days of readings. It has not been tested with a real crew, and no flight surgeon has reviewed the thresholds.
 
 **Who can see my health data?**
-Only you, unless you share it. The crew and Earth always see your status as Nominal, Watch or Act. Raw values and journal words go further only if you turn sharing on. The Commander manages accounts but cannot read anyone's readings. The Medical Officer can enter lab results for you but sees only what they entered.
+Only you, unless you share it. The crew and Earth always see your status as Normal, Drifting or Alert. Raw values and journal words go further only if you turn sharing on. The Commander manages accounts but cannot read anyone's readings. The Medical Officer can enter lab results for you but sees only what they entered.
 
 **How secure is it?**
 Each person has a PIN, stored only as a salted, slow hash. Wrong PINs lock the account for longer each time. The screen locks when idle. An audit log records who did what. The database itself is not encrypted, so a real vehicle should use disk encryption.

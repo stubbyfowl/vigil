@@ -44,7 +44,7 @@ Item {
                 visible: screen.crewMember
                 surface: true
                 title: "Who can see your readings"
-                Body { color: Theme.ink2; text: "Your status is always visible to the crew and Earth, as Nominal, Watch or Act. Raw values and journal words stay yours unless you turn these on." }
+                Body { color: Theme.ink2; text: "The crew and Earth always see your status: Normal, Drifting or Alert. Raw readings and journal words reach them only if you turn these on." }
                 ShareToggle { audience: "the crew"; field: "share_crew" }
                 ShareToggle { audience: "Earth"; field: "share_ground" }
             }
@@ -60,8 +60,8 @@ Item {
                     Layout.fillWidth: true
                     visible: screen.crewMember
                     surface: true
-                    title: "Take your data with you"
-                    Body { color: Theme.ink2; text: "Files are saved on this computer, in the exports folder. Hand them to your flight surgeon on a drive." }
+                    title: "Export"
+                    Body { color: Theme.ink2; text: "Files go to the exports folder on this computer." }
                     RowLayout {
                         spacing: 12
                         VButton { text: "Health summary (PDF)"; onClicked: screen.exportPdf() }

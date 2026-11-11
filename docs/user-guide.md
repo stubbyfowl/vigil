@@ -1,6 +1,6 @@
 # Running a real mission with Vigil
 
-This guide is for the crew and the Commander. Vigil gives decision support, not a diagnosis. Thresholds are starting values, not clinical limits. Talk to your flight surgeon about anything that worries you.
+This guide is for the crew and the Commander. Vigil does not diagnose anything, and a flight surgeon has not reviewed its thresholds. Talk to your flight surgeon about anything that worries you.
 
 ## Start Vigil
 
@@ -49,13 +49,13 @@ Tap your name and enter your PIN. A PIN is 4 to 8 digits, not all the same digit
 
 1. **Check in.** Mood, sleep, energy, stress and symptoms take under a minute. The journal is optional. Its words are scored on this computer and thrown away unless you turn on **Keep my words**. With `make voice` installed, you can speak instead of type.
 2. **Log readings.** Enter what your devices measured today. Leave anything you did not measure empty. Vigil checks every value against a plausible range and saves nothing until all of them are usable. Some readings, like grip strength, are weekly. If you make a mistake, tap **Remove** next to it under Recent readings.
-3. **Read Home.** For the first 10 days with readings, Home says **Learning your normal**. After that each system shows Nominal, Watch or Act, and any alert says what changed, by how much, for how long, and one thing to do.
+3. **Read Home.** For the first 10 days with readings, Home says **Building baseline**. After that each system shows Normal, Drifting or Alert, and any alert says what changed, by how much, for how long, and one thing to do.
 
 | Level | Meaning |
 |---|---|
 | 1 | Handle it on board. Follow the self-care step and recheck |
 | 2 | Tell the Medical Officer. They also see a prompt on their Home |
-| 3 | Vigil writes a priority packet for Earth by itself. Act on the checklist while it travels |
+| 3 | Vigil writes a priority packet for Earth by itself. Start the checklist on the alert while it travels |
 
 ## Import a file
 

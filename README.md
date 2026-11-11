@@ -6,9 +6,9 @@ A message to Mars can take about 20 minutes each way, so the astronaut cannot wa
 
 ![Home screen](docs/screens/home.png)
 
-The ribbon on Home is the last 30 days of this person's drift. It stays cool and narrow when all is well, and it swells and warms as they move away from their own normal.
+The look follows nasa.gov: black, white and hairline rules, Inter headlines, Public Sans text and DM Mono labels. Red is kept for calling Earth. Readings are laid out like a Wikipedia infobox: a name, a value and a usual range on each row.
 
-**The demo mission's crew and data are synthetic. A real mission uses only what your crew enters or imports. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.** See [LIMITATIONS.md](LIMITATIONS.md).
+**The demo mission's crew and data are synthetic. A real mission uses only what your crew enters or imports. A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything.** See [LIMITATIONS.md](LIMITATIONS.md).
 
 Built for the NASA Space Apps Challenge 2026, Phoenix.
 
@@ -151,7 +151,7 @@ The full table is in [docs/results.md](docs/results.md). It uses 20 missions tha
 
 These numbers come from events we planted in data we generated. They show the method works in simulation and say nothing about real people.
 
-![Same heart rate, different meaning](docs/screens/explainer.png)
+![Two crew members with the same heart rate](docs/screens/explainer.png)
 
 ## Files
 

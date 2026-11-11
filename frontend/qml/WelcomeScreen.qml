@@ -8,12 +8,12 @@ Item {
     ColumnLayout {
         anchors { fill: parent; margins: Theme.gutter; topMargin: 56 }
         spacing: 18
-        Text { text: "Vigil"; font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 28; font.letterSpacing: -0.9; color: Theme.ink }
+        Wordmark { size: 72 }
         Statement {
             Layout.maximumWidth: 900
-            size: 52
-            lead: "Your own normal, watched every day."
-            detail: "Vigil learns each crew member's baseline, spots drift across many signals, and decides when to call Earth."
+            size: 34
+            lead: "Health monitoring for long missions."
+            detail: "It learns each crew member's usual readings and flags slow changes in heart, immune, bone and behavior data."
         }
         RowLayout {
             Layout.topMargin: 24
@@ -41,6 +41,6 @@ Item {
             }
         }
         Item { Layout.fillHeight: true }
-        Note { text: "Vigil gives decision support, not a diagnosis. It opens no network connections." }
+        Note { text: "Vigil does not diagnose, and it opens no network connections." }
     }
 }
