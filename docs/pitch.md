@@ -38,7 +38,7 @@ Run `make demo`. Speaker 1 talks over the opening. The app plays beside you. Eve
 
 > We did not want to just claim this, so we measured it. Twenty simulated missions, on data we held back from tuning. Vigil found all 60 planted health events and passed on all 20 storm warnings.
 >
-> It raised about 1.5 false alarms per 100 days. Fixed limits raised 3 to 8. On heart drift, Vigil flagged about 7 days before the quieter fixed limit, which missed 5 runs out of 20.
+> It raised about 1.5 false alarms per 100 days. Fixed limits raised 3 to 8. On heart drift, Vigil flagged about 7.5 days before the quieter fixed limit, which missed 5 runs out of 20.
 >
 > For immune and behavior events, a fixed limit was about as fast. We show that too.
 

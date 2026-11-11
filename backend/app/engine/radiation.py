@@ -55,11 +55,15 @@ def radiation_day(mission: Mission, who: Astronaut, day: int, cfg: Config) -> di
     cum = series["cum_dose"]
     mission_dose = float(cum[day - 1])
     career = who.prior_dose + mission_dose
-    storm_days = {120, 121} if mission.storm else set()
+    storm_days = set(range(mission.storm["onset_hour"] // HOURS + 1, (mission.storm["end_hour"] - 1) // HOURS + 2)) if mission.storm else set()
     daily_rate = _dose_rate_for_projection(cum, day, storm_days)
     projected = career + daily_rate * (mission.days - day)
     fraction = career / limit
     storm = _storm_summary(mission, who, day)
+    if storm["phase"] != "none" and mission.storm:
+        # Which real event this storm replays, and NASA's per-event limit [V1 4031].
+        storm.update(event_begin=mission.storm["event_begin"], event_peak_pfu=mission.storm["event_peak_pfu"],
+                     event_flare=mission.storm["event_flare"], event_limit_msv=r.get("event_limit_msv", 250))
     active = storm["phase"] == "active"
     peak_rate = float(mission.hourly_free[who.id][(day - 1) * HOURS: day * HOURS].max())
     score = max(100 * fraction, min(100.0, 75 * peak_rate / r["dose_rate_warn_usv_h"]))

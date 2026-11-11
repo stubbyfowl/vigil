@@ -3,10 +3,14 @@
 import csv
 import math
 import re
+import zipfile
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from sqlite3 import Connection
+from typing import IO
+from xml.etree.ElementTree import iterparse  # noqa: S405 (expat in Python 3.12 limits entity expansion)
 
 import numpy as np
 
@@ -28,6 +32,20 @@ ALIASES = {
 }
 MAX_IMPORT_ROWS = 50_000
 MAX_SKIP_REASONS = 30
+# Apple Health export.xml record types Vigil can read, and what each becomes.
+APPLE_TYPES = {
+    "HKQuantityTypeIdentifierRestingHeartRate": "resting_hr",
+    "HKQuantityTypeIdentifierOxygenSaturation": "spo2",
+    "HKQuantityTypeIdentifierBodyTemperature": "temp",
+    "HKQuantityTypeIdentifierBloodPressureSystolic": "bp_sys",
+    "HKQuantityTypeIdentifierBloodPressureDiastolic": "bp_dia",
+}
+APPLE_SLEEP = "HKCategoryTypeIdentifierSleepAnalysis"
+APPLE_ASLEEP = {
+    "HKCategoryValueSleepAnalysisAsleep", "HKCategoryValueSleepAnalysisAsleepUnspecified",
+    "HKCategoryValueSleepAnalysisAsleepCore", "HKCategoryValueSleepAnalysisAsleepDeep", "HKCategoryValueSleepAnalysisAsleepREM",
+}
+APPLE_HRV = "HKQuantityTypeIdentifierHeartRateVariabilitySDNN"
 
 
 def mission_day(start: date, today: date) -> int:
@@ -125,6 +143,9 @@ def read_import(path: Path, start: date, today_day: int, members: dict[str, str]
     with path.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         header = {(h or "").strip().lower(): h for h in reader.fieldnames or []}
+        wide = {h: _signal_for(h) for h in header if h not in ("date", "day", "member", "unit")}
+        if "signal" not in header and "value" not in header and any(wide.values()):
+            return _read_wide(reader, header, wide, start, today_day, members, default_member, result)
         missing = [c for c in ("signal", "value") if c not in header]
         if "date" not in header and "day" not in header:
             missing.append("date")
@@ -163,3 +184,128 @@ def read_import(path: Path, start: date, today_day: int, members: dict[str, str]
 
 def safe_name(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", text)[:80]
+
+
+def _read_wide(reader: csv.DictReader, header: dict[str, str], wide: dict[str, str | None], start: date, today_day: int,
+               members: dict[str, str], default_member: str | None, result: ImportResult) -> ImportResult:
+    """A spreadsheet with a date column and one column per reading."""
+    if "date" not in header and "day" not in header:
+        raise ValueError("The file needs a date or day column.")
+    unknown = [h for h, sig in wide.items() if sig is None or sig not in IMPORTABLE]
+    if unknown:
+        result.skip(f"Columns left out because Vigil does not track them: {', '.join(unknown)}.")
+    for number, raw in enumerate(reader, start=2):
+        if number > MAX_IMPORT_ROWS + 1:
+            result.skip(f"Stopped after {MAX_IMPORT_ROWS} rows.")
+            break
+        row = {k: (raw.get(v) or "") for k, v in header.items()}
+        who_text = row.get("member", "").strip().lower()
+        member = members.get(who_text) if who_text else default_member
+        if member is None:
+            result.skip(f"Row {number}: no crew member named {row.get('member', '').strip()!r}.")
+            continue
+        try:
+            day = _day_for(row, start, today_day)
+        except ValueError as err:
+            result.skip(f"Row {number}: {err}")
+            continue
+        if not 1 <= day <= today_day:
+            result.skip(f"Row {number}: the date is outside the mission so far.")
+            continue
+        for column, signal in wide.items():
+            text = row.get(column, "").strip()
+            if not text or signal is None or signal not in IMPORTABLE:
+                continue
+            try:
+                result.rows.append((member, signal, check_value(signal, text, IMPORTABLE), day))
+            except ValueError as err:
+                result.skip(f"Row {number}: {err}")
+    return result
+
+
+def _apple_records(stream: IO[bytes]) -> Iterator[dict[str, str]]:
+    for _, element in iterparse(stream, events=("end",)):  # noqa: S314
+        if element.tag == "Record":
+            yield dict(element.attrib)
+        element.clear()
+
+
+def _apple_value(signal: str, unit: str, value: float) -> float:
+    """Apple stores oxygen as a fraction and lets temperature be in Fahrenheit."""
+    if signal == "spo2" and value <= 1:
+        return value * 100
+    if signal == "temp" and unit.lower() in ("degf", "\u00b0f", "f"):
+        return (value - 32) * 5 / 9
+    return value
+
+
+def read_apple_health(path: Path, start: date, today_day: int, member: str) -> ImportResult:
+    """Read an Apple Health export (export.xml, or the export.zip around it) for one person.
+
+    Readings outside the mission so far are counted, not listed. Sleep is summed per night and
+    filed under the morning it ended. Apple's HRV is SDNN, a different measure from Vigil's RMSSD, so it is left out.
+    """
+    result = ImportResult()
+    outside = hrv = 0
+    sleep: dict[int, float] = {}
+
+    def day_of(stamp_text: str) -> int:
+        return mission_day(start, date.fromisoformat(stamp_text.strip()[:10]))
+
+    def consume(stream: IO[bytes]) -> None:
+        nonlocal outside, hrv
+        for count, rec in enumerate(_apple_records(stream)):
+            if count > MAX_IMPORT_ROWS * 20:
+                result.skip("Stopped after a million records.")
+                return
+            kind = rec.get("type", "")
+            if kind == APPLE_HRV:
+                hrv += 1
+                continue
+            if kind == APPLE_SLEEP and rec.get("value") in APPLE_ASLEEP:
+                try:
+                    begin = datetime.strptime(rec["startDate"][:19], "%Y-%m-%d %H:%M:%S")
+                    end = datetime.strptime(rec["endDate"][:19], "%Y-%m-%d %H:%M:%S")
+                    day = day_of(rec["endDate"])
+                except (KeyError, ValueError):
+                    result.skip("A sleep record had an unreadable date.")
+                    continue
+                if 1 <= day <= today_day:
+                    sleep[day] = sleep.get(day, 0.0) + max(0.0, (end - begin).total_seconds() / 3600)
+                else:
+                    outside += 1
+                continue
+            signal = APPLE_TYPES.get(kind)
+            if signal is None:
+                continue
+            try:
+                day = day_of(rec["startDate"])
+                value = check_value(signal, _apple_value(signal, rec.get("unit", ""), float(rec["value"])), IMPORTABLE)
+            except (KeyError, ValueError) as err:
+                result.skip(f"{BY_ID[signal].name}: {err}")
+                continue
+            if 1 <= day <= today_day:
+                result.rows.append((member, signal, value, day))
+            else:
+                outside += 1
+
+    if path.suffix.lower() == ".zip":
+        with zipfile.ZipFile(path) as archive:
+            inner = next((n for n in archive.namelist() if n.endswith("export.xml")), None)
+            if inner is None:
+                raise ValueError("The zip file has no export.xml inside.")
+            with archive.open(inner) as stream:
+                consume(stream)
+    else:
+        with path.open("rb") as stream:
+            consume(stream)
+    for day, hours in sorted(sleep.items()):
+        try:
+            result.rows.append((member, "sleep_hours", check_value("sleep_hours", round(hours, 2), IMPORTABLE), day))
+        except ValueError as err:
+            result.skip(f"Night before day {day}: {err}")
+    if outside:
+        result.skip(f"{outside} readings were from outside the mission so far and were left out.")
+    if hrv:
+        result.skip(f"{hrv} heart rate variability readings were left out. Apple records SDNN, and Vigil tracks RMSSD.")
+    return result

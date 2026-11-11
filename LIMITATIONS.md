@@ -27,3 +27,6 @@ The demo mission's crew are invented and all their readings are synthetic. No re
 - Sign-in is local to one computer. There is no central account server, and a backup copied to another computer carries its accounts with it.
 - Real missions were tested with scripted entries covering 15 days, not with a real crew. Baselines on real people will need more days and per-sensor noise settings.
 - In testing, the Mission Control window reads the same outbox the vehicle writes. A real ground station would read the copies the comm system delivers.
+- The Apple Health importer was tested on an invented export written in Apple's format. Apple publishes no schema for it, so a real export from a phone may need small fixes.
+- Eleven sources were read only in press releases or secondary pages. They are marked "Summary only" in SOURCES.md and should be checked in the original before they are quoted.
+- The day-120 storm follows a real event's timing and size, but the dose it produces comes from a team assumption about shielding and energy spectrum.

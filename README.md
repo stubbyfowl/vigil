@@ -100,7 +100,7 @@ PINs are stored only as salted PBKDF2 hashes. Five wrong PINs lock an account fo
 | Folder (in `data/` when run from source, `~/.local/share/vigil` when packaged) | What it is for |
 |---|---|
 | `outbox/` | One JSON file per packet for Earth. The vehicle's comm system sends and removes them. Level 3 files sort first |
-| `import/` | Drop a CSV here to import it. Columns: `date` (or `day`), `signal`, `value`, and optionally `member` |
+| `import/` | Drop a file here to import it: an Apple Health export, a spreadsheet with one column per reading, or a long table of `date`, `signal`, `value` |
 | `exports/` | CSV and PDF files people export for their flight surgeon |
 | `backups/` | Backups and archived missions |
 
@@ -145,8 +145,8 @@ The full table is in [docs/results.md](docs/results.md). It uses 20 missions tha
 |---|---|
 | Planted health events found | 60 of 60 |
 | Solar storm warnings passed on | 20 of 20 |
-| False alarms per 100 days, non-event days | Vigil 1.54, fixed limits 2.94 to 8.48 |
-| Heart drift, against the quieter fixed limit | Vigil flagged it 7.1 days sooner on average, and the fixed limit missed 5 of 20 runs |
+| False alarms per 100 days, non-event days | Vigil 1.53, fixed limits 2.94 to 8.48 |
+| Heart drift, against the quieter fixed limit | Vigil flagged it 7.5 days sooner on average, and the fixed limit missed 5 of 20 runs |
 | Immune and behavior events | A fixed limit was about as fast |
 
 These numbers come from events we planted in data we generated. They show the method works in simulation and say nothing about real people.

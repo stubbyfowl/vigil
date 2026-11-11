@@ -76,6 +76,34 @@ Item {
                         : screen.d.storm.phase === "passed" ? "Last storm has passed. Dose in shelter: " + screen.d.storm.shelter_dose_msv + " mSv. With no shelter: " + screen.d.storm.unsheltered_dose_msv + " mSv."
                         : "The solar monitor shows no storm."
                 }
+                // Which real storm this replays, and its dose against NASA's per-event limit [V1 4031].
+                Note {
+                    visible: !!screen.d.storm.event_begin
+                    text: screen.d.storm.event_begin ? "Replays the solar proton event of " + new Date(screen.d.storm.event_begin.replace("Z", ":00Z")).toLocaleDateString(Qt.locale("en_GB"), "d MMMM yyyy")
+                        + " from NOAA's list, peak " + Number(screen.d.storm.event_peak_pfu).toLocaleString(Qt.locale("en_US"), "f", 0) + " pfu above 10 MeV. Turning flux into dose here is a team assumption." : ""
+                }
+                ColumnLayout {
+                    visible: screen.d.storm.event_limit_msv !== undefined
+                    Layout.fillWidth: true
+                    spacing: 6
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Placard { text: "This storm, in shelter"; Layout.fillWidth: true }
+                        Text {
+                            text: (screen.d.storm.shelter_dose_msv || 0) + " of " + screen.d.storm.event_limit_msv + " mSv"
+                            font.family: Theme.display; font.weight: Font.DemiBold; font.pixelSize: 17; font.features: { "tnum": 1 }; color: Theme.ink
+                        }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 6
+                        color: Theme.panel2
+                        Rectangle { width: parent.width * Math.min(1, (screen.d.storm.shelter_dose_msv || 0) / (screen.d.storm.event_limit_msv || 250)); height: parent.height; color: Theme.caution }
+                        Accessible.role: Accessible.ProgressBar
+                        Accessible.name: "Storm dose " + (screen.d.storm.shelter_dose_msv || 0) + " of the " + screen.d.storm.event_limit_msv + " millisievert per-storm limit"
+                    }
+                    Note { text: "NASA holds each solar particle event under 250 mSv (NASA-STD-3001, V1 4031)." }
+                }
                 Canvas {
                     id: trace
                     visible: screen.d.storm.phase !== "none"

@@ -59,7 +59,20 @@ Tap your name and enter your PIN. A PIN is 4 to 8 digits, not all the same digit
 
 ## Import a file
 
-Copy a CSV into the import folder (shown on the Log readings screen), then tap **Import**.
+Copy a file into the import folder (shown on the Log readings screen), then tap **Import**. Three kinds of file work.
+
+**Apple Health export.** On an iPhone, open Health, tap your picture, then Export All Health Data. Copy `export.zip` (or the `export.xml` inside it) to the import folder. Vigil reads resting heart rate, blood oxygen, body temperature (Fahrenheit is converted), blood pressure, and sleep, summed per night. Apple records heart rate variability as SDNN, which is a different measure from the RMSSD Vigil tracks, so those readings are left out. One export belongs to one person: it is imported for whoever is signed in, or for the person the Medical Officer chose.
+
+**A spreadsheet from any device.** A `date` (or `day`) column, then one column per reading, named by its id or its name:
+
+```
+date,Resting heart rate,SpO2,steps
+2026-11-20,61,98,5200
+```
+
+Columns Vigil does not track, like `steps` above, are left out and named in the result.
+
+**A long table**, one reading per row:
 
 ```
 date,member,signal,value

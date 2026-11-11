@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from app.signals import DRIFT_SIGNALS, SIGNALS
 from app.sim.generator import CREW, generate_mission
 
@@ -59,10 +60,31 @@ def test_storm_has_warning_and_spike():
     m = generate_mission(10)
     assert m.storm is not None
     assert m.storm["onset_hour"] - m.storm["warning_hour"] == 2
-    assert m.storm["end_hour"] - m.storm["onset_hour"] == 36
+    assert m.storm["end_hour"] - m.storm["onset_hour"] == 81  # a 27-hour rise, then about two rises to fall
     free = m.hourly_free["cmdr"]
     assert free[m.storm["onset_hour"]:m.storm["end_hour"]].max() > 5 * np.median(free)
+    peak_hour = m.storm["onset_hour"] + int(np.argmax(free[m.storm["onset_hour"]:m.storm["end_hour"]]))
+    assert abs(peak_hour - m.storm["onset_hour"] - 27) <= 2
     assert m.series["cmdr"]["spe_flag"][119] == 1 and m.series["cmdr"]["spe_flag"][100] == 0
+
+
+def test_storm_replays_noaa_october_1989_event():
+    from app.sim.generator import reference_event, solar_events
+    events = solar_events()
+    assert len(events) > 300 and events[0]["begin"].startswith("1976")
+    assert max(e["peak_pfu"] for e in events) == 43500  # March 1991, the record NOAA states
+    ev = reference_event("1989-10-19")
+    assert (ev["begin"], ev["peak_pfu"], ev["rise_hours"]) == ("1989-10-19T13:10Z", 42200, 27)
+    m = generate_mission(10)
+    assert m.storm["event_begin"] == "1989-10-19T13:10Z" and m.storm["event_peak_pfu"] == 42200
+
+
+def test_any_catalog_event_can_be_replayed():
+    small = generate_mission(10, storm_event="2017-09-10")
+    big = generate_mission(10)
+    assert small.storm["event_peak_pfu"] == 1494 and small.storm["peak_usv_h"] < big.storm["peak_usv_h"]
+    with pytest.raises(LookupError):
+        generate_mission(10, storm_event="1800-01-01")
 
 
 def test_shelter_reduces_measured_dose():

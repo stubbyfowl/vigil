@@ -133,7 +133,7 @@ Item {
                     Layout.fillWidth: true
                     surface: true
                     title: "Import from a file"
-                    Body { color: Theme.ink2; text: "Copy a CSV with date, signal and value columns into the import folder. A member column lets the Medical Officer import for several people." }
+                    Body { color: Theme.ink2; text: "Copy a file into the import folder: an Apple Health export (export.xml or export.zip), a spreadsheet with a date column and one column per reading, or a table with date, signal and value columns. A member column lets the Medical Officer import for several people." }
                     Note { text: screen.files.folder || ""; wrapMode: Text.WrapAnywhere }
                     Banner { visible: (screen.files.files || []).length === 0; text: "No files waiting in the import folder." }
                     Repeater {

@@ -44,3 +44,10 @@
 - Done: a user guide for the crew and Commander, and screenshots of every new screen.
 - Design: new form fields, banners and PIN pad follow rules from Meta's Astryx design system (see DECISIONS 42).
 - Checked: 342 tests pass on macOS, including every screen of a real mission as each role, the full access matrix, and an end-to-end real mission over 15 days.
+
+## Real data sources (done)
+- Done: a catalog of 30 sources (`data/sources.json`) with how much of each was read and an honest status, and every reference figure in `data/real_ranges.json` tied to one of them. `SOURCES.md` is generated from both.
+- Done: NOAA's list of 318 solar proton events since 1976 is bundled (`scripts/fetch_space_weather.py` refreshes it). The day-120 storm replays the 19 October 1989 event, and the Radiation screen shows its dose against NASA's 250 mSv per-event limit.
+- Done: crew baselines use published figures for heart rate variability, temperature, sleep, exercise and grip strength, and the bone trend follows the reported 1 to 1.5 percent a month.
+- Done: imports from Apple Health exports and from spreadsheets with one column per reading.
+- Done: the About screen lists every source by topic with a status tag.

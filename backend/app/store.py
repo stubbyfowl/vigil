@@ -64,7 +64,7 @@ class Store:
         else:
             m = self.cfg["mission"]
             self.crew = CREW
-            self.mission = generate_mission(m["seed"], m["length_days"])
+            self.mission = generate_mission(m["seed"], m["length_days"], storm_event=str(self.cfg["radiation"].get("reference_event", "1989-10-19")))
         with db.connect(self.db_path) as con:
             rows = con.execute("SELECT * FROM checkins").fetchall()
             self.actions = {}

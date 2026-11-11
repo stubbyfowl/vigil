@@ -1,0 +1,275 @@
+{
+ "_note": "Every source Vigil draws on. 'checked' says how much of it the team actually read: 'full text', 'abstract', or 'summary' (a press release or a secondary page quoting it). 'status' is 'verified' when the figure was read in the source itself or its abstract, 'partly verified' when it was read only in a summary, and 'not used yet' when the source is listed for later work. Retrieved 2026-11-11.",
+ "sources": [
+  {
+   "id": "nasa_std_3001_radiation", "kind": "standard", "group": "Radiation",
+   "title": "NASA-STD-3001 Technical Brief: Design for Ionizing Radiation Protection (OCHMO-TB-020, Rev E, 2022)",
+   "publisher": "NASA Office of the Chief Health and Medical Officer",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
+   "gives": "Career effective dose under 600 mSv for all ages and sexes [V1 4030]. Each solar particle event held under 250 mSv, measured against the October 1989 events [V1 4031]. Nuclear power sources under 20 mSv per mission year [V1 4032].",
+   "used_for": "The career limit on the Radiation screen and the per-storm limit.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "nasa_std_3001_co2", "kind": "standard", "group": "Cabin air",
+   "title": "NASA-STD-3001 Technical Brief: Carbon Dioxide",
+   "publisher": "NASA Office of the Chief Health and Medical Officer",
+   "url": "https://nasa.gov/wp-content/uploads/2023/03/co2-technical-brief-ochmo.pdf",
+   "gives": "Cabin CO2 limited to a one-hour average of 3 mmHg [V2 6004]. Headaches reported between 2.8 and 4.5 mmHg. 0.5% CO2 is 3.8 mmHg.",
+   "used_for": "Listed for a future cabin air signal. Vigil does not track CO2 yet.",
+   "checked": "full text", "status": "not used yet"
+  },
+  {
+   "id": "zeitlin_2013", "kind": "paper", "group": "Radiation",
+   "title": "Zeitlin et al. 2013, Measurements of energetic particle radiation in transit to Mars on the Mars Science Laboratory, Science 340:1080",
+   "publisher": "Science (via the DLR repository and the SwRI press release)",
+   "url": "https://elib.dlr.de/83619/",
+   "gives": "About 1.8 mSv per day during cruise, mostly from galactic cosmic rays. 0.66 plus or minus 0.12 Sv for the shortest round trip with current propulsion.",
+   "used_for": "The background dose rate in the simulated cruise (76 uSv per hour, about 1.8 mSv per day).",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "hassler_2014", "kind": "paper", "group": "Radiation",
+   "title": "Hassler et al. 2014, Curiosity RAD measurements on the surface of Mars, Science",
+   "publisher": "Science (via NBC News and Space.com reporting)",
+   "url": "https://www.nbcnews.com/sciencemain/radiation-mars-manageable-manned-mission-curiosity-finds-2D11716674",
+   "gives": "About 0.64 mSv per day on the Martian surface, roughly a third of the cruise rate.",
+   "used_for": "Reference figure for surface stays. Not yet used in a simulated phase.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "iss_dose_simonsen", "kind": "report", "group": "Radiation",
+   "title": "Simonsen et al., NASA ASCEND presentation draft (NTRS 20250006168)",
+   "publisher": "NASA Technical Reports Server",
+   "url": "https://ntrs.nasa.gov/api/citations/20250006168/downloads/ASCEND%20Simonsen%20draft%201.pdf",
+   "gives": "ISS effective dose of about 0.2 to 0.5 mSv per day, about 40 to 90 mSv over six months.",
+   "used_for": "Comparison on the About screen. The simulated mission is a Mars cruise, not the ISS.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "noaa_spe_list", "kind": "dataset", "group": "Radiation",
+   "title": "Solar Proton Events Affecting the Earth Environment, 1976 to present",
+   "publisher": "NOAA Space Weather Prediction Center, hosted by NOAA NCEI",
+   "url": "https://www.ngdc.noaa.gov/stp/space-weather/interplanetary-data/solar-proton-events/SEP page code.html",
+   "gives": "318 events with start time, peak time, and peak >10 MeV proton flux in pfu. The largest are March 1991 (43,500 pfu) and October 1989 (42,200 pfu).",
+   "used_for": "The day-120 storm replays the 19 October 1989 event: its 27-hour rise and its size. Bundled in data/space_weather and refreshed with scripts/fetch_space_weather.py.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "donki_sep", "kind": "dataset", "group": "Radiation",
+   "title": "DONKI Space Weather Database, solar energetic particle events",
+   "publisher": "NASA Community Coordinated Modeling Center",
+   "url": "https://ccmc.gsfc.nasa.gov/tools/DONKI",
+   "gives": "SEP events since 2010 with linked flares and coronal mass ejections, as JSON.",
+   "used_for": "Not downloaded: the CCMC servers did not answer from our network, and the public NASA API limits each request to 60 days.",
+   "checked": "summary", "status": "not used yet"
+  },
+  {
+   "id": "bone_meta_2020", "kind": "paper", "group": "Bone and muscle",
+   "title": "Meta-analysis of 25 studies of bone loss in space travelers, npj Microgravity, 2020 (doi 10.1038/s41526-020-0103-2)",
+   "publisher": "npj Microgravity",
+   "url": "https://www.doi.org/10.1038/S41526-020-0103-2",
+   "gives": "Bone loss of about 1 to 1.5 percent per month in long flights, only partly helped by non-drug countermeasures. Individual studies range from 0.4 to 1.8 percent per month.",
+   "used_for": "The slow downward trend of the bone marker index: about 7.5 percent over 180 days.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "csa_bones", "kind": "agency page", "group": "Bone and muscle",
+   "title": "What happens to bones in space?",
+   "publisher": "Canadian Space Agency",
+   "url": "https://www.asc-csa.gc.ca/eng/sciences/osm/bones.asp",
+   "gives": "Astronauts lose on average 1 to 2 percent of bone mineral density each month in microgravity.",
+   "used_for": "Cross-check for the bone trend.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "nasa_exercise", "kind": "agency page", "group": "Bone and muscle",
+   "title": "NASA ISS exercise prescription (NASA podcast and presentations)",
+   "publisher": "NASA",
+   "url": "https://www.nasa.gov/?p=407627",
+   "gives": "2.5 hours a day, 6 days a week scheduled for exercise on the ISS, including setup. A 2024 Phys.org report puts the average at about 2 hours a day.",
+   "used_for": "The crew's usual resistive exercise time: 120 minutes a day.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "dodds_2014", "kind": "paper", "group": "Bone and muscle",
+   "title": "Dodds et al. 2014, Grip strength across the life course: normative data from twelve British studies, PLoS ONE 9:e113637",
+   "publisher": "PLoS ONE",
+   "url": "https://www.iser.essex.ac.uk/research/publications/522861",
+   "gives": "Peak median grip strength of 51 kg in men (ages 29 to 39) and 31 kg in women (ages 26 to 42), from 49,964 people.",
+   "used_for": "The crew's grip strength baselines: mean 41 kg, spread 10 kg, for a mixed crew.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "mackowiak_1992", "kind": "paper", "group": "Immune",
+   "title": "Mackowiak et al. 1992, study of normal body temperature in 148 healthy adults, JAMA",
+   "publisher": "JAMA",
+   "url": "https://jamanetwork.com/journals/jama/article-abstract/400116",
+   "gives": "Mean oral temperature 36.8 C in healthy adults, upper limit of normal 37.7 C, daily swing of about 0.5 C.",
+   "used_for": "The crew's temperature baselines (mean 36.8 C) and the usual-range note.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "pearson_2003", "kind": "guideline", "group": "Immune",
+   "title": "Pearson et al. 2003, AHA/CDC scientific statement on markers of inflammation, Circulation",
+   "publisher": "American Heart Association and CDC",
+   "url": "https://www.ccjm.org/content/ccjom/70/7/634.full.pdf",
+   "gives": "hsCRP risk bands: below 1 mg/L low, 1 to 3 average, above 3 high. A secondary summary adds that values above 10 mg/L usually have an acute cause.",
+   "used_for": "The CRP usual range and the 10 mg/L hard limit.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "il6_reference", "kind": "lab reference", "group": "Immune",
+   "title": "Interleukin-6 reference intervals: Mayo Clinic Laboratories and Said et al. 2021 meta-analysis (J Med Virol)",
+   "publisher": "Mayo Clinic Laboratories; Journal of Medical Virology",
+   "url": "https://mayocliniclabs.com/test-catalog/Overview/618776",
+   "gives": "Mayo reference interval below 6.4 pg/mL. The meta-analysis of 140 studies gives a pooled healthy-adult mean of 5.19 pg/mL. Upper limits differ between labs and assays.",
+   "used_for": "The IL-6 usual range note.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "medlineplus_differential", "kind": "agency page", "group": "Immune",
+   "title": "Blood differential test",
+   "publisher": "MedlinePlus, US National Library of Medicine",
+   "url": "https://medlineplus.gov/ency/article/003657.htm",
+   "gives": "Lymphocytes are 20 to 40 percent of white blood cells (archived copy of the page).",
+   "used_for": "The lymphocyte ratio usual range (0.20 to 0.40).",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "crucian_2018", "kind": "paper", "group": "Immune",
+   "title": "Crucian et al. 2018, Immune system dysregulation during spaceflight, Frontiers in Immunology 9:1437",
+   "publisher": "Frontiers in Immunology",
+   "url": "https://frontiersin.org/journals/immunology/articles/10.3389/fimmu.2018.01437/full",
+   "gives": "Immune dysregulation and reactivation of latent herpesviruses persist across six-month orbital missions. Adaptive immunity is reduced and some innate responses are raised.",
+   "used_for": "Why the simulated mission includes an immune stress event. It gives no event size, so the size is the team's.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "twins_2019", "kind": "paper", "group": "Immune",
+   "title": "Garrett-Bakelman et al. 2019, The NASA Twins Study, Science",
+   "publisher": "Science (via Weill Cornell Medicine summary)",
+   "url": "https://research.weill.cornell.edu/node/6245",
+   "gives": "Signs of inflammation in flight, telomere lengthening in flight, and some changes lasting more than six months after landing. A study of one person.",
+   "used_for": "Background for the immune system. Vigil uses no Twins Study data.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "hr_normal", "kind": "clinical reference", "group": "Heart",
+   "title": "Normal resting heart rate for adults",
+   "publisher": "Cleveland Clinic and Mayo Clinic",
+   "url": "https://my.clevelandclinic.org/health/articles/heart-rate",
+   "gives": "60 to 100 bpm awake at rest for adults. Athletes can sit in the 40s or 50s.",
+   "used_for": "The resting heart rate usual range. Crew baselines sit low in it, as for fit adults.",
+   "checked": "summary", "status": "verified"
+  },
+  {
+   "id": "nunan_hrv", "kind": "paper", "group": "Heart",
+   "title": "Shaffer and Ginsberg 2017, An overview of heart rate variability metrics and norms, Frontiers in Public Health 5:258 (Table 6, short-term norms from Nunan et al.)",
+   "publisher": "Frontiers in Public Health",
+   "url": "https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2017.00258/full",
+   "gives": "Short-term (about 5 minute) RMSSD in healthy adults: mean 42 ms, SD 15, range 19 to 75 ms.",
+   "used_for": "The crew's HRV baselines: mean 42 ms, spread 15 ms.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "acc_aha_2017", "kind": "guideline", "group": "Heart",
+   "title": "2017 ACC/AHA high blood pressure guideline (Whelton et al.)",
+   "publisher": "American Heart Association and American College of Cardiology",
+   "url": "https://professional.heart.org/en/science-news/2017-hypertension-clinical-guidelines/top-things-to-know",
+   "gives": "Normal below 120/80 mmHg. Stage 1 hypertension 130 to 139 or 80 to 89. Stage 2 at 140/90 or higher.",
+   "used_for": "The blood pressure usual ranges. The hard limits (160/100) are the team's.",
+   "checked": "summary", "status": "verified"
+  },
+  {
+   "id": "hrs_2015_pots", "kind": "guideline", "group": "Heart",
+   "title": "2015 Heart Rhythm Society consensus on postural tachycardia, as reviewed in PMC6113123",
+   "publisher": "Heart Rhythm Society (via peer-reviewed review)",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6113123",
+   "gives": "A sustained heart rate rise of at least 30 bpm within 10 minutes of standing defines postural tachycardia in adults.",
+   "used_for": "The upper end of the standing heart rate rise range.",
+   "checked": "summary", "status": "verified"
+  },
+  {
+   "id": "medlineplus_pulse_ox", "kind": "agency page", "group": "Heart",
+   "title": "Pulse oximetry",
+   "publisher": "MedlinePlus, US National Library of Medicine",
+   "url": "https://medlineplus.gov/lab-tests/pulse-oximetry",
+   "gives": "Normal oxygen saturation is 95 to 100 percent.",
+   "used_for": "The blood oxygen usual range.",
+   "checked": "summary", "status": "verified"
+  },
+  {
+   "id": "barger_2014", "kind": "paper", "group": "Behavior and sleep",
+   "title": "Barger et al. 2014, ten-year study of astronaut sleep, Lancet Neurology",
+   "publisher": "Lancet Neurology (via Brigham and Women's Hospital release)",
+   "url": "https://sciencedaily.com/releases/2014/08/140807215803.htm",
+   "gives": "Astronauts slept 5.96 hours a night on shuttle missions and 6.09 on the ISS, against 8.5 scheduled. 64 astronauts on 80 shuttle missions and 21 on 13 ISS missions, by wrist actigraphy.",
+   "used_for": "The crew's sleep baselines: mean 6.1 hours.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "basner_2013", "kind": "paper", "group": "Behavior and sleep",
+   "title": "Basner et al. 2013, Mars 520-d mission simulation reveals protracted crew hypokinesis and alterations of sleep duration and timing, PNAS",
+   "publisher": "PNAS (via Scientific American)",
+   "url": "https://www.scientificamerican.com/blog/basic-space/what-a-fake-mars-mission-says-about-our-own-sleep-habits/",
+   "gives": "Over 520 days of isolation the crew grew more sedentary, and sleep timing and length changed. People differed widely.",
+   "used_for": "Why the behavioral slide lowers sleep and social contact together. Event size is the team's.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "hiseas_2022", "kind": "paper", "group": "Behavior and sleep",
+   "title": "HI-SEAS crews, Frontiers in Physiology 2022 (fphys.2022.898841)",
+   "publisher": "Frontiers in Physiology",
+   "url": "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2022.898841/pdf",
+   "gives": "18 people across three 8 to 12 month simulated Mars missions, tracked with wearables, hair and urine markers and self-ratings. Problems were most likely after the halfway point.",
+   "used_for": "The behavioral slide starts on day 90, the halfway point of the 180-day mission.",
+   "checked": "abstract", "status": "verified"
+  },
+  {
+   "id": "sirius", "kind": "mission", "group": "Behavior and sleep",
+   "title": "SIRIUS isolation missions (17 days, 4 months, 8 months) at IBMP, Moscow",
+   "publisher": "NASA Technical Reports Server (SIRIUS poster)",
+   "url": "https://ntrs.nasa.gov/api/citations/20230001103/downloads/IWS%20SIRIUS%20Poster%202023%20V4.pdf",
+   "gives": "Study plans for immune function, salivary cytokines and herpesvirus reactivation in 4 and 8 month isolation. No published outcomes found.",
+   "used_for": "Not used: no results to draw on yet.",
+   "checked": "summary", "status": "not used yet"
+  },
+  {
+   "id": "chapea", "kind": "mission", "group": "Communication",
+   "title": "NASA CHAPEA Mission 1 (378 days, June 2023 to July 2024)",
+   "publisher": "NASA (via news coverage)",
+   "url": "https://www.goodmorningamerica.com/news/story/nasas-mars-simulator-crew-emerged-after-378-days-111755446",
+   "gives": "A four-person crew lived 378 days in a simulated Mars habitat with a one-way message delay of up to 22 minutes. Health results are not published yet.",
+   "used_for": "Supports the 20-minute one-way delay used for Earth packets.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "osdr_inspiration4", "kind": "dataset", "group": "Open data",
+   "title": "Inspiration4 mission data in NASA's Open Science Data Repository (OSD-569, 570, 571, 575 for blood)",
+   "publisher": "NASA OSDR",
+   "url": "https://www.nasa.gov/osdr-latest-news-i4-mission-datasets/",
+   "gives": "De-identified blood counts, metabolic panels, cytokines and multi-omics from four commercial astronauts.",
+   "used_for": "Not imported. These are records of real people, and the project rule is to use none. The import format can read OSDR-style tables if the team decides otherwise.",
+   "checked": "summary", "status": "not used yet"
+  },
+  {
+   "id": "osdr_api", "kind": "dataset", "group": "Open data",
+   "title": "OSDR Biological Data API",
+   "publisher": "NASA OSDR",
+   "url": "https://visualization.osdr.nasa.gov/biodata/api",
+   "gives": "Programmatic access to GeneLab and ALSDA data and metadata.",
+   "used_for": "Not used yet.",
+   "checked": "summary", "status": "not used yet"
+  },
+  {
+   "id": "apple_health_export", "kind": "format", "group": "Device data",
+   "title": "Apple Health export (export.xml)",
+   "publisher": "Apple, format described by independent guides",
+   "url": "https://www.aihealthexport.com/guides/apple-health-xml-format",
+   "gives": "Readings stored as Record elements with type, unit, value and startDate. Apple publishes no schema, so the format is read from real exports.",
+   "used_for": "Vigil can import resting heart rate, blood oxygen, temperature, blood pressure and sleep from an Apple Health export.",
+   "checked": "summary", "status": "partly verified"
+  }
+ ]
+}

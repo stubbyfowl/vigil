@@ -89,7 +89,8 @@
       "unit": "days",
       "detected": 20,
       "levels": {
-        "2": 20
+        "2": 17,
+        "3": 3
       },
       "vigil_vs_onset": {
         "mean": 4.75,
@@ -151,8 +152,8 @@
         "n": 20
       },
       "fixed_alarm": {
-        "mean": 1,
-        "sd": 0.0,
+        "mean": 2.25,
+        "sd": 0.44,
         "n": 20
       },
       "triggers": {
@@ -173,21 +174,21 @@
         "3": 1
       },
       "vigil_vs_onset": {
-        "mean": 4.95,
-        "sd": 1.36,
+        "mean": 4.9,
+        "sd": 1.37,
         "n": 20
       },
       "fixed": {
         "sensitive": {
           "detected": 19,
           "vs_onset": {
-            "mean": 4.68,
-            "sd": 4.69,
+            "mean": 5.05,
+            "sd": 5.14,
             "n": 19
           },
           "lead_vigil_earlier": {
-            "mean": -0.26,
-            "sd": 4.99,
+            "mean": 0.16,
+            "sd": 5.28,
             "n": 19
           },
           "missed_by_fixed_found_by_vigil": 1
@@ -195,20 +196,20 @@
         "quiet": {
           "detected": 15,
           "vs_onset": {
-            "mean": 11.93,
-            "sd": 7.27,
+            "mean": 12.27,
+            "sd": 7.22,
             "n": 15
           },
           "lead_vigil_earlier": {
-            "mean": 7.13,
-            "sd": 7.13,
+            "mean": 7.53,
+            "sd": 7.07,
             "n": 15
           },
           "missed_by_fixed_found_by_vigil": 5
         }
       },
       "triggers": {
-        "hrv": 20,
+        "hrv": 19,
         "ortho_rise": 19,
         "resting_hr": 20
       }
@@ -217,13 +218,13 @@
   "false_alarms": {
     "quiet": {
       "l1": {
-        "mean": 1.31,
+        "mean": 1.28,
         "sd": 0.96,
         "n": 20
       },
       "l2": {
-        "mean": 0.75,
-        "sd": 0.81,
+        "mean": 0.72,
+        "sd": 0.79,
         "n": 20
       },
       "l3": {
@@ -232,7 +233,7 @@
         "n": 20
       },
       "fixed_sensitive": {
-        "mean": 7.86,
+        "mean": 7.83,
         "sd": 2.37,
         "n": 20
       },
@@ -244,12 +245,12 @@
     },
     "non_event": {
       "l1": {
-        "mean": 1.54,
+        "mean": 1.53,
         "sd": 0.48,
         "n": 20
       },
       "l2": {
-        "mean": 0.7,
+        "mean": 0.69,
         "sd": 0.35,
         "n": 20
       },
@@ -260,7 +261,7 @@
       },
       "fixed_sensitive": {
         "mean": 8.48,
-        "sd": 1.05,
+        "sd": 0.97,
         "n": 20
       },
       "fixed_quiet": {
@@ -282,7 +283,7 @@
       },
       "false_alarms_per_100_days": {
         "mean": 0.56,
-        "sd": 0.24,
+        "sd": 0.23,
         "n": 20
       }
     },
@@ -291,7 +292,7 @@
       "detected": 60,
       "total": 60,
       "delay": {
-        "mean": 4.38,
+        "mean": 4.37,
         "sd": 1.44,
         "n": 60
       },
@@ -311,8 +312,8 @@
         "n": 60
       },
       "false_alarms_per_100_days": {
-        "mean": 4.78,
-        "sd": 0.55,
+        "mean": 4.76,
+        "sd": 0.56,
         "n": 20
       }
     },
@@ -321,12 +322,12 @@
       "detected": 60,
       "total": 60,
       "delay": {
-        "mean": 4.17,
+        "mean": 4.15,
         "sd": 1.51,
         "n": 60
       },
       "false_alarms_per_100_days": {
-        "mean": 1.54,
+        "mean": 1.53,
         "sd": 0.48,
         "n": 20
       }

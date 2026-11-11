@@ -6,7 +6,6 @@ Screens never call these methods directly. They go through request(), which chec
 import csv
 import html
 import json
-import re
 import shutil
 import time
 from collections.abc import Callable
@@ -61,6 +60,7 @@ AUTO_LOCK_CHOICES = (1, 2, 5, 10, 15, 30)
 MISSION_NAME_LIMIT = 60
 MAX_MISSION_DAYS = 1100
 AUDIT_LIMIT = 300
+IMPORT_TYPES = (".csv", ".xml", ".zip")  # CSV tables, and Apple Health exports
 
 # Who may make which request. Everything is checked here, not only hidden on screen.
 PUBLIC = {"members", "mission_info", "about"}
@@ -568,13 +568,15 @@ class Vigil:
         return {"available": True, **json.loads(path.read_text())} if path.exists() else {"available": False}
 
     def about(self) -> dict[str, Any]:
+        """Every source Vigil draws on, and how many reference figures are checked."""
         ranges = json.loads((config.DATA_DIR / "real_ranges.json").read_text())
-        table = (config.ROOT / "SOURCES.md").read_text().split("## Numbers")[0]
-        rows = re.findall(r"^\| (?!Source|---)(.+?) \| (.+?) \| (.+?) \|$", table, flags=re.M)
-        groups = ("signals", "radiation", "communication")
+        catalog = json.loads((config.DATA_DIR / "sources.json").read_text())["sources"]
+        figures = [v for group in ("signals", "radiation", "communication") for v in ranges[group].values()]
+        counts = {k: sum(f["status"] == k for f in figures) for k in ("verified", "partly verified", "team choice", "must_verify")}
         return {
-            "sources": [{"name": n, "use": u, "status": s} for n, u, s in rows],
-            "must_verify_count": sum(v["status"] == "must_verify" for g in groups for v in ranges[g].values()),
+            "sources": [{"id": c["id"], "name": c["title"], "use": c["used_for"], "status": c["status"], "checked": c["checked"],
+                         "group": c["group"], "url": c["url"]} for c in catalog],
+            "figure_counts": counts, "must_verify_count": counts["must_verify"],
             "mode": self.mode,
             "statement": ("Readings come from what your crew enters and imports on this computer. " if self.mode == "live"
                           else "The demo crew and all their readings are simulated. ")
@@ -709,20 +711,23 @@ class Vigil:
         """CSV files waiting in the import folder, for example copied from a USB drive."""
         folder = config.IMPORT_DIR
         folder.mkdir(parents=True, exist_ok=True)
-        files = sorted(folder.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+        files = sorted((f for f in folder.iterdir() if f.is_file() and f.suffix.lower() in IMPORT_TYPES), key=lambda f: f.stat().st_mtime, reverse=True)
         return {"folder": str(folder), "files": [{"name": f.name, "kb": round(f.stat().st_size / 1024, 1)} for f in files]}
 
     def import_file(self, id: str, file: str) -> dict[str, Any]:
         """Import one CSV. A crew member imports only their own rows. The Medical Officer may import for anyone."""
         path = config.IMPORT_DIR / file
-        if Path(file).name != file or path.suffix.lower() != ".csv" or not path.is_file():
+        if Path(file).name != file or path.suffix.lower() not in IMPORT_TYPES or not path.is_file():
             raise LookupError("That file is not in the import folder.")
         self.store.who(id)
         anyone = self.actor_role in ("medical", "commander", "system")
         crew = self.store.crew if anyone else tuple(w for w in self.store.crew if w.id == id)
         names = {w.id: w.id for w in crew} | {w.name.lower(): w.id for w in crew} | {w.tag.lower(): w.id for w in crew}
         start = date.fromisoformat(self.store.info["start_date"])
-        result = mission.read_import(path, start, self._day(None), names, id)
+        if path.suffix.lower() in (".xml", ".zip"):
+            result = mission.read_apple_health(path, start, self._day(None), id)  # one person's export
+        else:
+            result = mission.read_import(path, start, self._day(None), names, id)
         by_member: dict[str, list[tuple[str, float, int]]] = {}
         for member, signal, value, day in result.rows:
             by_member.setdefault(member, []).append((signal, value, day))

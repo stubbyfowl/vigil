@@ -42,6 +42,8 @@ radiation:
   watch_fraction: 0.7
   near_limit_fraction: 0.9
   dose_rate_warn_usv_h: 150
+  event_limit_msv: 250
+  reference_event: '1989-10-19'
 sync:
   one_way_delay_minutes: 20
   demo_time_scale: 60

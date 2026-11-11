@@ -1,36 +1,43 @@
 {
-  "_note": "Reference ranges for sanity checks and the About screen. No figure here has been confirmed against a NASA source yet. The team must verify each one before quoting it.",
-  "signals": {
-    "resting_hr": { "low": 50, "high": 90, "unit": "bpm", "status": "must_verify", "source_note": "Typical healthy adult range from general knowledge. Check against NASA-STD-3001 and HRP risk reports." },
-    "hrv": { "low": 20, "high": 100, "unit": "ms RMSSD", "status": "must_verify", "source_note": "Wide adult range from general knowledge. Strongly age dependent. No NASA source yet." },
-    "bp_sys": { "low": 90, "high": 130, "unit": "mmHg", "status": "must_verify", "source_note": "Common adult range from general knowledge. Check against NASA-STD-3001." },
-    "bp_dia": { "low": 60, "high": 85, "unit": "mmHg", "status": "must_verify", "source_note": "Common adult range from general knowledge. Check against NASA-STD-3001." },
-    "ortho_rise": { "low": 5, "high": 30, "unit": "bpm", "status": "must_verify", "source_note": "Stand test rise from general knowledge. Check against HRP cardiovascular risk reports." },
-    "spo2": { "low": 95, "high": 100, "unit": "%", "status": "must_verify", "source_note": "Common adult range from general knowledge. Cabin pressure may change this." },
-    "exercise_min": { "low": 60, "high": 150, "unit": "min per day", "status": "must_verify", "source_note": "Assumed daily exercise block. Check against HRP bone and muscle reports." },
-    "exercise_load": { "low": 60, "high": 140, "unit": "arbitrary units", "status": "must_verify", "source_note": "Invented unit for this prototype. No real equivalent." },
-    "grip": { "low": 25, "high": 65, "unit": "kg", "status": "must_verify", "source_note": "Adult range from general knowledge. No NASA source yet." },
-    "bone_marker": { "low": 70, "high": 130, "unit": "synthetic index", "status": "must_verify", "source_note": "Invented index for this prototype. Real markers need lab assays. Check OSDR and Twin Study papers." },
-    "lean_mass": { "low": 40, "high": 85, "unit": "kg", "status": "must_verify", "source_note": "Adult proxy range from general knowledge. No NASA source yet." },
-    "temp": { "low": 36.1, "high": 37.3, "unit": "C", "status": "must_verify", "source_note": "Common adult range from general knowledge. Spaceflight may shift core temperature. Check HRP reports." },
-    "crp": { "low": 0, "high": 3, "unit": "mg/L", "status": "must_verify", "source_note": "Common lab range from general knowledge. Check Twin Study papers." },
-    "il6": { "low": 0, "high": 5, "unit": "pg/mL", "status": "must_verify", "source_note": "Common lab range from general knowledge. Assays vary. Check Twin Study papers." },
-    "lymph": { "low": 0.2, "high": 0.45, "unit": "ratio", "status": "must_verify", "source_note": "Common lab range from general knowledge. Check OSDR." },
-    "symptoms": { "low": 0, "high": 1, "unit": "0 to 5 self report", "status": "must_verify", "source_note": "Scale invented for this prototype." },
-    "sleep_hours": { "low": 6, "high": 9, "unit": "hours", "status": "must_verify", "source_note": "Common adult guidance from general knowledge. Check HRP behavioral reports and analog missions." },
-    "sleep_eff": { "low": 80, "high": 98, "unit": "%", "status": "must_verify", "source_note": "Common sleep study range from general knowledge. Check analog missions." },
-    "mood": { "low": 5, "high": 9, "unit": "1 to 10 self report", "status": "must_verify", "source_note": "Scale invented for this prototype. Check HI-SEAS, SIRIUS and CHAPEA methods." },
-    "stress": { "low": 2, "high": 6, "unit": "1 to 10 self report", "status": "must_verify", "source_note": "Scale invented for this prototype. Check HI-SEAS, SIRIUS and CHAPEA methods." },
-    "energy": { "low": 5, "high": 9, "unit": "1 to 10 self report", "status": "must_verify", "source_note": "Scale invented for this prototype." },
-    "social_min": { "low": 30, "high": 180, "unit": "min per day", "status": "must_verify", "source_note": "Assumed range. Check analog missions." },
-    "journal": { "low": -0.2, "high": 0.6, "unit": "-1 to 1", "status": "must_verify", "source_note": "Output range of this prototype's own word list." }
-  },
-  "radiation": {
-    "career_limit_msv": { "value": 600, "unit": "mSv", "status": "must_verify", "source_note": "Approximate NASA career limit given in the project brief. Confirm in NASA-STD-3001." },
-    "mars_round_trip_dose_sv": { "value": 0.66, "unit": "Sv", "days": 360, "status": "must_verify", "source_note": "Approximate figure given in the project brief, attributed to the Curiosity RAD instrument. Confirm the original paper." },
-    "daily_dose_msv": { "value": 1.8, "unit": "mSv per day", "status": "must_verify", "source_note": "Derived from the round trip figure above: 0.66 Sv over about 360 days." }
-  },
-  "communication": {
-    "one_way_delay_minutes": { "value": 20, "unit": "minutes", "status": "must_verify", "source_note": "Upper estimate given in the project brief. The real delay changes with planet positions." }
-  }
+ "_note": "Reference figures behind each signal. 'source' names an entry in data/sources.json. status: 'verified' (read in the source or its abstract), 'partly verified' (read in a summary of it), 'team choice' (a scale or setting Vigil defines, with no outside meaning), 'must_verify' (has an outside meaning but no source was found). These are context, not clinical limits: Vigil alerts on each person's own range.",
+ "signals": {
+  "resting_hr": {"unit": "bpm", "low": 60, "high": 100, "status": "verified", "source": "hr_normal", "note": "Adults awake at rest. Fit adults often sit lower, so crew baselines average 62."},
+  "hrv": {"unit": "ms RMSSD", "low": 19, "high": 75, "status": "verified", "source": "nunan_hrv", "note": "Short-term (about 5 minute) RMSSD in healthy adults: mean 42, SD 15. Crew baselines use the same mean and spread."},
+  "bp_sys": {"unit": "mmHg", "low": null, "high": 120, "status": "verified", "source": "acc_aha_2017", "note": "Normal is below 120. Stage 1 hypertension starts at 130 and stage 2 at 140. The 160 hard limit is the team's."},
+  "bp_dia": {"unit": "mmHg", "low": null, "high": 80, "status": "verified", "source": "acc_aha_2017", "note": "Normal is below 80. Stage 1 is 80 to 89 and stage 2 is 90 or higher. The 100 hard limit is the team's."},
+  "ortho_rise": {"unit": "bpm", "low": null, "high": 30, "status": "verified", "source": "hrs_2015_pots", "note": "A sustained rise of 30 bpm or more within 10 minutes of standing defines postural tachycardia in adults."},
+  "spo2": {"unit": "%", "low": 95, "high": 100, "status": "verified", "source": "medlineplus_pulse_ox", "note": "Normal saturation. The 90 percent hard limit is the team's."},
+  "exercise_min": {"unit": "min per day", "low": null, "high": null, "status": "partly verified", "source": "nasa_exercise", "note": "ISS crews are scheduled 2.5 hours a day including setup, and average about 2 hours. Crew baselines average 120 minutes."},
+  "exercise_load": {"unit": "AU", "low": null, "high": null, "status": "team choice", "source": null, "note": "An arbitrary load index defined by Vigil."},
+  "grip": {"unit": "kg", "low": null, "high": null, "status": "verified", "source": "dodds_2014", "note": "Peak medians are 51 kg for men and 31 kg for women. Crew baselines average 41 kg with a 10 kg spread."},
+  "bone_marker": {"unit": "index", "low": null, "high": null, "status": "team choice", "source": "bone_meta_2020", "note": "The index itself is Vigil's. Its slow fall, about 7.5 percent over 180 days, follows the 1 to 1.5 percent a month bone loss reported in long flights."},
+  "lean_mass": {"unit": "kg", "low": null, "high": null, "status": "must_verify", "source": null, "note": "A lean mass proxy that falls 1.2 kg over the mission. No source found for the rate."},
+  "temp": {"unit": "°C", "low": null, "high": 37.7, "status": "verified", "source": "mackowiak_1992", "note": "Mean oral temperature 36.8 C, upper limit of normal 37.7 C. The 38.5 C hard limit is the team's."},
+  "crp": {"unit": "mg/L", "low": null, "high": 3, "status": "partly verified", "source": "pearson_2003", "note": "Below 1 is low cardiovascular risk, 1 to 3 average, above 3 high. The 10 mg/L hard limit marks a likely acute cause."},
+  "il6": {"unit": "pg/mL", "low": null, "high": 6.4, "status": "partly verified", "source": "il6_reference", "note": "Mayo Clinic Laboratories reference interval. Upper limits differ between labs and assays."},
+  "lymph": {"unit": "ratio", "low": 0.2, "high": 0.4, "status": "partly verified", "source": "medlineplus_differential", "note": "Lymphocytes are 20 to 40 percent of white blood cells."},
+  "symptoms": {"unit": "0 to 5", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
+  "sleep_hours": {"unit": "hours", "low": null, "high": null, "status": "verified", "source": "barger_2014", "note": "ISS crews averaged 6.09 hours a night against 8.5 scheduled. Crew baselines average 6.1 hours."},
+  "sleep_eff": {"unit": "%", "low": 85, "high": 100, "status": "must_verify", "source": null, "note": "85 percent is a common convention for good sleep efficiency, but only consumer sources were found for it."},
+  "mood": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
+  "stress": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
+  "energy": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
+  "social_min": {"unit": "min per day", "low": null, "high": null, "status": "team choice", "source": "basner_2013", "note": "Minutes of social contact. The Mars-500 crews grew less active over time, which the behavioral slide follows."},
+  "journal": {"unit": "-1 to 1", "low": null, "high": null, "status": "team choice", "source": null, "note": "Tone score from Vigil's own word list."}
+ },
+ "radiation": {
+  "career_limit_msv": {"value": 600, "status": "verified", "source": "nasa_std_3001_radiation", "note": "Career effective dose, all ages and sexes [V1 4030]."},
+  "event_limit_msv": {"value": 250, "status": "verified", "source": "nasa_std_3001_radiation", "note": "Per solar particle event, against the October 1989 events [V1 4031]."},
+  "cruise_dose_msv_per_day": {"value": 1.8, "status": "verified", "source": "zeitlin_2013", "note": "Mars cruise, mostly galactic cosmic rays. The simulation uses 76 uSv per hour."},
+  "mars_round_trip_dose_sv": {"value": 0.66, "status": "verified", "source": "zeitlin_2013", "note": "Shortest round trip with current propulsion, plus or minus 0.12 Sv."},
+  "mars_surface_msv_per_day": {"value": 0.64, "status": "partly verified", "source": "hassler_2014", "note": "On the Martian surface."},
+  "iss_msv_per_day": {"value": [0.2, 0.5], "status": "partly verified", "source": "iss_dose_simonsen", "note": "Low Earth orbit, for comparison."},
+  "storm_reference_event": {"value": "1989-10-19", "status": "verified", "source": "noaa_spe_list", "note": "Start 13:10 UTC, peak 27 hours later at 42,200 pfu (>10 MeV)."},
+  "free_space_usv_h_per_pfu": {"value": 0.025, "status": "must_verify", "source": null, "note": "Team assumption that turns proton flux into dose rate in this ship. Real conversion depends on the energy spectrum and shielding."},
+  "shelter_factor": {"value": 0.4, "status": "must_verify", "source": null, "note": "Team assumption: the storm shelter passes 40 percent of storm dose."},
+  "storm_warning_hours": {"value": 2, "status": "must_verify", "source": null, "note": "Team assumption for how early a solar monitor warns."}
+ },
+ "communication": {
+  "one_way_delay_minutes": {"value": 20, "status": "partly verified", "source": "chapea", "note": "CHAPEA used delays of up to 22 minutes one way. The real delay to Mars depends on the planets' positions."}
+ }
 }

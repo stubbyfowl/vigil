@@ -198,9 +198,28 @@ def test_explainer_finds_same_heart_rate_real_day():
     assert a["median"] != b["median"]
 
 
-def test_about_marks_everything_unverified():
+def test_about_lists_sources_with_honest_status():
     a = vigil.about()
-    assert a["must_verify_count"] > 20 and all(s["status"] == "to verify" for s in a["sources"])
+    assert len(a["sources"]) >= 25
+    assert all(s["status"] in ("verified", "partly verified", "not used yet") and s["url"].startswith("https://") for s in a["sources"])
+    assert all(s["checked"] in ("full text", "abstract", "summary") for s in a["sources"])
+    assert a["must_verify_count"] >= 1 and sum(a["figure_counts"].values()) >= 30
+
+
+def test_every_reference_figure_names_a_real_source():
+    import json
+    catalog = {s["id"]: s for s in json.loads((config.DATA_DIR / "sources.json").read_text())["sources"]}
+    ranges = json.loads((config.DATA_DIR / "real_ranges.json").read_text())
+    for group in ("signals", "radiation", "communication"):
+        for name, fig in ranges[group].items():
+            assert fig["status"] in ("verified", "partly verified", "team choice", "must_verify"), name
+            if fig["status"] in ("verified", "partly verified"):
+                assert fig["source"] in catalog, name
+                assert catalog[fig["source"]]["status"] != "not used yet", name
+            if fig["source"] is not None:
+                assert fig["source"] in catalog, name
+    from app.signals import DRIFT_SIGNALS
+    assert {s.id for s in DRIFT_SIGNALS} <= set(ranges["signals"])
 
 
 def test_results_are_available():

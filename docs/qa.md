@@ -13,7 +13,7 @@ It limits what the number means. It shows the method can find this kind of chang
 About 1.5 per 100 days per person, and we report them on a quiet control with no events. Fixed limits gave 3 to 8. Level 3 false alarms were almost zero, at 0.02 per 100 days.
 
 **Is Vigil faster than a simple alarm?**
-Sometimes. Against the quieter fixed limit, Vigil flagged heart drift about 7 days sooner, and that limit missed 5 of 20 runs. For immune and behavior events, a fixed limit was about as fast. The more sensitive fixed limit fired sooner on those two events, but raised about five times as many false alarms.
+Sometimes. Against the quieter fixed limit, Vigil flagged heart drift about 7.5 days sooner, and that limit missed 5 of 20 runs. For immune and behavior events, a fixed limit was about as fast. The more sensitive fixed limit fired sooner on those two events, but raised about five times as many false alarms.
 
 **Why not use machine learning?**
 An astronaut has to trust and check the answer. Each alert shows which signals moved, by how much, for how long and which rule fired. A small statistical method also runs on modest hardware and needs no training data, which we do not have.
@@ -53,3 +53,12 @@ Only you, unless you share it. The crew and Earth always see your status as Norm
 
 **How secure is it?**
 Each person has a PIN, stored only as a salted, slow hash. Wrong PINs lock the account for longer each time. The screen locks when idle. An audit log records who did what. The database itself is not encrypted, so a real vehicle should use disk encryption.
+
+**Where do your numbers come from?**
+Every reference figure in `data/real_ranges.json` names a source in `data/sources.json`, such as NASA-STD-3001 for the radiation limits, Curiosity's RAD instrument for the cruise dose, and Barger 2014 for ISS sleep. Each source says how much of it we read. Figures we could not source, like the shielding factor, are marked must_verify. The About screen and SOURCES.md show all of it.
+
+**Is the solar storm real?**
+Its timing and size are. The storm on day 120 replays the 19 October 1989 solar proton event from NOAA's list of 318 events since 1976, the same event family NASA uses for its 250 mSv per-storm limit. How that flux becomes dose inside our ship is our own assumption.
+
+**Can it use data from a real watch?**
+Yes, in a real mission. Vigil imports Apple Health exports and spreadsheets from a folder on the computer. It never connects to a phone or the internet.

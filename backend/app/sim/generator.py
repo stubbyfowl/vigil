@@ -1,6 +1,10 @@
 """Synthetic crew generator. The same seed always gives the same mission."""
 
+import json
 from dataclasses import dataclass, field
+from datetime import datetime
+from functools import cache
+from pathlib import Path
 
 import numpy as np
 
@@ -8,9 +12,14 @@ from ..signals import DRIFT_SIGNALS, Signal
 
 HOURS = 24
 SHELTER_FACTOR = 0.4  # invented value, see SOURCES.md
-STORM_HOURS = 36
-STORM_PEAK_USV_H = 900.0  # invented free-space peak
-BASE_DOSE_RATE = 76.0  # about 1.8 mSv per day, must_verify
+# Storms replay a real event from NOAA's solar proton event list (data/space_weather).
+# Start time, rise to peak and relative size come from the list. The step from proton flux
+# to dose rate inside this ship is a team assumption, not a measurement.
+EVENT_CATALOG = Path(__file__).resolve().parents[3] / "data" / "space_weather" / "noaa_solar_proton_events.json"
+REFERENCE_EVENT = "1989-10-19"  # the October 1989 events define NASA's storm shielding limit [V1 4031]
+FREE_SPACE_USV_H_PER_PFU = 0.025  # team assumption, must_verify
+STORM_DECAY_RISES = 2.0  # the flux falls back over about two rise times, team assumption
+BASE_DOSE_RATE = 76.0  # about 1.8 mSv per day in Mars cruise (Curiosity RAD, Zeitlin 2013)
 MISSING_RATE = 0.03
 
 
@@ -110,22 +119,45 @@ def _signal_series(sig: Signal, who: Astronaut, days: int, rng: np.random.Genera
     return values
 
 
-def _storm_window(days: int) -> dict[str, int] | None:
+@cache
+def solar_events() -> tuple[dict, ...]:
+    """NOAA's list of solar proton events since 1976, bundled with Vigil."""
+    return tuple(json.loads(EVENT_CATALOG.read_text())["events"])
+
+
+def reference_event(date: str = REFERENCE_EVENT) -> dict:
+    """The catalog event that starts on this date. The largest one if several do."""
+    matches = [e for e in solar_events() if e["begin"].startswith(date)]
+    if not matches:
+        raise LookupError(f"No solar proton event starts on {date} in NOAA's list.")
+    event = max(matches, key=lambda e: e["peak_pfu"])
+    parse = lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%MZ")  # noqa: E731
+    rise = max(1, round((parse(event["peak_time"]) - parse(event["begin"])).total_seconds() / 3600))
+    return event | {"rise_hours": rise, "peak_usv_h": round(event["peak_pfu"] * FREE_SPACE_USV_H_PER_PFU, 1)}
+
+
+def _storm_window(days: int, event: dict) -> dict | None:
     if days < STORM_DAY + 2:
         return None
     onset = (STORM_DAY - 1) * HOURS + STORM_START_HOUR
-    return {"warning_hour": onset - STORM_WARNING_HOURS, "onset_hour": onset, "end_hour": onset + STORM_HOURS}
+    length = int(event["rise_hours"] * (1 + STORM_DECAY_RISES) + 0.5)
+    return {
+        "warning_hour": onset - STORM_WARNING_HOURS, "onset_hour": onset, "end_hour": onset + length,
+        "rise_hours": event["rise_hours"], "peak_usv_h": event["peak_usv_h"], "event_begin": event["begin"],
+        "event_peak_pfu": event["peak_pfu"], "event_flare": event["flare"],
+    }
 
 
-def _free_space_hourly(days: int, storm: dict[str, int] | None, rng: np.random.Generator) -> np.ndarray:
+def _free_space_hourly(days: int, storm: dict | None, rng: np.random.Generator) -> np.ndarray:
     """Dose rate per hour outside any storm shelter. Same for the whole ship."""
     hours = days * HOURS
     slow = 1 + 0.04 * np.sin(2 * np.pi * np.arange(hours) / (27 * HOURS))
     rate = BASE_DOSE_RATE * slow + rng.normal(0, 3.0, hours)
     if storm:
-        h = np.arange(STORM_HOURS, dtype=float)
-        shape = np.minimum(h / 6, 1) * np.exp(-np.maximum(h - 6, 0) / 14)
-        rate[storm["onset_hour"]:storm["end_hour"]] += STORM_PEAK_USV_H * shape
+        rise = storm["rise_hours"]
+        h = np.arange(storm["end_hour"] - storm["onset_hour"], dtype=float)
+        shape = np.minimum(h / rise, 1) * np.exp(-np.maximum(h - rise, 0) / (rise * STORM_DECAY_RISES / 3))
+        rate[storm["onset_hour"]:storm["end_hour"]] += storm["peak_usv_h"] * shape
     return np.clip(rate, 0, None)
 
 
@@ -166,18 +198,21 @@ def build_ground_truth(days: int, storm: dict[str, int] | None, planted: bool) -
     if storm:
         truth.append({
             "id": "solar_storm", "title": "Solar particle event", "day": STORM_DAY, "astronaut": "all",
-            "system": "radiation", "ramp_days": 0, "duration_days": 1.5,
-            "signals": [{"signal": "dose_rate", "change": STORM_PEAK_USV_H}], **storm,
+            "system": "radiation", "ramp_days": 0, "duration_days": round((storm["end_hour"] - storm["onset_hour"]) / HOURS, 2),
+            "signals": [{"signal": "dose_rate", "change": storm["peak_usv_h"]}], **storm,
         })
     return sorted(truth, key=lambda e: e["day"])
 
 
-def generate_mission(seed: int = 42, days: int = 180, planted: bool = True) -> Mission:
-    """Build a full mission. Set planted=False for a mission with no events."""
+def generate_mission(seed: int = 42, days: int = 180, planted: bool = True, storm_event: str = REFERENCE_EVENT) -> Mission:
+    """Build a full mission. Set planted=False for a mission with no events.
+
+    storm_event is the start date of the NOAA-listed solar proton event the day-120 storm replays.
+    """
     series: dict[str, dict[str, np.ndarray]] = {}
     hourly: dict[str, np.ndarray] = {}
     hourly_free: dict[str, np.ndarray] = {}
-    storm = _storm_window(days) if planted else None
+    storm = _storm_window(days, reference_event(storm_event)) if planted else None
     free = _free_space_hourly(days, storm, np.random.default_rng([seed, 999]))
     for index, who in enumerate(CREW):
         rng = np.random.default_rng([seed, index])
