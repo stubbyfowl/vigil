@@ -47,29 +47,21 @@ Item {
                 : "Every system is inside your own normal today."
         }
 
+        // The top alert's action, then what is due today and anyone who needs the Medical Officer. One row, so nothing below moves.
         RowLayout {
             Layout.topMargin: 12
             Layout.preferredHeight: Theme.touch
-            visible: !!home.topAlert
+            visible: !!home.topAlert || (home.notices.length > 0 && !vigil.demo.active)
             spacing: 12
-            VButton { kind: "primary"; text: "See what to do  ›"; onClicked: vigil.navigate("/alert/" + home.topAlert.id) }
-            LevelBadge { level: home.topAlert ? home.topAlert.level : 0 }
+            VButton { visible: !!home.topAlert; kind: "primary"; text: "See what to do  ›"; onClicked: vigil.navigate("/alert/" + home.topAlert.id) }
+            LevelBadge { visible: !!home.topAlert; level: home.topAlert ? home.topAlert.level : 0 }
             Text {
-                visible: home.d.alerts.length > 1
+                visible: !!home.topAlert && home.d.alerts.length > 1
                 text: "and " + (home.d.alerts.length - 1) + " more"
                 font.family: Theme.body; font.pixelSize: 16; color: Theme.ink2
             }
-        }
-
-        // What is due today, and anyone who needs the Medical Officer.
-        Flow {
-            Layout.topMargin: 14
-            Layout.fillWidth: true
-            Layout.maximumWidth: 760
-            visible: home.notices.length > 0 && !vigil.demo.active
-            spacing: 10
             Repeater {
-                model: home.notices
+                model: vigil.demo.active ? [] : home.notices.slice(0, home.topAlert ? 1 : 3)
                 VButton {
                     required property var modelData
                     text: modelData.title + "  ›"

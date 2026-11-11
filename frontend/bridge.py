@@ -242,6 +242,7 @@ class Bridge(QObject):
         self._end_session()
 
     def _end_session(self) -> None:
+        self._set_stage(self._resting_stage())  # unload the screens first, so none asks for data with nobody signed in
         self._session = None
         self._locked = False
         self._clear_undo()
