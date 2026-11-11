@@ -37,3 +37,10 @@
 - Voice check-in: offline with Vosk. Tested on a recorded phrase. A live microphone is not tested.
 - Checked: 245 tests pass on macOS.
 - Checked on Linux ARM64 with networking disabled: all 245 tests pass, including the C++ match and speech tests. The standalone Linux build passes its own check.
+
+## Accounts and real missions (done)
+- Done: per-member PIN sign-in with growing lockout, auto-lock, forced PIN change for temporary PINs, roles (Crew, Medical Officer, Commander, Mission Control, Presenter for the demo), one access check for every screen request, and an audit log.
+- Done: real missions alongside the demo, in a separate database. Setup in two steps, crew management, daily logging with range checks and corrections, CSV import from a folder, Data sources, notices on Home, Level 3 and weekly summary packets written to an outbox folder, Mission Control built only from packets, CSV and PDF export, backup and archive.
+- Done: a user guide for the crew and Commander, and screenshots of every new screen.
+- Design: new form fields, banners and PIN pad follow rules from Meta's Astryx design system (see DECISIONS 42).
+- Checked: 342 tests pass on macOS, including every screen of a real mission as each role, the full access matrix, and an end-to-end real mission over 15 days.

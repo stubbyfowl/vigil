@@ -644,23 +644,30 @@ class Vigil:
 
     # Readings people enter (live missions)
 
+    def _for_someone_else(self, id: str) -> bool:
+        """The Medical Officer entering results for another person sees none of that person's own values."""
+        return self.actor_role not in ("system", "presenter") and self.actor != id
+
     def log_form(self, id: str) -> dict[str, Any]:
         who = self.store.who(id)
         d = self._day(None)
         series = self.store.mission.series[id]
+        hide = self._for_someone_else(id)
         groups: dict[str, list[dict[str, Any]]] = {}
         for sig in mission.LOGGABLE:
             past = np.flatnonzero(~np.isnan(series[sig.id][:d]))
             groups.setdefault(SYSTEMS.get(sig.system, "Radiation"), []).append({
                 "id": sig.id, "name": sig.name, "unit": sig.unit, "low": sig.low, "high": sig.high, "decimals": sig.decimals,
-                "cadence": sig.cadence, "today": _finite(series[sig.id][d - 1]),
-                "last": _finite(series[sig.id][past[-1]]) if len(past) else None, "last_day": int(past[-1]) + 1 if len(past) else None,
+                "cadence": sig.cadence, "today": None if hide else _finite(series[sig.id][d - 1]),
+                "last": None if hide or not len(past) else _finite(series[sig.id][past[-1]]),
+                "last_day": None if hide or not len(past) else int(past[-1]) + 1,
             })
         start = date.fromisoformat(self.store.info["start_date"])
         return {
             "member": _identity(who), "day": d, "date": mission.day_date(start, d).isoformat(),
             "groups": [{"name": k, "signals": v} for k, v in groups.items()],
             "days_with_readings": self.store.days_with_readings(id), "learning_days": self.store.cfg["baseline"]["learning_days"],
+            "for_someone_else": hide,
             "crew": [_identity(w) for w in self.store.crew] if self.actor_role in ("medical", "system") else [],
         }
 
@@ -687,9 +694,13 @@ class Vigil:
         self.store.who(id)
         start = date.fromisoformat(self.store.info["start_date"])
         rows = self.store.entries(id)
+        if self._for_someone_else(id):
+            rows = [r for r in rows if r["entered_by"] == self.actor]  # only what this Medical Officer entered
         return {"entries": [r | {"date": mission.day_date(start, r["day"]).isoformat()} for r in rows]}
 
     def delete_entry(self, id: str, entry: int) -> dict[str, Any]:
+        if self._for_someone_else(id) and all(r["id"] != int(entry) for r in self.entries(id)["entries"]):
+            raise PermissionError("You can only remove readings you entered yourself.")
         self.store.delete_entry(id, int(entry))
         self._audit("reading_deleted", id, f"entry {entry}")
         return {"deleted": entry}

@@ -5,7 +5,7 @@
 1. Turn off Wi-Fi. Vigil does not need it.
 2. Run `.venv/bin/python frontend/main.py --check`. It should print "Vigil check passed."
 3. Plug in the second display if you have one.
-4. Start with `make demo`. Add Mission Control with `.venv/bin/python scripts/demo_director.py --ground`.
+4. Start with `make demo`. It opens the demo mission and signs in as the Presenter. Add Mission Control with `.venv/bin/python scripts/demo_director.py --ground`.
 
 Starting the demo resets check-ins and alert actions, so every run begins the same way.
 
@@ -47,3 +47,11 @@ Touch nothing. Use **Next beat** to skip ahead and **Stop** to end.
 | A beat runs too long | Press **Next beat** |
 | You want to restart | Press **Stop**, then Menu, then **Play demo** |
 | The app will not open | Show the images in `docs/screens` and talk through them |
+
+## Show that it is real software
+
+After the automatic run, if there is time (about 1 minute):
+
+1. Tap **Lock**. "Each person has a PIN. The screen also locks by itself."
+2. Tap **Someone else? Sign out**, then **Lena Novak**, and enter 2026. "Lena sees only her own data. Not even the Commander can read it."
+3. Open Menu. "On a real mission the crew logs readings or imports device files, and packets for Earth go to an outbox folder. The demo and a real mission never share data."

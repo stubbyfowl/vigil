@@ -60,6 +60,7 @@ Item {
             visible: screen.form.days_with_readings !== undefined && screen.form.days_with_readings < screen.form.learning_days
             text: "Learning " + (screen.form.member ? screen.form.member.name.split(" ")[0] + "'s" : "your") + " normal: " + screen.form.days_with_readings + " of " + screen.form.learning_days + " days with readings. Alerts start after that."
         }
+        Banner { text: screen.form.for_someone_else ? "Entering results for " + screen.form.member.name + ". Their own readings stay private. You see only what you enter." : "" }
         Banner { tone: "success"; text: screen.saved }
         Banner { tone: "error"; text: screen.errors._ || (Object.keys(screen.errors).length ? "Some values need fixing. Nothing was saved." : "") }
         Split {
@@ -87,7 +88,8 @@ Item {
                                     spacing: 0
                                     Body { text: row.modelData.name }
                                     Note {
-                                        text: row.modelData.today !== null ? "Today: " + row.modelData.today + " " + row.modelData.unit
+                                        text: screen.form.for_someone_else ? row.modelData.unit
+                                              : row.modelData.today !== null ? "Today: " + row.modelData.today + " " + row.modelData.unit
                                               : row.modelData.last !== null ? "Last: " + row.modelData.last + " " + row.modelData.unit + " on day " + row.modelData.last_day
                                               : row.modelData.cadence > 1 ? "Every " + row.modelData.cadence + " days" : "No readings yet"
                                     }

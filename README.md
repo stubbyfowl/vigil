@@ -8,7 +8,7 @@ A message to Mars can take about 20 minutes each way, so the astronaut cannot wa
 
 The ribbon on Home is the last 30 days of this person's drift. It stays cool and narrow when all is well, and it swells and warms as they move away from their own normal.
 
-**All crew data is synthetic. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.** See [LIMITATIONS.md](LIMITATIONS.md).
+**The demo mission's crew and data are synthetic. A real mission uses only what your crew enters or imports. Thresholds are starting values, not clinical limits. Vigil gives decision support, not a diagnosis.** See [LIMITATIONS.md](LIMITATIONS.md).
 
 Built for the NASA Space Apps Challenge 2026, Phoenix.
 
@@ -31,7 +31,7 @@ make demo
 | Command | What it does |
 |---|---|
 | `make dev` | Opens Vigil and the Mission Control window |
-| `make demo` | Opens Vigil and plays the Demo Director, about 2 minutes |
+| `make demo` | Opens the demo mission, signs in as the Presenter and plays the Demo Director, about 2 minutes |
 | `make kiosk` | Runs fullscreen for a dedicated panel |
 | `make native` | Builds the optional C++ tracker. `make setup` tries this for you |
 | `make voice` | Adds optional offline voice check-in. Downloads a 41 MB speech model once |
@@ -70,19 +70,51 @@ Before any demo, this confirms the interface loads cleanly:
 |---|---|
 | Esc | Back |
 | Ctrl+Z | Undo the last alert action |
-| Ctrl+D | Play demo |
+| Ctrl+L | Lock the screen |
+| Ctrl+D | Play demo (Presenter only) |
 | Ctrl+Right | Next demo beat |
 | Ctrl+. | Stop demo |
 | Ctrl+G | Open Mission Control |
 | F11 | Toggle fullscreen |
 
-The hidden Admin screen opens after five taps on the VIGIL wordmark.
+Thresholds are on the Commander's Menu, or after five taps on the Vigil wordmark.
+
+## Use it on a real mission
+
+The first time Vigil opens on a computer, it asks whether to set up a mission or explore the demo. The two never mix: each has its own database.
+
+1. **Set up.** Enter the mission name, start date and length, then the first Commander's name and PIN.
+2. **Add the crew.** The Commander opens Crew and accounts and adds each person with a temporary PIN. Each person chooses their own PIN at first sign-in.
+3. **Every day.** Each person signs in, does the daily check-in, and logs readings by hand or imports a device export. Vigil learns each person's normal over the first 10 days with readings, then starts raising alerts.
+4. **Earth.** Level 3 alerts and a weekly summary for each person are written to the outbox folder by themselves. Anyone can also call Earth with a note.
+
+| Role | Can do |
+|---|---|
+| Crew | See and enter only their own data. Share raw values with the crew or Earth if they choose |
+| Medical Officer | Everything crew can, plus is told about Level 2 alerts and can enter lab results for anyone |
+| Commander | Everything crew can, plus add members, reset PINs, set the screen lock, see the audit log, back up and archive |
+| Mission Control | Signs in on the Mission Control window only, and sees only what packets carried |
+
+PINs are stored only as salted PBKDF2 hashes. Five wrong PINs lock an account for a minute, then longer each time. The screen locks after a few idle minutes. The audit log records sign-ins, account changes, data entry and exports, never PINs, readings or journal words.
+
+| Folder (in `data/` when run from source, `~/.local/share/vigil` when packaged) | What it is for |
+|---|---|
+| `outbox/` | One JSON file per packet for Earth. The vehicle's comm system sends and removes them. Level 3 files sort first |
+| `import/` | Drop a CSV here to import it. Columns: `date` (or `day`), `signal`, `value`, and optionally `member` |
+| `exports/` | CSV and PDF files people export for their flight surgeon |
+| `backups/` | Backups and archived missions |
+
+The full guide is [docs/user-guide.md](docs/user-guide.md).
 
 ## How it works
 
 | Step | Code |
 |---|---|
-| A seeded generator builds a 180-day mission with 4 crew, a quiet control and 4 planted events | `backend/app/sim` |
+| Accounts, PIN hashing and lockout | `backend/app/auth.py` |
+| One access check for every screen request | `Vigil.request` in `backend/app/views.py` |
+| A real mission built from what people enter or import | `backend/app/mission.py`, `backend/app/store.py` |
+| Packets for Earth written as files | `backend/app/sync/outbox.py` |
+| A seeded generator builds the 180-day demo mission with 4 crew, a quiet control and 4 planted events | `backend/app/sim` |
 | Robust personal baselines, then z-score, EWMA and CUSUM with a vote | `backend/app/engine/baseline.py`, `drift.py` |
 | Small shifts combine into a 0 to 100 score per system | `backend/app/engine/fusion.py` |
 | Escalation to Level 1, 2 or 3, with the reason in plain words | `backend/app/engine/escalation.py` |
@@ -130,6 +162,7 @@ These numbers come from events we planted in data we generated. They show the me
 | [DECISIONS.md](DECISIONS.md) | Choices the brief left open |
 | [SOURCES.md](SOURCES.md) | Sources and numbers the team must verify |
 | [LIMITATIONS.md](LIMITATIONS.md) | What this does not show |
+| [docs/user-guide.md](docs/user-guide.md) | Running a real mission, for the crew and the Commander |
 | [docs/pitch.md](docs/pitch.md) | 3-minute pitch |
 | [docs/demo-script.md](docs/demo-script.md) | Click-by-click demo |
 | [docs/qa.md](docs/qa.md) | Likely judge questions |

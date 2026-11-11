@@ -83,6 +83,8 @@ def main() -> int:
         bridge.openGround()
     if args.demo:
         bridge.signIn("presenter", DEMO_PIN)
+        if args.ground:
+            bridge.ground_bridge.signIn("presenter", DEMO_PIN)
         bridge.ask("demo_start", "{}")
     bridge.tick()
     if args.check:

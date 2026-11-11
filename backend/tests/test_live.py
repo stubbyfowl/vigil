@@ -197,10 +197,16 @@ def test_access_rules(run, who, name, args):
         v.request(who, name, dict(args))
 
 
-def test_medical_officer_may_enter_lab_results(run):
+def test_medical_officer_may_enter_lab_results_but_sees_only_their_own_entries(run):
     v, _ = run
     assert v.request(MO, "log_readings", {"id": "lena", "values": {"crp": 1.3}})["saved"] == 1
-    assert v.request(MO, "entries", {"id": "lena"})["entries"][0]["entered_by"] == "priya"
+    seen = v.request(MO, "entries", {"id": "lena"})["entries"]
+    assert seen and all(e["entered_by"] == "priya" for e in seen)
+    form = v.request(MO, "log_form", {"id": "lena"})
+    assert form["for_someone_else"] and all(s["today"] is None and s["last"] is None for g in form["groups"] for s in g["signals"])
+    lenas_own = v.request(LENA, "entries", {})["entries"][-1]
+    with pytest.raises(PermissionError):
+        v.request(MO, "delete_entry", {"id": "lena", "entry": lenas_own["id"]})
 
 
 def test_audit_trail_has_no_secrets(run):

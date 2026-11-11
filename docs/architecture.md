@@ -1,12 +1,33 @@
 # Architecture
 
 ```
-Generator (seeded) -> Engine (day by day) -> Store (memory + SQLite) -> Views -> Bridge -> Qt Quick screens
-                                                 |
-                                       Live clock, Demo Director, Earth link queue
+Demo:  Generator (seeded) --+
+                            +-> Engine (day by day) -> Store (memory + SQLite) -> Views -> request() -> Bridge -> Qt Quick screens
+Real:  Entries and imports -+                                |                     |                      |
+                                         Clock: Demo Director or calendar     access rules            session, lock
+                                         Earth: simulated link or outbox files
 ```
 
-Everything runs in one native process with no server and no open ports. It runs on Linux, macOS and Windows. The mission is computed from a seed when the server starts, in about a second. A check-in overrides that day's values and reruns that person.
+Everything runs in one native process with no server and no open ports. It runs on Linux, macOS and Windows. The demo mission is computed from a seed in about a second. A real mission is built from what people entered, as one array per signal per person, with each day's median. A check-in or a new reading reruns the engine.
+
+## Accounts and access
+
+`auth.py` keeps members in the mission's own database. A PIN is stored only as a salted PBKDF2-SHA256 hash. Five misses lock an account, for longer each time. `frontend/bridge.py` holds who is signed in at each station and locks the screen after the Commander's idle time.
+
+Every screen request goes through `Vigil.request(session, name, args)` in `views.py`, so the rules hold whatever a screen shows:
+
+| Rule | Requests |
+|---|---|
+| No sign-in needed | Who can sign in here, mission name, About |
+| Own data only | Home, systems, alerts, radiation, check-in, readings, sharing, export, Call Earth |
+| Medical Officer may act for others | Log, import, and see or remove only the entries they made |
+| Crew on board | Crew view, import folder |
+| Mission Control only | The ground view |
+| Commander only | Accounts, screen lock, audit log, thresholds, backup, archive |
+| Demo only | Time controls, timeline, explainer, results, Demo Director (Presenter only) |
+| Real mission only | Log readings, import, archive |
+
+The audit log records actions and who did them, never PINs, readings or journal words.
 
 ## Engine, per person and per day
 
@@ -59,7 +80,7 @@ All numbers live in `config/thresholds.yaml`. They are starting values, not clin
 
 ## Sync
 
-`sync/queue.py` models one transmitter. Level 3 packets leave first. Packets wait while the link is down. `sync/privacy.py` is the only code that builds crew and ground views. Raw values appear only if the astronaut turns on sharing.
+In the demo, `sync/queue.py` models one transmitter. Level 3 packets leave first. Packets wait while the link is down. In a real mission, `sync/outbox.py` writes each packet as a JSON file for the vehicle's comm system, written whole and then renamed, with a reference so nothing is written twice. Mission Control is built only from those packets. `sync/privacy.py` is the only code that builds crew and ground views. Raw values appear only if the astronaut turns on sharing.
 
 | Audience | Sees |
 |---|---|
@@ -69,4 +90,4 @@ All numbers live in `config/thresholds.yaml`. They are starting values, not clin
 
 ## Clock
 
-`live.py` holds one mission clock, so a second window stays in step. A timer in `frontend/bridge.py` advances it every 50 ms and tells the screens only when something changed. The Demo Director finds each story beat from real engine output and never hard-codes an alert day.
+`live.py` holds one mission clock, so a second window stays in step. The demo clock moves when told to. `MissionClock` follows the calendar, rebuilds the mission when the date changes, and writes Level 3 and weekly summary packets by itself. A timer in `frontend/bridge.py` advances it every 50 ms and tells the screens only when something changed. The Demo Director finds each story beat from real engine output and never hard-codes an alert day.

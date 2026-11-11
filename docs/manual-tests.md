@@ -4,6 +4,23 @@
 
 The checks below need a person and a real screen.
 
+## Sign-in and lock
+
+1. Run `make dev` on a computer with no mission yet. Choose **Explore the demo**.
+2. Tap Lena Novak and enter a wrong PIN five times. Confirm the lock message and the countdown on her tile.
+3. Sign in as Kai Sato with 2026. Confirm the top bar shows only Kai and there is no way to switch to someone else.
+4. Leave the screen alone for 5 minutes. Confirm it locks, and that the PIN brings you back to the same screen.
+
+## A real mission
+
+1. On the sign-in screen, choose **Set up a real mission**. Create it with today's date and a Commander.
+2. Add a crew member and a Mission Control account. Sign in as the crew member with the temporary PIN and confirm Vigil asks for a new PIN.
+3. Log a few readings, including one out of range, and confirm nothing saves until it is fixed. Remove one reading.
+4. Copy `data/samples/osdr_style_sample.csv` style rows into the import folder with `date,member,signal,value` columns, and import them. Read the reasons for any rows left out.
+5. Call Earth. Confirm a file appears in the outbox folder. Delete it, as a comm system would, and confirm Mission Control shows **Picked up**.
+6. Open Mission Control from the Menu and sign in with the Mission Control account. Confirm it shows status only.
+7. As the Commander, back up the mission, then open the audit log and confirm it lists what you did.
+
 ## Offline
 
 1. Turn off Wi-Fi and unplug Ethernet.

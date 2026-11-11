@@ -44,3 +44,12 @@ No. The importer reads tables in that general shape, but we tested it only on a 
 
 **What would you build next?**
 Flight surgeon review, real analog mission data, real sensors, and clinically grounded thresholds.
+
+**Can a real crew use this today?**
+Yes, as decision support. Set up a mission, add each person with a PIN, and they enter or import readings each day. Vigil learns each person's normal over the first 10 days of readings. It has not been tested with a real crew, and no flight surgeon has reviewed the thresholds.
+
+**Who can see my health data?**
+Only you, unless you share it. The crew and Earth always see your status as Nominal, Watch or Act. Raw values and journal words go further only if you turn sharing on. The Commander manages accounts but cannot read anyone's readings. The Medical Officer can enter lab results for you but sees only what they entered.
+
+**How secure is it?**
+Each person has a PIN, stored only as a salted, slow hash. Wrong PINs lock the account for longer each time. The screen locks when idle. An audit log records who did what. The database itself is not encrypted, so a real vehicle should use disk encryption.
