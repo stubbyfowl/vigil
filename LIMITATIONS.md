@@ -13,7 +13,7 @@ The demo mission's crew are invented and all their readings are synthetic. No re
 ## Known gaps
 
 - In the demo mission, sensors are simulated. In a real mission readings are typed in or imported from CSV files. Vigil does not talk to devices directly.
-- Radiation numbers are rough figures marked `must_verify`. The storm size and shelter factor are invented.
+- The radiation limits (600 mSv career, 250 mSv per storm) and the Curiosity cruise dose are sourced. The flux-to-dose conversion, the shelter factor and the 2-hour storm warning are team assumptions marked `must_verify`.
 - The demo mission is computed ahead from a seed and replayed. Check-ins do feed back into the engine. A real mission is rebuilt from entries whenever they change.
 - The journal score uses a small word list. It misses sarcasm and context.
 - Protocols are samples, not medical advice.

@@ -25,7 +25,7 @@ It is one native program with no server, no browser and no network connections. 
 No. The warning comes from a simulated solar monitor. Vigil passes it on and starts the shelter steps. Vigil does not predict storms.
 
 **Where do the radiation numbers come from?**
-The roughly 600 mSv limit and 0.66 Sv round trip are approximate figures we still must verify. They are marked `must_verify`. The storm size and the shelter factor are invented for the simulation.
+The career limit is NASA's: under 600 mSv effective dose for every age and sex (NASA-STD-3001, requirement V1 4030, adopted in 2022). It replaced older limits that changed with age and sex. Each solar storm must stay under 250 mSv (V1 4031). The cruise dose comes from Curiosity's RAD instrument: about 1.8 mSv a day on the way to Mars, and 0.66 plus or minus 0.12 Sv for the shortest round trip (Zeitlin et al., Science, 2013). That is roughly the whole career limit before anyone lands. The flux-to-dose conversion, the shelter factor and the 2-hour storm warning are our own assumptions and are marked `must_verify`.
 
 **Who sees my data?**
 You see everything about yourself. The crew sees status and trends. Earth sees summaries and Level 3 reasons. Raw values and journal text stay with you unless you turn on sharing. Journal text is scored on the computer and is not stored unless you choose to keep it.

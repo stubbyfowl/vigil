@@ -209,6 +209,15 @@
    "checked": "abstract", "status": "verified"
   },
   {
+   "id": "nsf_sleep_quality", "kind": "paper", "group": "Behavior and sleep",
+   "title": "Ohayon et al. 2017, National Sleep Foundation's sleep quality recommendations: first report, Sleep Health",
+   "publisher": "Sleep Health (via Sleep Review)",
+   "url": "https://sleepreviewmag.com/sleep-health/prevailing-attitudes/good-quality-sleep-national-sleep-foundation-provides-guidance/",
+   "gives": "An expert panel lists four signs of good sleep quality, including being asleep for at least 85 percent of the time in bed.",
+   "used_for": "The 85 percent sleep efficiency usual range.",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
    "id": "basner_2013", "kind": "paper", "group": "Behavior and sleep",
    "title": "Basner et al. 2013, Mars 520-d mission simulation reveals protracted crew hypokinesis and alterations of sleep duration and timing, PNAS",
    "publisher": "PNAS (via Scientific American)",
@@ -241,8 +250,17 @@
    "publisher": "NASA (via news coverage)",
    "url": "https://www.goodmorningamerica.com/news/story/nasas-mars-simulator-crew-emerged-after-378-days-111755446",
    "gives": "A four-person crew lived 378 days in a simulated Mars habitat with a one-way message delay of up to 22 minutes. Health results are not published yet.",
-   "used_for": "Supports the 20-minute one-way delay used for Earth packets.",
+   "used_for": "Shows a NASA analog mission used the same 22-minute maximum delay as Vigil.",
    "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "nasa_mars_delay", "kind": "agency page", "group": "Communication",
+   "title": "NASA Science, Speaking Percy's language: how to talk so Perseverance will listen; and McBrayer, Chai and Judd, Communication Delays, Disruptions, and Blackouts for Crewed Mars Missions (NASA Langley, ASCEND 2022)",
+   "publisher": "NASA",
+   "url": "https://science.nasa.gov/missions/mars-2020-perseverance/speaking-percys-language-how-to-talk-so-perseverance-will-listen/",
+   "gives": "Commands take between 3 and 22 minutes to reach Mars, depending on where the planets are. The Langley study puts the maximum one-way delay at about 22 minutes for any mission, and solar conjunction blocks contact for about 12 days on average.",
+   "used_for": "The 22-minute one-way delay used for Earth packets.",
+   "checked": "full text", "status": "verified"
   },
   {
    "id": "osdr_inspiration4", "kind": "dataset", "group": "Open data",

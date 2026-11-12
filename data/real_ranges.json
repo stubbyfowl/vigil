@@ -18,7 +18,7 @@
   "lymph": {"unit": "ratio", "low": 0.2, "high": 0.4, "status": "partly verified", "source": "medlineplus_differential", "note": "Lymphocytes are 20 to 40 percent of white blood cells."},
   "symptoms": {"unit": "0 to 5", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
   "sleep_hours": {"unit": "hours", "low": null, "high": null, "status": "verified", "source": "barger_2014", "note": "ISS crews averaged 6.09 hours a night against 8.5 scheduled. Crew baselines average 6.1 hours."},
-  "sleep_eff": {"unit": "%", "low": 85, "high": 100, "status": "must_verify", "source": null, "note": "85 percent is a common convention for good sleep efficiency, but only consumer sources were found for it."},
+  "sleep_eff": {"unit": "%", "low": 85, "high": 100, "status": "partly verified", "source": "nsf_sleep_quality", "note": "The National Sleep Foundation lists being asleep for at least 85 percent of time in bed as a sign of good sleep quality."},
   "mood": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
   "stress": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
   "energy": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
@@ -38,6 +38,6 @@
   "storm_warning_hours": {"value": 2, "status": "must_verify", "source": null, "note": "Team assumption for how early a solar monitor warns."}
  },
  "communication": {
-  "one_way_delay_minutes": {"value": 20, "status": "partly verified", "source": "chapea", "note": "CHAPEA used delays of up to 22 minutes one way. The real delay to Mars depends on the planets' positions."}
+  "one_way_delay_minutes": {"value": 22, "status": "verified", "source": "nasa_mars_delay", "note": "A signal takes 3 to 22 minutes one way, depending on where Earth and Mars are. Vigil uses the 22-minute worst case. CHAPEA used the same maximum."}
  }
 }

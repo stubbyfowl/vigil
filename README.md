@@ -2,7 +2,7 @@
 
 An offline health monitor for long missions. It learns each astronaut's own normal, finds drift across many signals, explains it in plain words, and decides when to call Earth.
 
-A message to Mars can take about 20 minutes each way, so the astronaut cannot wait for ground staff.
+A message to Mars takes 3 to 22 minutes each way, depending on where the planets are, so the astronaut cannot wait for ground staff.
 
 ![Home screen](docs/screens/home.png)
 

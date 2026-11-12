@@ -50,7 +50,7 @@ def build_beats(store: Store) -> list[Beat]:
     if store.mission.storm:
         beats += [
             Beat(120, "eng", "/radiation", "Day 120. The solar monitor warns of a storm 2 hours ahead, and the shelter checklist opens.", 9),
-            Beat(120, "eng", "/ground", "A Level 3 packet goes to the front of the queue. Earth reads it 20 minutes later.", 8),
+            Beat(120, "eng", "/ground", "A Level 3 packet goes to the front of the queue. Earth reads it 22 minutes later.", 8),
         ]
     heart = _first_alert(store, "heart_drift")
     if heart:

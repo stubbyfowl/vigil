@@ -45,7 +45,7 @@ radiation:
   event_limit_msv: 250
   reference_event: '1989-10-19'
 sync:
-  one_way_delay_minutes: 20
+  one_way_delay_minutes: 22
   demo_time_scale: 60
   bandwidth_kb_s: 40
   scale_time: true

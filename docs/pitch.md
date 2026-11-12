@@ -4,7 +4,7 @@ Run `make demo`. Speaker 1 talks over the opening. The app plays beside you. Eve
 
 ## 0:00 The problem (Speaker 1, 30 seconds)
 
-> On the way to Mars, a message home can take about 20 minutes each way. If something is wrong with your body, you are the first responder and the patient.
+> On the way to Mars, a message home can take up to 22 minutes each way. If something is wrong with your body, you are the first responder and the patient.
 >
 > Long missions bring radiation, bone loss, immune changes, heart changes and isolation. Most of these do not arrive as an emergency. They arrive as small changes you do not notice in yourself.
 
@@ -26,7 +26,7 @@ Run `make demo`. Speaker 1 talks over the opening. The app plays beside you. Eve
 
 *Day 120, solar storm.*
 
-> A solar storm. The warning comes from the solar monitor, and Vigil starts the shelter steps right away. Earth gets a priority packet, which is still 20 minutes away. The crew is already moving.
+> A solar storm. The warning comes from the solar monitor, and Vigil starts the shelter steps right away. Earth gets a priority packet, which is still up to 22 minutes away. The crew is already moving.
 
 *Day 157, the explainer screen. Pause here.*
 
