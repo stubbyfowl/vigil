@@ -6,7 +6,7 @@ Item {
     readonly property var d: Api.ask("radiation", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
     readonly property bool active: d.storm.phase === "active"
     property bool drill: false
-    function pct(v) { return Math.min(v / d.limit_msv, 1) }
+    function pct(v) { return v === null ? 0 : Math.min(v / d.limit_msv, 1) }
 
     PageScroll {
         anchors.fill: parent
@@ -23,7 +23,8 @@ Item {
             Layout.maximumWidth: 900
             size: 38
             lead: "Career dose: " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " mSv."
-            detail: "At this rate it will be " + screen.d.projected_total_msv + " mSv when the mission ends."
+            detail: screen.d.projected_total_msv === null ? "Log personal dosimeter readings to see where the mission total is heading."
+                    : "At this rate it will be " + screen.d.projected_total_msv + " mSv when the mission ends."
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -33,7 +34,7 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 18
                 Accessible.role: Accessible.ProgressBar
-                Accessible.name: "Career dose " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " millisieverts. Projected " + screen.d.projected_total_msv + "."
+                Accessible.name: "Career dose " + screen.d.career_dose_msv + " of " + screen.d.limit_msv + " millisieverts." + (screen.d.projected_total_msv === null ? "" : " Projected " + screen.d.projected_total_msv + ".")
                 Rectangle { anchors.fill: parent; radius: 9; color: Theme.panel2 }
                 Rectangle { width: track.width * screen.pct(screen.d.projected_total_msv); height: parent.height; radius: 9; color: Theme.band; opacity: 0.3 }
                 Rectangle { width: track.width * screen.pct(screen.d.career_dose_msv); height: parent.height; radius: 9; color: Theme.action }

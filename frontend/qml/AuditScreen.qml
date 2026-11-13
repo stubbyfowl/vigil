@@ -23,7 +23,7 @@ Item {
             spacing: 12
             BackButton {}
             BigTitle { text: "Audit log" }
-            Placard { text: "Latest " + screen.events.length + " events" }
+            Placard { text: screen.events.length === 1 ? "1 event" : "Latest " + screen.events.length + " events" }
         }
         Note { text: "Sign-ins, account changes, exports and data entry. Readings and journal words are kept out of it." }
         Banner { visible: screen.events.length === 0; text: "Nothing has happened yet." }

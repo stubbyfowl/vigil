@@ -4,10 +4,10 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache
-from pathlib import Path
 
 import numpy as np
 
+from .. import config
 from ..signals import DRIFT_SIGNALS, Signal
 
 HOURS = 24
@@ -15,7 +15,7 @@ SHELTER_FACTOR = 0.4  # invented value, see SOURCES.md
 # Storms replay a real event from NOAA's solar proton event list (data/space_weather).
 # Start time, rise to peak and relative size come from the list. The step from proton flux
 # to dose rate inside this ship is a team assumption, not a measurement.
-EVENT_CATALOG = Path(__file__).resolve().parents[3] / "data" / "space_weather" / "noaa_solar_proton_events.json"
+EVENT_CATALOG = config.DATA_DIR / "space_weather" / "noaa_solar_proton_events.json"  # inside the bundle when packaged
 REFERENCE_EVENT = "1989-10-19"  # the October 1989 events define NASA's storm shielding limit [V1 4031]
 FREE_SPACE_USV_H_PER_PFU = 0.025  # team assumption, must_verify
 STORM_DECAY_RISES = 2.0  # the flux falls back over about two rise times, team assumption

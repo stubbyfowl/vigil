@@ -51,3 +51,10 @@
 - Done: crew baselines use published figures for heart rate variability, temperature, sleep, exercise and grip strength, and the bone trend follows the reported 1 to 1.5 percent a month.
 - Done: imports from Apple Health exports and from spreadsheets with one column per reading.
 - Done: the About screen lists every source by topic with a status tag.
+
+## Team test feedback and inspection before release (done)
+- Fixed from the team's first test run: sign-out from the lock screen, a live countdown on locked accounts, the journal box, reopening Mission Control, Mission Control lag, the system arrows, small windows, and every QML warning they saw.
+- Fixed in a full inspection: the packaged app crashed at start because the NOAA storm list was not bundled. The `--check` run now opens every screen, and a test checks that every data file the app reads is in the build.
+- Fixed: a system with no baseline no longer reads Normal to Earth, Call Earth or Home, and no dose total is projected without dosimeter readings. Two members can no longer share a name, and shared initials get a number.
+- Fixed: every screen fits a 1024 by 700 window for every role, and the PIN box closes when the session ends.
+

@@ -85,3 +85,12 @@ def test_ids_skip_titles_and_stay_unique(accounts):
 def test_bad_member_details_are_refused(accounts, args):
     with pytest.raises(AuthError):
         accounts.create(*args, "8402", iterations=FAST)
+
+
+def test_names_are_unique_and_tags_never_collide(accounts):
+    with pytest.raises(AuthError, match="account already"):
+        accounts.create("lena  NOVAK", "crew", "5933", iterations=FAST)
+    assert accounts.create("Luis Nunez", "crew", "5933", iterations=FAST)["tag"] == "LN2"
+    with pytest.raises(AuthError, match="account already"):
+        accounts.update("luis", name="Ana Reyes")
+    assert accounts.update("luis", name="Luis Navarro")["tag"] == "LN2"  # renaming keeps it apart from Lena

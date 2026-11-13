@@ -20,6 +20,37 @@ from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 from PySide6.QtQuick import QQuickWindow  # noqa: E402
 
 CHECK_MS = 1500
+# Every screen the --check run opens, so a missing data file or a broken screen fails the check.
+CHECK_ROUTES = (
+    "/", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors", "/timeline", "/explainer",
+    "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit", "/system/heart",
+)
+
+
+def check_screens(app: QGuiApplication, vigil: Vigil, bridge: Bridge) -> list[str]:
+    """Open every screen as the Presenter and report any request that failed for a reason other than access."""
+    found: list[str] = []
+    if vigil.mode != "demo":
+        return found  # a real mission's accounts are not ours to sign in to
+    real = vigil.request
+
+    def request(session, name, args):  # type: ignore[no-untyped-def]
+        try:
+            return real(session, name, args)
+        except PermissionError:
+            raise
+        except Exception as err:
+            found.append(f"{name}: {type(err).__name__}: {err}")
+            raise
+
+    vigil.request = request  # type: ignore[method-assign]
+    bridge.signIn("presenter", DEMO_PIN)
+    for route in CHECK_ROUTES:
+        bridge.navigate(route)
+        app.processEvents()
+    bridge.signOut()
+    vigil.request = real  # type: ignore[method-assign]
+    return found
 
 
 def quick_window(obj: QObject) -> QQuickWindow:
@@ -92,6 +123,7 @@ def main() -> int:
         bridge.ask("demo_start", "{}")
     bridge.tick()
     if args.check:
+        problems.extend(check_screens(app, vigil, bridge))
         QTimer.singleShot(CHECK_MS, app.quit)
         app.exec()
         print("\n".join(problems) or "Vigil check passed.")

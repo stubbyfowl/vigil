@@ -41,14 +41,15 @@ Item {
         Item { Layout.fillHeight: true }
     }
 
-    ColumnLayout {
+    PageScroll {
         anchors.fill: parent
         visible: screen.saved === null
-        spacing: 12
         RowLayout { spacing: 12; BackButton {} BigTitle { text: "Check in" } }
-        RowLayout {
+        GridLayout {
             Layout.fillWidth: true
-            spacing: 16
+            columns: screen.width >= 1180 ? 2 : 1
+            columnSpacing: 16
+            rowSpacing: 12
             Panel {
                 Layout.preferredWidth: 780
                 Layout.alignment: Qt.AlignTop

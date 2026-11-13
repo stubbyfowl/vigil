@@ -222,7 +222,12 @@ ApplicationWindow {
     ChangePinDialog { id: forcedPin; required: true }
     Connections {
         target: vigil
-        function onSessionChanged() { if (vigil.session.must_change && !forcedPin.opened) forcedPin.open() }
-        function onLockedChanged() { if (vigil.locked) menu.close() }
+        // The PIN box follows the session: it closes on sign-out or lock, so the next person never sees it.
+        function onSessionChanged() { win.syncPinBox() }
+        function onLockedChanged() { if (vigil.locked) menu.close(); win.syncPinBox() }
+    }
+    function syncPinBox() {
+        if (vigil.signedIn && !vigil.locked && vigil.session.must_change) { if (!forcedPin.opened) forcedPin.open() }
+        else if (forcedPin.opened) forcedPin.close()
     }
 }

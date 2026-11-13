@@ -14,7 +14,7 @@ Built for the NASA Space Apps Challenge 2026, Phoenix.
 
 ## What it is
 
-Vigil is native desktop software built on Qt 6. It is not a web page and has no browser inside. The interface and the engine run in one process, with no server and no open network ports. It runs on Linux, macOS and Windows, on x86-64 or ARM64.
+Vigil is native desktop software built on Qt 6. It is not a web page and has no browser inside. The interface and the engine run in one process, with no server and no open network ports. It is tested on macOS and on Linux (ARM64 and x86-64). Qt also runs on Windows, but Vigil has not been tested there.
 
 ## Run it
 

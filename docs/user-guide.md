@@ -21,7 +21,7 @@ Vigil opens straight to **Crew and accounts**.
 
 ## Add people (Commander)
 
-Add each person with a full name, a role and a temporary PIN. Tell them the temporary PIN in person. They choose their own PIN the first time they sign in.
+Add each person with a full name, a role and a temporary PIN. Two people cannot share a full name. If two share initials, the second gets a number, like LN2. Tell them the temporary PIN in person. They choose their own PIN the first time they sign in.
 
 | Role | What they see and do |
 |---|---|
@@ -102,7 +102,7 @@ Vigil opens no network connections. Each packet is a file in the outbox folder:
 | Writing | Each file is written in full under a hidden `.part` name, then renamed, so a reader never sees half a file |
 | Sending | The vehicle's comm system sends each file and deletes it. Vigil then shows the packet as **Picked up** |
 
-The **Mission Control** window (Menu, then Open Mission Control window) needs a Mission Control account. It shows the latest status each person sent and any Level 3 reasons.
+The **Mission Control** window (Menu, then Open Mission Control window) needs a Mission Control account. It shows the latest status each person sent and any Level 3 reasons. A system reads Learning until Vigil has that person's baseline, so Earth never sees Normal for a system Vigil cannot judge yet.
 
 ## Take data out, back up, and finish
 

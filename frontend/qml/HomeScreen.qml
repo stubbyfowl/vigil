@@ -12,6 +12,7 @@ Item {
         return out
     }
     readonly property var drifting: d.systems.filter(function (s) { return !s.learning && s.status !== "green" })
+    readonly property var waiting: d.systems.filter(function (s) { return s.learning })
     readonly property var topAlert: d.alerts.length ? d.alerts[0] : null
     readonly property var hottest: {
         var best = null
@@ -26,6 +27,7 @@ Item {
     readonly property string headline: topAlert ? topAlert.system_name + " alert"
         : d.learning ? "Building baseline"
         : drifting.length ? drifting.map(function (s) { return s.name }).join(" and ") + " drifting"
+        : waiting.length ? "No drift found"
         : "All systems normal"
     readonly property int cardWidth: 340
     // Where the carousel is, in cards. Arrows step to the next card that is even partly hidden.
@@ -35,7 +37,7 @@ Item {
     function signed(row) {
         var v = Math.round(row.change * 100) / 100
         var unit = row.unit === "C" ? "°C" : row.unit
-        return (v >= 0 ? "+" : "−") + Math.abs(v) + (unit === "%" ? "%" : " " + unit)
+        return (v >= 0 ? "+" : "−") + (/ to /.test(unit) ? Math.abs(v) + (Math.abs(v) === 1 ? " point" : " points") : Theme.amount(Math.abs(v), unit))
     }
 
     // Fills the page when it fits. A short window scrolls, so the buttons at the bottom stay reachable.
@@ -78,15 +80,17 @@ Item {
                 }
                 RowLayout {
                     visible: !!home.topAlert
+                    Layout.fillWidth: true
                     spacing: 12
                     LevelBadge { level: home.topAlert ? home.topAlert.level : 0 }
-                    Note { Layout.fillWidth: false; text: home.topAlert ? home.topAlert.level_reason : "" }
+                    Note { text: home.topAlert ? home.topAlert.level_reason : "" }
                 }
                 Note {
                     visible: !home.topAlert
                     Layout.maximumWidth: 640
                     text: home.d.learning ? "Vigil needs about 10 days of readings before it can tell a change from this person's usual range."
                         : home.drifting.length ? "The change is too small to raise an alert."
+                        : home.waiting.length ? home.waiting.map(function (s) { return s.name }).join(" and ") + (home.waiting.length === 1 ? " needs" : " need") + " more readings. The other systems are inside this person's usual range."
                         : "Every system is inside this person's usual range."
                 }
 
@@ -116,8 +120,9 @@ Item {
                     }
                 }
 
-                RowLayout {
+                Flow {
                     Layout.topMargin: 8
+                    Layout.fillWidth: true
                     spacing: 8
                     visible: !!home.topAlert || (home.notices.length > 0 && !vigil.demo.active)
                     VButton { visible: !!home.topAlert; kind: "primary"; text: "View alert"; onClicked: vigil.navigate("/alert/" + home.topAlert.id) }
@@ -146,7 +151,7 @@ Item {
                     learning: !home.hottest
                     label: "Highest drift today"
                 }
-                Placard { Layout.alignment: Qt.AlignHCenter; text: !home.hottest ? "No baseline yet" : home.hottest.score > 0 ? "Highest drift · " + home.hottest.name : "No drift today" }
+                Placard { Layout.alignment: Qt.AlignHCenter; Layout.maximumWidth: 260; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; text: !home.hottest ? "No baseline yet" : home.hottest.score > 0 ? "Highest drift · " + home.hottest.name : "No drift today" }
             }
         }
 

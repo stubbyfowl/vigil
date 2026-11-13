@@ -421,9 +421,15 @@ class Vigil:
         alerts = self.store.alerts(id, d, include_hidden=True)
         level = max((a["level"] for a in alerts), default=0)
         kind, title, detail = EARTH_DECISIONS[level]
+        learning = [name for key, name in SYSTEMS.items() if self.store.runs[id].systems[key][d - 1]["learning"]]
+        if level == 0 and learning:
+            title = "No alert today."
+            detail = ("Vigil has too few readings to judge any system yet." if len(learning) == len(SYSTEMS)
+                      else f"Vigil still needs more readings for {' and '.join(learning)}.") + " A summary goes to Earth every 7 days."
         top = next((a for a in alerts if a["level"] == level), None)
         return {
             "level": level, "decision": kind, "title": title, "detail": detail, "reason": top["level_reason"] if top else None,
+            "learning": learning,
             "delay_minutes": self.store.cfg["sync"]["one_way_delay_minutes"], "share": self.store.share(id),
             "preview": ground_card(self.store.runs[id], d, alerts, self.store.share(id)["share_ground"]),
         }
@@ -465,6 +471,7 @@ class Vigil:
     def _ground_from_packets(self, d: int) -> dict[str, Any]:
         """What Earth knows is only what the packets carried. Latest status per person, Level 3 reasons."""
         outbox = self.live.queue
+        assert isinstance(outbox, Outbox)  # a live mission always writes to the outbox folder
         rows = outbox.rows(200)
         latest: dict[str, dict[str, Any]] = {}
         level3 = []

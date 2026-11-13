@@ -10,6 +10,7 @@ Item {
     readonly property var crew: vigil.role === "presenter" ? Api.ask("crew", { v: [vigil.version, vigil.mode, vigil.signedIn] }).crew : []
     readonly property bool commands: vigil.role === "commander" || vigil.role === "presenter"
     readonly property bool onHome: vigil.route === "/"
+    readonly property bool compact: width < 1240
 
     Rectangle { anchors.fill: parent; color: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 0.55); visible: !bar.onHome }
     Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: Theme.rule; visible: !bar.onHome }
@@ -38,7 +39,7 @@ Item {
                 id: tab
                 required property var modelData
                 readonly property bool current: modelData.id === vigil.astronaut
-                implicitWidth: Math.max(Theme.touch, name.implicitWidth + 22)
+                implicitWidth: Math.max(Theme.touch, name.implicitWidth + (bar.compact ? 12 : 22))
                 implicitHeight: Theme.touch
                 focusPolicy: Qt.StrongFocus
                 Accessible.role: Accessible.Button
@@ -78,7 +79,7 @@ Item {
                 spacing: 10
                 Avatar { size: 36; name: vigil.session.name || ""; initials: vigil.session.tag || "" }
                 Text { text: (vigil.session.name || "").split(" ")[0]; font.family: Theme.display; font.weight: Font.DemiBold; font.pixelSize: 17; color: Theme.ink }
-                Note { Layout.fillWidth: false; text: vigil.session.role_name || "" }
+                Note { visible: !bar.compact; Layout.fillWidth: false; text: vigil.session.role_name || "" }
             }
         }
 
@@ -87,6 +88,7 @@ Item {
         // Plain labels, so nothing that only informs looks like a button.
         Placard { visible: vigil.isDemo; text: "Simulated data"; color: Theme.caution; objectName: "simulated" }
         Placard {
+            visible: !bar.compact || !vigil.linkUp
             Layout.leftMargin: 18
             text: vigil.isDemo ? (vigil.linkUp ? "Link up" : "Link lost") + " · " + vigil.delayMinutes + " min" : "Earth · " + vigil.delayMinutes + " min"
             color: vigil.linkUp ? Theme.ink2 : Theme.warning

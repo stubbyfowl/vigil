@@ -7,6 +7,12 @@ Item {
     property var draft: Api.ask("get_config", {}).config
     readonly property var signalList: Api.ask("get_config", {}).signals
     readonly property var groups: ["mission", "sync", "detector", "baseline", "escalation", "status", "radiation"]
+    // Names for settings whose keys do not read as words.
+    readonly property var labels: ({
+        z_limit: "Z-score limit", ewma_lambda: "EWMA weight (λ)", ewma_l: "EWMA limit (L)", cusum_k: "CUSUM slack (k)",
+        cusum_h: "CUSUM limit (h)", bandwidth_kb_s: "Bandwidth (kb/s)", one_way_delay_minutes: "One-way delay (min)",
+        seed: "Random seed", sigma_floor: "Smallest spread (σ)", days_per_second: "Demo days per second"
+    })
     property string message: ""
 
     function values() {
@@ -61,7 +67,7 @@ Item {
                             readonly property string key: modelData
                             readonly property var current: screen.draft[group.name][key]
                             Layout.fillWidth: true
-                            Body { text: field.key.charAt(0).toUpperCase() + field.key.slice(1).replace(/_/g, " ") }
+                            Body { text: screen.labels[field.key] || field.key.charAt(0).toUpperCase() + field.key.slice(1).replace(/_/g, " ") }
                             Toggle {
                                 visible: typeof field.current === "boolean"
                                 checked: field.current === true

@@ -234,3 +234,12 @@ def test_archive_keeps_the_file_and_returns_to_demo(tmp_path, monkeypatch):
     out = v.request(BOSS, "archive_mission", {"confirm": True})
     assert v.mode == "demo" and not Vigil.mission_exists()
     assert sqlite3.connect(out["archived_to"]).execute("SELECT value FROM settings WHERE key = 'name'").fetchone()[0] == '"Analog 1"'
+
+
+def test_no_baseline_is_never_reported_as_normal(run):
+    """Before Vigil has a person's range, Earth reads Learning, Call Earth says so, and no dose total is projected."""
+    v, _ = run
+    ana = v.request(BOSS, "earth_decision", {})
+    assert ana["learning"] and ana["title"] == "No alert today." and "in your usual range" not in ana["detail"]
+    assert set(ana["preview"]["systems"].values()) == {"none"}
+    assert v.request(BOSS, "radiation", {})["projected_total_msv"] is None

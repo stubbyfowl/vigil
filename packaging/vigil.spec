@@ -28,6 +28,8 @@ analysis = Analysis(
         (str(root / "frontend" / "palette.json"), "frontend"),
         (str(root / "config" / "thresholds.defaults.yaml"), "config"),
         (str(root / "data" / "real_ranges.json"), "data"),
+        (str(root / "data" / "sources.json"), "data"),
+        (str(root / "data" / "space_weather" / "noaa_solar_proton_events.json"), "data/space_weather"),
         (str(root / "data" / "synthetic" / "results.json"), "data/synthetic"),
         (str(root / "SOURCES.md"), "."),
         (str(root / "backend" / "app" / "engine" / "protocols.json"), "app/engine"),

@@ -43,7 +43,8 @@ def ground_card(run: AstronautRun, day: int, alerts: list[dict], share: bool) ->
     ]
     summary = {
         **_identity(run),
-        "systems": {k: run.systems[k][day - 1]["status"] for k in SYSTEMS},
+        # "none" means no baseline yet, so Earth never reads "Normal" for a system Vigil cannot judge.
+        "systems": {k: "none" if run.systems[k][day - 1]["learning"] else run.systems[k][day - 1]["status"] for k in SYSTEMS},
         "radiation": run.radiation[day - 1]["status"],
         "max_level": max((a["level"] for a in alerts), default=0),
         "level3": level3,

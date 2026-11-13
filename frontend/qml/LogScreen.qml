@@ -89,8 +89,8 @@ Item {
                                     Body { text: row.modelData.name }
                                     Note {
                                         text: screen.form.for_someone_else ? row.modelData.unit
-                                              : row.modelData.today !== null ? "Today: " + row.modelData.today + " " + row.modelData.unit
-                                              : row.modelData.last !== null ? "Last: " + row.modelData.last + " " + row.modelData.unit + " on day " + row.modelData.last_day
+                                              : row.modelData.today !== null ? "Today: " + Theme.amount(row.modelData.today, row.modelData.unit)
+                                              : row.modelData.last !== null ? "Last: " + Theme.amount(row.modelData.last, row.modelData.unit) + " on day " + row.modelData.last_day
                                               : row.modelData.cadence > 1 ? "Every " + row.modelData.cadence + " days" : "No readings yet"
                                     }
                                 }
@@ -169,7 +169,7 @@ Item {
                             spacing: 10
                             Note { Layout.fillWidth: false; Layout.preferredWidth: 64; text: "Day " + modelData.day; font.features: { "tnum": 1 } }
                             Body { text: modelData.name; maximumLineCount: 1; elide: Text.ElideRight }
-                            Text { text: modelData.value + " " + modelData.unit; font.family: Theme.body; font.pixelSize: 17; font.features: { "tnum": 1 }; color: Theme.ink }
+                            Text { text: Theme.amount(modelData.value, modelData.unit); font.family: Theme.body; font.pixelSize: 17; font.features: { "tnum": 1 }; color: Theme.ink }
                             VButton {
                                 kind: "quiet"
                                 text: "Remove"

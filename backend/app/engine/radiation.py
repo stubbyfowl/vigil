@@ -57,6 +57,7 @@ def radiation_day(mission: Mission, who: Astronaut, day: int, cfg: Config) -> di
     career = who.prior_dose + mission_dose
     storm_days = set(range(mission.storm["onset_hour"] // HOURS + 1, (mission.storm["end_hour"] - 1) // HOURS + 2)) if mission.storm else set()
     daily_rate = _dose_rate_for_projection(cum, day, storm_days)
+    dose_days = int(np.count_nonzero(~np.isnan(series["daily_dose"][:day])))
     projected = career + daily_rate * (mission.days - day)
     fraction = career / limit
     storm = _storm_summary(mission, who, day)
@@ -74,7 +75,7 @@ def radiation_day(mission: Mission, who: Astronaut, day: int, cfg: Config) -> di
         "career_dose_msv": round(career, 1), "prior_dose_msv": who.prior_dose,
         "mission_dose_msv": round(mission_dose, 1), "today_dose_msv": round(float(series["daily_dose"][day - 1]), 2),
         "dose_rate_usv_h": round(float(series["dose_rate"][day - 1]), 1), "peak_rate_usv_h": round(peak_rate),
-        "projected_total_msv": round(projected, 1), "limit_msv": limit,
+        "projected_total_msv": round(projected, 1) if dose_days else None, "limit_msv": limit,
         "near_limit": near, "storm": storm,
     }
 

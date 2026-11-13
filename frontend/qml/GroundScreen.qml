@@ -72,6 +72,7 @@ Item {
         }
         Split {
             Layout.fillWidth: true
+            stackBelow: 1000  // the crew grid needs the full width on a small window
             Panel {
                 Layout.fillWidth: true
                 surface: true

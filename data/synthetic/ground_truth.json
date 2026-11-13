@@ -60,16 +60,21 @@
     "astronaut": "all",
     "system": "radiation",
     "ramp_days": 0,
-    "duration_days": 1.5,
+    "duration_days": 3.38,
     "signals": [
       {
         "signal": "dose_rate",
-        "change": 900.0
+        "change": 1055.0
       }
     ],
     "warning_hour": 2860,
     "onset_hour": 2862,
-    "end_hour": 2898
+    "end_hour": 2943,
+    "rise_hours": 27,
+    "peak_usv_h": 1055.0,
+    "event_begin": "1989-10-19T13:10Z",
+    "event_peak_pfu": 42200.0,
+    "event_flare": "X13/4B 10/19 1306"
   },
   {
     "id": "heart_drift",

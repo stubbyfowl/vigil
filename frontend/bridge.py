@@ -341,8 +341,8 @@ class Bridge(QObject):
             return str(err)
         if self._session:
             self.vigil.note_session(self._session["id"], "signed_out")
+        self._end_session()  # unload the screens before the new mission's data arrives
         self._mission_opened()
-        self._end_session()
         return ""
 
     def _mission_opened(self) -> None:
@@ -434,8 +434,8 @@ class Bridge(QObject):
         if name == "set_auto_lock" and "error" not in result:
             self._auto_lock_s = result["auto_lock_minutes"] * 60
         if name == "archive_mission" and "error" not in result:
+            self._end_session()  # unload the screens before they look for the archived crew
             self._mission_opened()
-            self._end_session()
         elif name in CHANGES_STATE:
             self.tick()
         return json.dumps(plain(result))

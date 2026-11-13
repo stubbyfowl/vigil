@@ -41,7 +41,12 @@ QtObject {
 
     function statusColor(s) { return s === "green" ? nominal : s === "yellow" ? caution : warning }
     function statusFill(s) { return s === "green" ? nominalBg : s === "yellow" ? cautionBg : warningBg }
-    function statusWord(s) { return s === "green" ? "Normal" : s === "yellow" ? "Drifting" : "Alert" }
+    // A reading with its unit. Self-rated scales read "6.7 of 10" rather than "6.7 1 to 10".
+    function amount(value, unit) {
+        var scale = /^\d+ to (\d+)$/.exec(unit || "")
+        return scale ? value + " of " + scale[1] : unit === "%" ? value + "%" : value + " " + unit
+    }
+    function statusWord(s) { return s === "green" ? "Normal" : s === "yellow" ? "Drifting" : s === "none" ? "Learning" : "Alert" }
     function faint(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
     function lead(text) { var i = text.indexOf(". "); return i < 0 ? text : text.slice(0, i + 1) }
     function rest(text) { var i = text.indexOf(". "); return i < 0 ? "" : text.slice(i + 2) }

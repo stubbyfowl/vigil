@@ -10,6 +10,6 @@ WORKDIR /vigil
 COPY backend/requirements.txt backend/requirements-dev.txt backend/requirements-voice.txt backend/
 RUN python3 -m venv .venv && .venv/bin/pip install -q --default-timeout=180 --retries 10 -r backend/requirements-dev.txt -r backend/requirements-voice.txt
 COPY . .
-ENV QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
+ENV QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software LANG=C.UTF-8
 RUN .venv/bin/python scripts/get_voice_model.py && make native && .venv/bin/pyinstaller --noconfirm --log-level WARN packaging/vigil.spec
 CMD ["bash", "-c", "make test && ./dist/vigil/vigil --check && uname -sm"]

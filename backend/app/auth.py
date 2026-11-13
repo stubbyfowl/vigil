@@ -108,6 +108,23 @@ class Accounts:
             candidate, n = f"{base}{n}", n + 1
         return candidate
 
+    def _check_name(self, name: str, member_id: str | None = None) -> None:
+        """Two accounts with one name would be impossible to tell apart on the sign-in screen and at Mission Control."""
+        with db.connect(self.path) as con:
+            rows = con.execute("SELECT id, name FROM members").fetchall()
+        if any(r[1].casefold() == name.casefold() and r[0] != member_id for r in rows):
+            raise AuthError(f"{name} has an account already. Add a middle initial to tell the two apart.")
+
+    def _free_tag(self, name: str, member_id: str | None = None) -> str:
+        """Initials, with a number added when two people share them, like LN and LN2."""
+        base = initials(name)
+        with db.connect(self.path) as con:
+            taken = {r[0] for r in con.execute("SELECT tag FROM members WHERE id != ?", (member_id or "",))}
+        tag, n = base, 2
+        while tag in taken:
+            tag, n = f"{base}{n}", n + 1
+        return tag
+
     def create(
         self, name: str, role: str, pin: str, prior_dose: float = 0.0, must_change: bool = True,
         member_id: str | None = None, tag: str | None = None, iterations: int = ITERATIONS, check_pin: bool = True,
@@ -122,11 +139,13 @@ class Accounts:
         problem = pin_problem(pin) if check_pin else None
         if problem:
             raise AuthError(problem)
+        self._check_name(name)
+        tag = tag or self._free_tag(name)
         member_id = member_id or self._new_id(name)
         with db.connect(self.path) as con:
             con.execute(
                 "INSERT INTO members (id, name, role, tag, prior_dose, pin_hash, must_change, created_at) VALUES (?,?,?,?,?,?,?,?)",
-                (member_id, name, role, tag or initials(name), float(prior_dose), hash_pin(pin, iterations), int(must_change), self.clock()),
+                (member_id, name, role, tag, float(prior_dose), hash_pin(pin, iterations), int(must_change), self.clock()),
             )
         return self.get(member_id)
 
@@ -188,11 +207,12 @@ class Accounts:
             name = " ".join(name.split())
             if not name or len(name) > NAME_LIMIT:
                 raise AuthError(f"Enter a name of 1 to {NAME_LIMIT} characters.")
+            self._check_name(name, member_id)
         if role is not None and role not in ROLES:
             raise AuthError("Choose a role.")
         if prior_dose is not None and not 0 <= prior_dose <= MAX_PRIOR_DOSE:
             raise AuthError(f"Career dose before this mission must be 0 to {MAX_PRIOR_DOSE} mSv.")
-        changes = {"name": name, "tag": initials(name) if name else None, "role": role, "prior_dose": prior_dose,
+        changes = {"name": name, "tag": self._free_tag(name, member_id) if name else None, "role": role, "prior_dose": prior_dose,
                    "active": None if active is None else int(active)}
         sets = {k: v for k, v in changes.items() if v is not None}
         if sets:

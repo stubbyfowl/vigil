@@ -31,7 +31,7 @@ Item {
                 LevelBadge { level: screen.d.alert.level }
                 Placard { text: screen.d.alert.system_name; font.pixelSize: 18 }
                 Placard { visible: screen.d.closed; text: "This alert has closed" }
-                Placard { visible: !!screen.d.alert.recovering; text: "Readings are recovering" }
+                Placard { visible: !screen.d.closed && !!screen.d.alert.recovering; text: "Readings are recovering" }  // a closed alert says only that
                 Item { Layout.fillWidth: true }
                 VButton { text: "Why?"; onClicked: screen.showWhy = true }
             }
@@ -150,7 +150,7 @@ Item {
                         Placard { text: "Change"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
                         Placard { text: "Days"; Layout.fillWidth: true; Layout.preferredWidth: 1 }
                         Body { text: modelData.baseline_low + " to " + modelData.baseline_high; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
-                        Body { text: modelData.current + " " + modelData.unit; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
+                        Body { text: Theme.amount(modelData.current, modelData.unit); font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
                         Body { text: (modelData.change > 0 ? "+" : "") + modelData.change; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
                         Body { text: modelData.days_of_drift; font.weight: Font.DemiBold; Layout.preferredWidth: 1 }
                     }

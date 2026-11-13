@@ -20,7 +20,7 @@ Item {
             spacing: 12
             BackButton {}
             BigTitle { text: "Call Earth" }
-            LevelBadge { level: screen.d.level }
+            LevelBadge { level: screen.d.level; visible: screen.d.level > 0 || !(screen.d.learning || []).length }  // not "In range" before a range is known
         }
         Split {
             Layout.fillWidth: true
