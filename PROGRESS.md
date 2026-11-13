@@ -58,3 +58,9 @@
 - Fixed: a system with no baseline no longer reads Normal to Earth, Call Earth or Home, and no dose total is projected without dosimeter readings. Two members can no longer share a name, and shared initials get a number.
 - Fixed: every screen fits a 1024 by 700 window for every role, and the PIN box closes when the session ends.
 
+## Ways to read your own data (done)
+- Done: organ group chat, texts from you at 70, a lab results ticker on Home, an immune system replay, a heart rate album that turns each week into a track, Gut City, and a documentary narrator for reminders. All are built from each person's real readings with templates, offline.
+- Done: two optional check-in questions, servings of fiber and of processed food, for Gut City. The drift engine never scores them, and every existing demo reading stays the same.
+- Left out: a cough classifier, because there is no validated model to run (DECISIONS 54).
+- Checked: 428 tests pass, including every new screen as every role, a 1024 by 700 window, and access rules for every new request.
+

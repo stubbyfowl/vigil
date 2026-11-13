@@ -24,6 +24,7 @@ CHECK_MS = 1500
 CHECK_ROUTES = (
     "/", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors", "/timeline", "/explainer",
     "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit", "/system/heart",
+    "/chat", "/replay", "/album", "/gut",
 )
 
 
@@ -109,6 +110,7 @@ def main() -> int:
     vigil = Vigil(mode="demo" if args.demo or not Vigil.mission_exists() else "live")
     problems: list[str] = []
     engine, bridge = create_engine(app, vigil, lambda found: problems.extend(w.toString() for w in found))
+    app.aboutToQuit.connect(bridge.stop_sound)
     if not engine.rootObjects():
         print("\n".join(problems), file=sys.stderr)
         return 1

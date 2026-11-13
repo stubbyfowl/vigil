@@ -19,6 +19,7 @@ TARGETS = ("QQuickAbstractButton", "QQuickTextField", "QQuickSlider", "QQuickTex
 ROUTES = [
     "/", "/alert/eng-immune-46", "/system/immune", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors",
     "/timeline", "/explainer", "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit",
+    "/chat", "/replay", "/album", "/gut",
 ]
 
 
@@ -364,3 +365,21 @@ def test_journal_scrolls_when_the_words_outgrow_the_box(ui):
     box = journal.parentItem().parentItem()  # the scroll view around it
     assert journal.height() > box.height()
     journal.setProperty("text", "")
+
+
+def test_album_player_only_plays_vigils_own_tracks(ui, tmp_path):
+    stranger = tmp_path / "song.wav"
+    stranger.write_bytes(b"RIFF0000WAVE")
+    assert "not one of Vigil's album tracks" in ui.bridge.playTrack(str(stranger))
+    assert ui.bridge.playing == ""
+
+
+def test_narrator_card_follows_the_menu_setting(ui):
+    ui.warnings.clear()
+    ui.bridge.narrator = True
+    ui.show("/")
+    assert any(i.property("text") == "Narrator" for i in ui.items())
+    ui.bridge.narrator = False
+    QTest.qWait(100)
+    assert not any(i.property("text") == "Narrator" for i in ui.items())
+    assert ui.warnings == []

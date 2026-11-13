@@ -8,6 +8,7 @@ import html
 import json
 import shutil
 import time
+import zlib
 from collections.abc import Callable
 from datetime import date, datetime
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-from . import auth, config, db, mission
+from . import auth, config, db, extras, mission, music
 from .auth import CREW_ROLES, AuthError
 from .engine.alerts import PROTOCOLS
 from .live import Live, MissionClock
@@ -69,6 +70,8 @@ OWN = {  # request name -> the argument that names whose data it is
     "set_share": "id", "earth_decision": "id", "call_earth": "astronaut", "checkin": "astronaut", "notices": "id",
     "log_form": "id", "log_readings": "id", "entries": "id", "delete_entry": "id", "import_file": "id", "export_data": "id",
     "report": "id", "alert_action": "id", "undo_alert_action": "id",
+    "organ_chat": "id", "future_you": "id", "lab_ticker": "id", "immune_replay": "id", "gut_city": "id",
+    "narration": "id", "album": "id", "album_track": "id",
 }
 MEDICAL_MAY = {"log_form", "log_readings", "entries", "delete_entry", "import_file"}  # the Medical Officer enters lab results
 CREW_TIER = {"crew", "crew_view", "import_files"}
@@ -444,6 +447,54 @@ class Vigil:
         priority = PRIORITY_LEVEL3 if level >= 3 else PRIORITY_NORMAL
         packet = self.live.queue.enqueue(now, "call", who.id, f"{who.tag} call to Earth", priority, CALL_PACKET_KB, d, card | {"note": note[:280]})
         return {"packet_id": packet.id, "state": packet.state(now), "flight_seconds": self.live.queue.delay_s}
+
+    # Playful views of one person's readings: organ texts, future you, lab ticker, immune replay, album, Gut City, narrator
+
+    def _person(self, id: str, day: int | None) -> tuple[Any, dict[str, Any], int]:
+        self.store.who(id)
+        return self.store.runs[id], self.store.mission.series[id], self._day(day)
+
+    def organ_chat(self, id: str, day: int | None = None) -> dict[str, Any]:
+        run, series, d = self._person(id, day)
+        return extras.organ_chat(run, series, d, datetime.now())
+
+    def future_you(self, id: str, day: int | None = None) -> dict[str, Any]:
+        return extras.future_you(*self._person(id, day))
+
+    def lab_ticker(self, id: str, day: int | None = None) -> dict[str, Any]:
+        return extras.lab_ticker(*self._person(id, day))
+
+    def immune_replay(self, id: str, day: int | None = None) -> dict[str, Any]:
+        run, _, d = self._person(id, day)
+        return extras.immune_replay(run, d)
+
+    def gut_city(self, id: str, day: int | None = None) -> dict[str, Any]:
+        _, series, d = self._person(id, day)
+        return extras.gut_city(series, d)
+
+    def narration(self, id: str, day: int | None = None) -> dict[str, Any]:
+        run, series, d = self._person(id, day)
+        phase = run.radiation[d - 1]["storm"]["phase"]
+        return extras.narration(run, series, d, self.store.alerts(id, d), self.store.checked_in(id, d), self.mode == "live", phase)
+
+    def album(self, id: str, month: int | None = None, day: int | None = None) -> dict[str, Any]:
+        run, series, d = self._person(id, day)
+        return music.album(run, series, d, month)
+
+    def album_track(self, id: str, month: int, number: int, day: int | None = None) -> dict[str, Any]:
+        """Make one track's sound file, or reuse it if that week's readings have not changed."""
+        plan = self.album(id, month, day)
+        track = next((t for t in plan["tracks"] if t["number"] == int(number)), None)
+        if track is None:
+            raise LookupError("That track is not on this album yet.")
+        folder = config.EXPORT_DIR / "album"
+        stem = f"{mission.safe_name(id)}-month{plan['month']}-track{track['number']}"
+        path = folder / f"{stem}-{zlib.crc32(repr(sorted(track.items())).encode()):08x}.wav"
+        if not path.exists():
+            for old in folder.glob(f"{stem}-*.wav"):
+                old.unlink()
+            music.render(track, path)
+        return {"path": str(path), "title": track["title"]}
 
     # Crew and ground
 

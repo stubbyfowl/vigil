@@ -67,6 +67,7 @@ class Store:
             self.mission = generate_mission(m["seed"], m["length_days"], storm_event=str(self.cfg["radiation"].get("reference_event", "1989-10-19")))
         with db.connect(self.db_path) as con:
             rows = con.execute("SELECT * FROM checkins").fetchall()
+            food = con.execute("SELECT * FROM food_log").fetchall()
             self.actions = {}
             for row in con.execute("SELECT * FROM alert_actions"):
                 self._remember_action(row["alert_id"], row["action"], row["day"], row["level"])
@@ -74,13 +75,16 @@ class Store:
         for row in rows:
             if row["astronaut"] in known and row["day"] <= self.mission.days:
                 self._write_checkin_values(row["astronaut"], row["day"], dict(row))
+        for row in food:
+            if row["astronaut"] in known and row["day"] <= self.mission.days:
+                self._write_food(row["astronaut"], row["day"], row["fiber"], row["processed"])
         self.runs = run_mission(self.mission, self.cfg, crew=self.crew)
         self.version += 1
 
     def reset_interactive(self) -> None:
         """Forget check-ins, alert actions and share choices. Used before each demo."""
         with db.connect(self.db_path) as con:
-            for table in ("checkins", "alert_actions", "share_prefs"):
+            for table in ("checkins", "food_log", "alert_actions", "share_prefs"):
                 con.execute(f"DELETE FROM {table}")
         self.rebuild()
 
@@ -149,6 +153,12 @@ class Store:
             series[signal][day - 1] = float(row[signal])
         series["journal"][day - 1] = float(row["journal_score"])
 
+    def _write_food(self, astronaut: str, day: int, fiber: int | None, processed: int | None) -> None:
+        series = self.mission.series[astronaut]
+        for signal, value in (("fiber", fiber), ("processed", processed)):
+            if value is not None:
+                series[signal][day - 1] = float(value)
+
     def save_checkin(self, body: CheckIn, day: int) -> float:
         """Store scores, and the text only if the astronaut asked. Then rerun that person."""
         self.who(body.astronaut)
@@ -161,6 +171,10 @@ class Store:
                  journal_score, body.journal if body.keep_text else None),
             )
         self._write_checkin_values(body.astronaut, day, row)
+        if body.fiber is not None or body.processed is not None:
+            with db.connect(self.db_path) as con:
+                con.execute("INSERT OR REPLACE INTO food_log VALUES (?,?,?,?)", (body.astronaut, day, body.fiber, body.processed))
+            self._write_food(body.astronaut, day, body.fiber, body.processed)
         self.runs[body.astronaut] = run_astronaut(self.who(body.astronaut), self.mission, self.cfg)
         self.version += 1
         return journal_score

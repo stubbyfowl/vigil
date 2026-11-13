@@ -18,6 +18,9 @@ CREATE TABLE IF NOT EXISTS checkins (
   astronaut TEXT, day INTEGER, mood INTEGER, sleep_quality INTEGER, energy INTEGER,
   stress INTEGER, symptoms INTEGER, journal_score REAL, journal_text TEXT,
   PRIMARY KEY (astronaut, day));
+CREATE TABLE IF NOT EXISTS food_log (
+  astronaut TEXT, day INTEGER, fiber INTEGER, processed INTEGER,
+  PRIMARY KEY (astronaut, day));
 CREATE TABLE IF NOT EXISTS alert_actions (
   alert_id TEXT, day INTEGER, action TEXT, level INTEGER);
 CREATE TABLE IF NOT EXISTS share_prefs (

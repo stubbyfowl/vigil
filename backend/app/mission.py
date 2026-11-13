@@ -18,7 +18,7 @@ from .signals import BY_ID, SIGNALS, Signal
 from .sim.generator import Astronaut, Mission
 
 HOURS = 24
-CHECKIN_SIGNALS = ("mood", "energy", "stress", "symptoms", "journal")
+CHECKIN_SIGNALS = ("mood", "energy", "stress", "symptoms", "journal", "fiber", "processed")
 DERIVED = ("cum_dose", "spe_flag")
 # What a person or the Medical Officer can type in. Check-in scales come from the check-in screen.
 LOGGABLE: list[Signal] = [s for s in SIGNALS if s.id not in CHECKIN_SIGNALS and s.id not in DERIVED]

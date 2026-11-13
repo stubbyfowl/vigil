@@ -9,6 +9,7 @@ SYSTEMS = {
     "behavior": "Behavior",
 }
 RADIATION = "radiation"
+DIET = "diet"  # self-reported food from the check-in. Feeds Gut City only, never an alert.
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,9 @@ SIGNALS: list[Signal] = [
     S("energy", "Energy", "1 to 10", "behavior", 1, 1, 10, 0.7, "down", 7.0, 0.7, -0.3),
     S("social_min", "Social contact", "min", "behavior", 1, 0, 300, 18, "down", 90, 20, 0, 0),
     S("journal", "Journal tone", "-1 to 1", "behavior", 1, -1, 1, 0.15, "down", 0.25, 0.1, 0, 2),
+    # Food, answered in the check-in. Servings per day, 0 to 5.
+    S("fiber", "Fiber", "servings", DIET, 1, 0, 5, 1.0, "down", 3.0, 0.7, 0, 0),
+    S("processed", "Processed food", "servings", DIET, 1, 0, 5, 1.0, "up", 1.5, 0.6, 0, 0),
     # Radiation is measured, not drift tested. The radiation module scores it.
     S("dose_rate", "Dose rate", "uSv/h", RADIATION, 1, 0, 2000, 3.0, "up", 76, 0),
     S("daily_dose", "Daily dose", "mSv", RADIATION, 1, 0, 50, 0.05, "up", 1.8, 0, 0, 2),

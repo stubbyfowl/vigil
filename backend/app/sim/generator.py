@@ -8,7 +8,7 @@ from functools import cache
 import numpy as np
 
 from .. import config
-from ..signals import DRIFT_SIGNALS, Signal
+from ..signals import BY_ID, DRIFT_SIGNALS, Signal
 
 HOURS = 24
 SHELTER_FACTOR = 0.4  # invented value, see SOURCES.md
@@ -204,6 +204,18 @@ def build_ground_truth(days: int, storm: dict[str, int] | None, planted: bool) -
     return sorted(truth, key=lambda e: e["day"])
 
 
+def _food_series(who: Astronaut, days: int, rng: np.random.Generator) -> dict[str, np.ndarray]:
+    """Synthetic check-in answers for fiber and processed food, whole servings from 0 to 5."""
+    out = {}
+    for sid in ("fiber", "processed"):
+        sig = BY_ID[sid]
+        taste = sig.pop_mean + rng.normal(0, sig.pop_sd)
+        values = np.clip(np.round(taste + rng.normal(0, sig.noise, days)), sig.low, sig.high)
+        values[rng.random(days) < 0.12] = np.nan  # some days nobody answers
+        out[sid] = values
+    return out
+
+
 def generate_mission(seed: int = 42, days: int = 180, planted: bool = True, storm_event: str = REFERENCE_EVENT) -> Mission:
     """Build a full mission. Set planted=False for a mission with no events.
 
@@ -219,4 +231,5 @@ def generate_mission(seed: int = 42, days: int = 180, planted: bool = True, stor
         series[who.id] = {s.id: _signal_series(s, who, days, rng, planted) for s in DRIFT_SIGNALS}
         rad, hourly[who.id], hourly_free[who.id] = _radiation_series(free, storm, days, rng)
         series[who.id].update(rad)
+        series[who.id].update(_food_series(who, days, np.random.default_rng([seed, 500 + index])))
     return Mission(seed, days, series, hourly, hourly_free, storm, build_ground_truth(days, storm, planted))

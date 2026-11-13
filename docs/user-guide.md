@@ -57,6 +57,18 @@ Tap your name and enter your PIN. A PIN is 4 to 8 digits, not all the same digit
 | 2 | Tell the Medical Officer. They also see a prompt on their Home |
 | 3 | Vigil writes a priority packet for Earth by itself. Start the checklist on the alert while it travels |
 
+## The lighter screens
+
+The Menu also has **Organ chat**, **Immune replay**, **Heart rate album** and **Gut City**, and Home shows a **Lab market** ticker. They read the same readings as everything else and never raise an alert. Under each organ text is the reading it came from.
+
+| Screen | Notes |
+|---|---|
+| Organ chat | The last 7 days. The **You at 70** tab writes from the last 14 days of habits. It is not a prediction |
+| Immune replay | Appears once Vigil has opened an immune alert. Play it, or step through it a day at a time |
+| Heart rate album | Tap **Play** to hear a week. Tracks are saved in the exports folder under `album` |
+| Gut City | Built from the two optional food questions at the end of the check-in |
+| Narrator | Turn on **Documentary narrator** in the Menu. **Listen** reads the line aloud |
+
 ## Import a file
 
 Copy a file into the import folder (shown on the Log readings screen), then tap **Import**. Three kinds of file work.

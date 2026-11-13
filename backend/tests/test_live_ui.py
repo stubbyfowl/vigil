@@ -17,7 +17,8 @@ from app.views import Vigil  # noqa: E402
 from main import create_engine, quick_window  # noqa: E402
 
 TARGETS = ("QQuickAbstractButton", "QQuickTextField", "QQuickSlider", "QQuickTextArea")
-CREW_ROUTES = ["/", "/log", "/checkin", "/sensors", "/radiation", "/crew", "/earth", "/profile", "/system/heart", "/about"]
+CREW_ROUTES = ["/", "/log", "/checkin", "/sensors", "/radiation", "/crew", "/earth", "/profile", "/system/heart", "/about",
+               "/chat", "/replay", "/album", "/gut"]
 PEOPLE = {"ana": "4826", "priya": "7391", "lena": "5170"}
 
 

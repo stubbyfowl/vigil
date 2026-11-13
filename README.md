@@ -79,6 +79,22 @@ Before any demo, this confirms the interface loads cleanly:
 
 Thresholds are on the Commander's Menu, or after five taps on the Vigil wordmark.
 
+## Ways to read your own data
+
+People skip health alerts but read a funny text, so the same readings also show up in lighter forms. None of them raise an alert, and each one shows the numbers it came from.
+
+| Screen | What it does |
+|---|---|
+| Organ chat | Your heart, lungs, brain, kidneys, immune system, muscles and gut text you about this week's readings |
+| You at 70 | Texts from you at 70, chill or grumpy depending on the last two weeks of exercise, sleep, stress and social time |
+| Lab market | A ticker on Home that reads blood work like a stock feed |
+| Immune replay | Your last immune alert replayed as a three-lane strategy game, drawn from temperature, CRP, IL-6, heart rate and HRV |
+| Heart rate album | One album per mission month, one track per week: lo-fi at your resting heart rate for calm weeks, drum and bass for stressful ones |
+| Gut City | A city built from two optional check-in questions: fiber builds it, processed food sends in raccoons |
+| Narrator | Turn it on in the Menu and reminders are read like a wildlife film, out loud if the computer has an offline voice |
+
+![Organ group chat](docs/screens/chat.png)
+
 ## Use it on a real mission
 
 The first time Vigil opens on a computer, it asks whether to set up a mission or explore the demo. The two never mix: each has its own database.
@@ -123,6 +139,8 @@ The full guide is [docs/user-guide.md](docs/user-guide.md).
 | Screen data, in process | `backend/app/views.py` |
 | Optional C++ version of the tracker, tested to match Python exactly | `backend/native/vigil_fast.cpp` |
 | Optional offline speech to text for the journal | `frontend/voice.py` |
+| Organ chat, texts from you at 70, lab ticker, immune replay, Gut City and narrator, all from real readings | `backend/app/extras.py` |
+| Heart rate album: each week of readings becomes a track, made offline | `backend/app/music.py` |
 | Interface | `frontend/qml` |
 
 Details are in [docs/architecture.md](docs/architecture.md). Design choices are in [docs/design-principles.md](docs/design-principles.md).

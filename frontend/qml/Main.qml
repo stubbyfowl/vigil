@@ -20,7 +20,8 @@ ApplicationWindow {
         radiation: "RadiationScreen.qml", crew: "CrewScreen.qml", ground: "GroundScreen.qml", earth: "EarthScreen.qml",
         sensors: "SensorsScreen.qml", timeline: "TimelineScreen.qml", explainer: "ExplainerScreen.qml", delay: "DelayScreen.qml",
         results: "ResultsScreen.qml", about: "AboutScreen.qml", admin: "AdminScreen.qml", profile: "ProfileScreen.qml",
-        accounts: "AccountsScreen.qml", audit: "AuditScreen.qml", log: "LogScreen.qml"
+        accounts: "AccountsScreen.qml", audit: "AuditScreen.qml", log: "LogScreen.qml",
+        chat: "ChatScreen.qml", replay: "ReplayScreen.qml", album: "AlbumScreen.qml", gut: "GutCityScreen.qml"
     })
     readonly property string section: vigil.route.split("/")[1] || ""
     readonly property bool inApp: vigil.stage === "app"
@@ -33,6 +34,7 @@ ApplicationWindow {
             out.push(["/checkin", "Check in"])
             if (!vigil.isDemo) out.push(["/log", "Log readings"])
             out.push(["/crew", "Crew"], ["/radiation", "Radiation"], ["/earth", "Call Earth"], ["/sensors", vigil.isDemo ? "Sensors" : "Data sources"])
+            out.push(["/chat", "Organ chat"], ["/replay", "Immune replay"], ["/album", "Heart rate album"], ["/gut", "Gut City"])
         }
         if (vigil.role === "ground" || vigil.role === "presenter") out.push(["/ground", "Mission Control"])
         out.push(["/profile", "My account"])
@@ -185,6 +187,7 @@ ApplicationWindow {
                 }
             }
             Toggle { text: "Reduce motion"; checked: vigil.reduceMotion; onToggled: vigil.reduceMotion = checked }
+            Toggle { text: "Documentary narrator"; checked: vigil.narrator; onToggled: vigil.narrator = checked }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8

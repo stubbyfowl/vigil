@@ -2,6 +2,9 @@
 
 import json
 import math
+import shutil
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -23,8 +26,15 @@ CHANGES_STATE = {
     "log_readings", "delete_entry", "import_file", "add_member", "update_member", "set_auto_lock", "archive_mission",
 }
 DESIGN_VERSION = 2  # the aurora redesign; older saved themes reset once to the new default
-DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False, "chose_demo": False, "design": DESIGN_VERSION}
+DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False, "chose_demo": False, "design": DESIGN_VERSION, "narrator": False}
 PROBLEMS = (LookupError, ValueError, TypeError, PermissionError, AuthError)
+# Sound goes through the computer's own offline tools. None of them use the network.
+PLAYERS = (("afplay",), ("paplay",), ("pw-play",), ("aplay", "-q"), ("ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"))
+SPEAKERS = (("say", "-v", "Daniel", "-r", "165"), ("espeak-ng", "-s", "140"), ("espeak", "-s", "140"), ("spd-say", "-w"))
+
+
+def find_tool(options: tuple[tuple[str, ...], ...]) -> tuple[str, ...] | None:
+    return next((cmd for cmd in options if shutil.which(cmd[0])), None)
 
 
 def plain(value: Any) -> Any:
@@ -56,6 +66,7 @@ class Bridge(QObject):
     stageChanged = Signal()
     lockedChanged = Signal()
     missionChanged = Signal()
+    playingChanged = Signal()
 
     def __init__(self, vigil: Vigil, parent: QObject | None = None, station: str = "vehicle") -> None:
         super().__init__(parent)
@@ -247,6 +258,7 @@ class Bridge(QObject):
 
     def _end_session(self) -> None:
         self._set_stage(self._resting_stage())  # unload the screens first, so none asks for data with nobody signed in
+        self.stop_sound()  # the next person should not hear someone else's album
         self._session = None
         self._locked = False
         self._clear_undo()
@@ -390,6 +402,86 @@ class Bridge(QObject):
         self._save_prefs()
 
     reduceMotion = Property(bool, _get_reduce, _set_reduce, notify=prefsChanged)
+
+    def _get_narrator(self) -> bool:
+        return self._prefs.get("narrator", False)
+
+    def _set_narrator(self, value: bool) -> None:
+        self._prefs["narrator"] = value
+        self._save_prefs()
+
+    narrator = Property(bool, _get_narrator, _set_narrator, notify=prefsChanged)
+
+    # Heart rate album playback and the narrator's voice
+
+    _player: subprocess.Popen | None = None
+    _speaker: subprocess.Popen | None = None
+    _playing = ""
+
+    @Property(bool, constant=True)
+    def canPlay(self) -> bool:  # noqa: N802 (Qt name)
+        return find_tool(PLAYERS) is not None
+
+    @Property(bool, constant=True)
+    def canSpeak(self) -> bool:  # noqa: N802 (Qt name)
+        return find_tool(SPEAKERS) is not None
+
+    @Property(str, notify=playingChanged)
+    def playing(self) -> str:
+        if self._player is not None and self._player.poll() is not None:
+            self._player, self._playing = None, ""
+        return self._playing
+
+    @Slot(str, result=str)
+    def playTrack(self, path: str) -> str:  # noqa: N802 (Qt name)
+        """Play one album track. Only files Vigil made in its album folder."""
+        file = Path(path).resolve()
+        if file.parent != (config.EXPORT_DIR / "album").resolve() or file.suffix != ".wav" or not file.is_file():
+            return "That file is not one of Vigil's album tracks."
+        command = find_tool(PLAYERS)
+        if command is None:
+            return f"No audio player was found on this computer. The track is saved at {file}."
+        self.stopTrack()
+        self._player = subprocess.Popen([*command, str(file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self._playing = str(file)
+        self.playingChanged.emit()
+        QTimer.singleShot(500, self._watch_player)
+        return ""
+
+    def _watch_player(self) -> None:
+        if self._player is None:
+            return
+        if self._player.poll() is None:
+            QTimer.singleShot(500, self._watch_player)
+        else:
+            self._player, self._playing = None, ""
+            self.playingChanged.emit()
+
+    @Slot()
+    def stopTrack(self) -> None:  # noqa: N802 (Qt name)
+        if self._player is not None:
+            self._player.terminate()
+        self._player, self._playing = None, ""
+        self.playingChanged.emit()
+
+    @Slot(str, result=str)
+    def speak(self, text: str) -> str:
+        """Read a line aloud with the computer's offline voice."""
+        command = find_tool(SPEAKERS)
+        if command is None:
+            return "No offline voice was found on this computer."
+        if command[0] == "say" and sys.platform == "darwin" and "Daniel" not in subprocess.run(["say", "-v", "?"], capture_output=True, text=True).stdout:
+            command = ("say",)
+        if self._speaker is not None:
+            self._speaker.terminate()
+        self._speaker = subprocess.Popen([*command, text[:500]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return ""
+
+    def stop_sound(self) -> None:
+        """Called when the app quits, so nothing keeps playing after the window closes."""
+        self.stopTrack()
+        if self._speaker is not None:
+            self._speaker.terminate()
 
     @Property(bool, notify=prefsChanged)
     def welcomed(self) -> bool:

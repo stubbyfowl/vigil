@@ -12,9 +12,11 @@ Item {
         { key: "sleep_quality", label: "Sleep", low: 1, high: 10, hint: "1 is very poor, 10 is great" },
         { key: "energy", label: "Energy", low: 1, high: 10, hint: "1 is empty, 10 is full" },
         { key: "stress", label: "Stress", low: 1, high: 10, hint: "1 is calm, 10 is extreme" },
-        { key: "symptoms", label: "Symptoms", low: 0, high: 5, hint: "0 is none, 5 is severe" }
+        { key: "symptoms", label: "Symptoms", low: 0, high: 5, hint: "0 is none, 5 is severe" },
+        { key: "fiber", label: "Fiber", low: 0, high: 5, hint: "servings of fiber-rich food today, optional", optional: true },
+        { key: "processed", label: "Processed", low: 0, high: 5, hint: "servings of processed food today, optional", optional: true }
     ]
-    readonly property var missing: scales.filter(function (s) { return values[s.key] === undefined }).map(function (s) { return s.label })
+    readonly property var missing: scales.filter(function (s) { return !s.optional && values[s.key] === undefined }).map(function (s) { return s.label })
 
     function choose(key, value) {
         var copy = Object.assign({}, values)
@@ -61,7 +63,7 @@ Item {
                         spacing: 4
                         Accessible.role: Accessible.Grouping
                         Accessible.name: modelData.label + ". " + modelData.hint + "."
-                        Placard { text: modelData.label; font.pixelSize: 19; color: Theme.ink; Layout.preferredWidth: 110 }
+                        Placard { text: modelData.label; font.pixelSize: 19; color: Theme.ink; Layout.preferredWidth: 136 }
                         Repeater {
                             model: parent.modelData.high - parent.modelData.low + 1
                             VButton {
@@ -78,6 +80,7 @@ Item {
                         }
                     }
                 }
+                Note { text: "Fiber and Processed are optional servings for today. They build Gut City and never raise an alert." }
             }
             ColumnLayout {
                 Layout.fillWidth: true

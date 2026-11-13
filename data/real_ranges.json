@@ -23,7 +23,9 @@
   "stress": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
   "energy": {"unit": "1 to 10", "low": null, "high": null, "status": "team choice", "source": null, "note": "A self-rated scale defined by Vigil."},
   "social_min": {"unit": "min per day", "low": null, "high": null, "status": "team choice", "source": "basner_2013", "note": "Minutes of social contact. The Mars-500 crews grew less active over time, which the behavioral slide follows."},
-  "journal": {"unit": "-1 to 1", "low": null, "high": null, "status": "team choice", "source": null, "note": "Tone score from Vigil's own word list."}
+  "journal": {"unit": "-1 to 1", "low": null, "high": null, "status": "team choice", "source": null, "note": "Tone score from Vigil's own word list."},
+  "fiber": {"unit": "servings", "low": null, "high": null, "status": "team choice", "source": null, "note": "Self-reported servings of fiber-rich food in the check-in, 0 to 5. Feeds Gut City only."},
+  "processed": {"unit": "servings", "low": null, "high": null, "status": "team choice", "source": null, "note": "Self-reported servings of processed food in the check-in, 0 to 5. Feeds Gut City only."}
  },
  "radiation": {
   "career_limit_msv": {"value": 600, "status": "verified", "source": "nasa_std_3001_radiation", "note": "Career effective dose, all ages and sexes [V1 4030]."},

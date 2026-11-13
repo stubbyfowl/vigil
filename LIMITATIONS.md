@@ -30,3 +30,8 @@ The demo mission's crew are invented and all their readings are synthetic. No re
 - The Apple Health importer was tested on an invented export written in Apple's format. Apple publishes no schema for it, so a real export from a phone may need small fixes.
 - Eleven sources were read only in press releases or secondary pages. They are marked "Summary only" in SOURCES.md and should be checked in the original before they are quoted.
 - The day-120 storm follows a real event's timing and size, but the dose it produces comes from a team assumption about shielding and energy spectrum.
+- The organ chat, texts from you at 70, lab ticker, immune replay, heart rate album, Gut City and narrator are for engagement. They are not medical advice, they are not predictions, and they raise no alerts. The rules that pick their words are the team's.
+- Gut City is built from two self-reported food questions. It does not measure the microbiome, and Vigil cannot read gut test kits.
+- The heart rate album has no breathing data. Its mapping from heart rate, stress, sleep and heart rate variability to music is the team's design.
+- Album playback and the narrator's voice need a player and an offline voice on the computer: afplay and say on macOS, and paplay, aplay, espeak-ng or spd-say on Linux. Without them, tracks are still saved and the narrator's text still shows.
+

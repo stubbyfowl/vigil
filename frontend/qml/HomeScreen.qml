@@ -5,6 +5,7 @@ import QtQuick.Layouts
 Item {
     id: home
     readonly property var d: Api.ask("astronaut", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
+    readonly property var story: vigil.narrator ? (Api.ask("narration", { id: vigil.astronaut, day: vigil.day, v: vigil.version }).lines || []) : []
     readonly property var notices: (Api.ask("notices", { id: vigil.astronaut, v: [vigil.version, vigil.day] }).notices || []).slice(0, 3)
     readonly property var names: {
         var out = {}
@@ -56,6 +57,8 @@ Item {
         width: homeFlick.width - (homeFlick.scrolls ? 18 : 0)
         height: homeFlick.contentHeight
         spacing: 0
+
+        LabTicker { Layout.fillWidth: true; Layout.bottomMargin: 6 }
 
         RowLayout {
             Layout.fillWidth: true
@@ -117,6 +120,31 @@ Item {
                             }
                             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.rule }
                         }
+                    }
+                }
+
+                // The narrator reads the top reminder, the way a wildlife film would. Off unless chosen in the Menu.
+                Rectangle {
+                    visible: home.story.length > 0
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: 640
+                    Layout.topMargin: 8
+                    implicitHeight: narratorRow.implicitHeight + 24
+                    radius: Theme.radius
+                    color: Theme.panel
+                    border.width: 1
+                    border.color: Theme.rule
+                    RowLayout {
+                        id: narratorRow
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: 16; rightMargin: 12 }
+                        spacing: 12
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Placard { text: "Narrator" }
+                            Text { Layout.fillWidth: true; text: home.story[0] || ""; wrapMode: Text.WordWrap; font.family: Theme.body; font.italic: true; font.pixelSize: 17; color: Theme.ink }
+                        }
+                        VButton { visible: vigil.canSpeak; text: "Listen"; Accessible.name: "Read the narrator's line aloud"; onClicked: vigil.speak(home.story[0]) }
                     }
                 }
 
@@ -238,8 +266,8 @@ Item {
             visible: !vigil.demo.active
             spacing: 12
             Repeater {
-                model: vigil.isDemo ? [["/checkin", "Check in", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
-                                    : [["/checkin", "Check in", "normal"], ["/log", "Log readings", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
+                model: vigil.isDemo ? [["/checkin", "Check in", "normal"], ["/chat", "Organ chat", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
+                                    : [["/checkin", "Check in", "normal"], ["/log", "Log readings", "normal"], ["/chat", "Organ chat", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
                 VButton {
                     required property var modelData
                     Layout.fillWidth: true
