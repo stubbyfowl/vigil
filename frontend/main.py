@@ -48,7 +48,11 @@ def create_engine(app: QGuiApplication, vigil: Vigil, on_warning: Callable | Non
 
     def open_ground() -> None:
         if ground:
-            ground[0].rootObjects()[0].requestActivate()
+            # It may have been closed (hidden) or be behind the main window: show it and bring it forward.
+            window = quick_window(ground[0].rootObjects()[0])
+            window.show()
+            window.raise_()
+            window.requestActivate()
         else:
             station = Bridge(vigil, app, station="ground")
             ground.append(load("GroundWindow.qml", "dark", station))

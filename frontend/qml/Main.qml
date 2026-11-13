@@ -136,9 +136,20 @@ ApplicationWindow {
         width: 560
         modal: true
         padding: 16
+        // A short window scrolls the menu instead of cutting off the bottom items.
+        height: Math.min(implicitHeight, win.height - y - 16)
         background: Rectangle { color: Theme.panel; radius: Theme.radius; border.color: Theme.rule; SoftShadow {} }
+        contentItem: Flickable {
+            id: menuFlick
+            clip: true
+            implicitHeight: menuColumn.implicitHeight
+            contentHeight: menuColumn.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+            readonly property bool scrolls: menuColumn.implicitHeight > height + 1
+            ScrollBar.vertical: ScrollBar { policy: menuFlick.scrolls ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff }
         ColumnLayout {
-            anchors.fill: parent
+            id: menuColumn
+            width: menuFlick.width - (menuFlick.scrolls ? 18 : 0)
             spacing: 4
             VButton { visible: vigil.role === "presenter"; Layout.fillWidth: true; kind: "primary"; text: "Play the demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
             GridLayout {
@@ -180,6 +191,7 @@ ApplicationWindow {
                 VButton { Layout.fillWidth: true; text: "Lock screen"; onClicked: { menu.close(); vigil.lock() } }
                 VButton { Layout.fillWidth: true; text: "Sign out"; onClicked: { menu.close(); vigil.signOut() } }
             }
+        }
         }
     }
 

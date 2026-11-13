@@ -86,18 +86,24 @@ Item {
                     Layout.fillWidth: true
                     title: "Journal (optional)"
                     Note { text: "A word list on this computer scores the tone." }
-                    TextArea {
-                        id: journal
-                        objectName: "journal"
+                    // Scrolls once the words outgrow the box, and follows the cursor while typing.
+                    ScrollView {
+                        id: journalScroll
                         Layout.fillWidth: true
                         Layout.preferredHeight: 150
-                        wrapMode: TextEdit.Wrap
-                        font.family: Theme.body
-                        font.pixelSize: 18
-                        color: Theme.ink
-                        Accessible.name: "Journal"
-                        background: Rectangle { color: Theme.panel2; border.color: journal.activeFocus ? Theme.action : "transparent"; radius: 10 }
-                        onTextChanged: if (text.length > 2000) remove(2000, text.length)
+                        clip: true
+                        background: Rectangle { color: Theme.panel2; border.width: journal.activeFocus ? 2 : 1; border.color: journal.activeFocus ? Theme.link : Theme.rule; radius: Theme.controlRadius }
+                        TextArea {
+                            id: journal
+                            objectName: "journal"
+                            wrapMode: TextEdit.Wrap
+                            font.family: Theme.body
+                            font.pixelSize: 18
+                            color: Theme.ink
+                            Accessible.name: "Journal"
+                            background: null
+                            onTextChanged: if (text.length > 2000) remove(2000, text.length)
+                        }
                     }
                     RowLayout {
                         visible: vigil.voiceAvailable

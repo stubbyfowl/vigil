@@ -157,6 +157,7 @@ def test_ground_knows_only_what_packets_carried(run):
     first = config.OUTBOX_DIR / g["packets"][-1]["file"]
     first.unlink()  # the comm system picked it up
     assert v.request(GROUND, "ground", {})["packets"][-1]["state"] == "picked_up"
+    assert v.request(GROUND, "packets", {})["packets"] == v.request(GROUND, "ground", {})["packets"]
 
 
 def test_export_holds_journal_words_only_when_kept(run):
@@ -181,6 +182,7 @@ def test_report_and_backup(run):
     (LENA, "log_readings", {"id": "ana", "values": {}}),
     (LENA, "accounts_admin", {}),
     (LENA, "ground", {}),
+    (LENA, "packets", {}),
     (MO, "astronaut", {"id": "lena"}),
     (MO, "export_data", {"id": "lena"}),
     (BOSS, "astronaut", {"id": "lena"}),

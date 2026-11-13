@@ -42,7 +42,7 @@ ColumnLayout {
         Text { visible: root.present(root.value); text: "Day " + (root.series ? root.series.days[root.shown] : ""); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 17; color: Theme.ink }
         Text { visible: root.present(root.value); text: root.present(root.value) ? root.value.toFixed(root.series.decimals) + " " + root.series.unit : ""; font.family: Theme.body; font.pixelSize: 17; color: Theme.ink }
         Text {
-            text: !root.present(root.value) ? "No reading on this day" : root.present(root.low) ? "Usual range " + root.low.toFixed(root.tickDecimals) + " to " + root.high.toFixed(root.tickDecimals) : "Needs more readings"
+            text: !root.present(root.value) ? "No reading on this day" : root.present(root.low) && root.present(root.high) ? "Usual range " + root.low.toFixed(root.tickDecimals) + " to " + root.high.toFixed(root.tickDecimals) : "Needs more readings"
             font.family: Theme.body; font.pixelSize: 17; color: Theme.ink2
         }
         StatusPill { visible: root.shown >= 0 && !!root.series && root.series.flagged[root.shown]; status: "yellow"; label: "Drifting"; compact: true }

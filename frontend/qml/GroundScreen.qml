@@ -1,16 +1,20 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 
 Item {
     id: screen
     property bool standalone: false
     property int tick: 0
-    readonly property var raw: Api.ask("ground", { day: vigil.day, v: [vigil.version, tick, vigil.signedIn] })
+    // Crew status changes only with the day or new data. The packet list moves every half second, so it is asked for on its own.
+    readonly property var raw: Api.ask("ground", { day: vigil.day, v: [vigil.version, vigil.signedIn, vigil.locked] })
+    readonly property var flow: Api.ask("packets", { v: [tick, vigil.version, vigil.signedIn, vigil.locked, vigil.linkUp] })
     // Signed out or locked: show an empty control room, so no stale data appears.
-    readonly property var d: raw.error ? { system_keys: [], crew: [], level3: [], packets: [], live: !vigil.isDemo, day: vigil.day, link_up: true, delay_minutes: vigil.delayMinutes, flight_seconds: Math.max(1, vigil.flightSeconds) } : raw
-    readonly property real timeScale: d.delay_minutes * 60 / d.flight_seconds
+    readonly property var d: raw.error ? { system_keys: [], crew: [], level3: [], live: !vigil.isDemo, day: vigil.day, delay_minutes: vigil.delayMinutes } : raw
+    readonly property var f: flow.error ? { packets: [], link_up: true, flight_seconds: Math.max(1, vigil.flightSeconds) } : flow
+    readonly property real timeScale: d.delay_minutes * 60 / f.flight_seconds
     readonly property var systemKeys: d.system_keys
-    readonly property int inFlight: d.packets.filter(function (p) { return p.state === "in_transit" || p.state === "sent" }).length
+    readonly property int inFlight: f.packets.filter(function (p) { return p.state === "in_transit" || p.state === "sent" }).length
     // One line per reason, listing everyone it applies to, so a storm that hits five people reads as one event.
     readonly property var level3Groups: {
         var groups = []
@@ -23,14 +27,14 @@ Item {
     }
     readonly property var stateWord: ({ queued: "Queued", sent: "Sent", in_transit: "In transit", received: "Received", in_outbox: "In outbox", picked_up: "Picked up" })
 
-    Timer { interval: 400; running: true; repeat: true; onTriggered: screen.tick += 1 }
+    Timer { interval: 500; running: screen.visible && !!screen.Window.window && screen.Window.window.visible; repeat: true; onTriggered: screen.tick += 1 }
 
     function eta(seconds) {
         var total = Math.ceil(seconds * timeScale)
         return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0")
     }
 
-        PageScroll {
+    PageScroll {
         anchors.fill: parent
         RowLayout {
             Layout.fillWidth: true
@@ -47,7 +51,7 @@ Item {
                 color: Theme.cautionBg
                 Placard { id: badge; anchors.centerIn: parent; text: "Simulated data"; color: Theme.caution }
             }
-            VButton { visible: !screen.d.live; text: screen.d.link_up ? "Drop link" : "Restore link"; onClicked: Api.ask("set_link", { up: !screen.d.link_up }) }
+            VButton { visible: !screen.d.live; text: screen.f.link_up ? "Drop link" : "Restore link"; onClicked: Api.ask("set_link", { up: !screen.f.link_up }) }
             VButton { visible: screen.standalone; text: "Lock"; onClicked: vigil.lock() }
             VButton { visible: screen.standalone; text: "Sign out"; onClicked: vigil.signOut() }
         }
@@ -106,14 +110,14 @@ Item {
                 Panel {
                     Layout.fillWidth: true
                     surface: true
-                    title: screen.d.live ? "Packets" : "Packet timeline, " + (screen.d.link_up ? screen.inFlight + " in flight" : "Link lost. Packets wait on board.")
-                    Note { visible: screen.d.packets.length === 0; text: screen.d.live ? "No packets yet." : "No packets yet." }
+                    title: screen.d.live ? "Packets" : "Packet timeline, " + (screen.f.link_up ? screen.inFlight + " in flight" : "Link lost. Packets wait on board.")
+                    Note { visible: screen.f.packets.length === 0; text: screen.d.live ? "No packets yet." : "No packets yet." }
                     Repeater {
-                        model: Math.min(7, screen.d.packets.length)
+                        model: Math.min(7, screen.f.packets.length)
                         ColumnLayout {
                             id: packet
                             required property int index
-                            readonly property var p: screen.d.packets[index]
+                            readonly property var p: screen.f.packets[index]
                             readonly property bool urgent: p.priority === 0
                             readonly property real progress: p.state === "received" || p.state === "picked_up" ? 1 : p.state === "queued" || p.state === "in_outbox" ? 0 : 1 - p.seconds_left / p.flight_seconds
                             Layout.fillWidth: true
@@ -139,7 +143,7 @@ Item {
                             }
                         }
                     }
-                    Note { text: screen.d.live ? "Each packet is a file in the outbox folder until the vehicle's comm system sends it. Earth gets it about " + screen.d.delay_minutes + " minutes later." : "Countdown shows flight time. This demo plays " + screen.d.delay_minutes + " minutes as " + screen.d.flight_seconds + " seconds." }
+                    Note { text: screen.d.live ? "Each packet is a file in the outbox folder until the vehicle's comm system sends it. Earth gets it about " + screen.d.delay_minutes + " minutes later." : "Countdown shows flight time. This demo plays " + screen.d.delay_minutes + " minutes as " + screen.f.flight_seconds + " seconds." }
                 }
             ]
         }

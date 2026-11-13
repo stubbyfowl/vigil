@@ -100,10 +100,18 @@ def test_unknown_alert_explains_itself(ui):
 
 
 def test_second_window_opens(ui):
+    def ground_windows():  # other test modules may have their own in this process
+        return {w for w in ui.app.topLevelWindows() if w.title() == "Vigil Mission Control"}
     ui.warnings.clear()
+    before = ground_windows()
     ui.bridge.openGround()
     QTest.qWait(200)
-    ui.bridge.openGround()  # a second request must not open a second window
+    (window,) = ground_windows() - before
+    assert window.isVisible()
+    window.close()  # closing only hides it, so the menu item must bring it back
+    ui.bridge.openGround()
+    QTest.qWait(100)
+    assert ground_windows() - before == {window} and window.isVisible()
     assert ui.warnings == []
 
 
@@ -280,3 +288,79 @@ def test_first_run_stages_render(ui, stage):
     assert ui.warnings == []
     ui.bridge._set_stage("signin")
     assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+
+
+def tile_note(ui, member):
+    """The line under a name on the sign-in screen."""
+    name = ui.vigil.accounts.get(member)["name"]
+    tile = next(i for i in ui.items() if i.property("text") == name)
+    texts = [c.property("text") for c in tile.parentItem().childItems() if isinstance(c.property("text"), str)]
+    return next(t for t in texts if t != name)
+
+
+def test_sign_out_from_the_lock_screen_and_live_lockout_countdown(ui):
+    ui.bridge.signOut()
+    if ui.bridge.stage == "welcome":
+        ui.bridge.chooseDemo()  # with no real mission yet, signing out returns to the first-run choice
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+    ui.show("/")
+    ui.bridge.lock()
+    QTest.qWait(100)
+    ui.warnings.clear()
+    ui.bridge.signOut()
+    QTest.qWait(200)
+    texts = [i.property("text") for i in ui.items() if isinstance(i.property("text"), str)]
+    assert any("Day 49 / " in t for t in texts) and not any("undefined" in t for t in texts)
+    screen = find_named(ui, "signin")
+    for _ in range(5):
+        ui.bridge.signIn("plt", "9999")
+    screen.setProperty("refresh", screen.property("refresh") + 1)  # what the PIN pad does after each try
+    QTest.qWait(150)
+    first = tile_note(ui, "plt")
+    assert first.startswith("Locked · opens in ")
+    QTest.qWait(2100)
+    assert tile_note(ui, "plt") != first  # counts down on its own, with nobody touching the screen
+    ui.vigil.accounts.unlock("plt")
+    assert ui.warnings == []
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+
+
+def test_system_arrows_follow_any_hidden_card(ui):
+    home = screen_item(ui, "/")
+    cards = home.findChild(QObject, "cards")
+    arrows = {i.property("text"): i for i in ui.items() if i.inherits("QQuickAbstractButton") and i.property("text") in ("‹", "›")}
+    cards.setProperty("contentX", 0)
+    assert not arrows["‹"].property("enabled") and arrows["›"].property("enabled")
+    cards.setProperty("contentX", 20)  # a sliver of the first card is hidden
+    assert arrows["‹"].property("enabled")
+    QTest.mouseClick(ui.window, Qt.LeftButton, pos=arrows["‹"].mapToScene(arrows["‹"].boundingRect().center()).toPoint())
+    QTest.qWait(50)
+    assert cards.property("contentX") == 0
+
+
+def test_small_window_scrolls_home_and_the_menu(ui):
+    ui.bridge.signOut()
+    assert ui.bridge.signIn("cmdr", DEMO_PIN) == ""
+    old = ui.window.size()
+    ui.window.resize(1024, 700)
+    home = screen_item(ui, "/")
+    flick = next(i for i in ui.items(home) if i.inherits("QQuickFlickable") and not i.objectName())
+    assert flick.property("contentHeight") >= flick.height()
+    menu = ui.window.findChild(QObject, "menu")
+    menu.setProperty("visible", True)
+    QTest.qWait(300)
+    assert menu.property("y") + menu.property("height") <= 700
+    menu.setProperty("visible", False)
+    ui.window.resize(old)
+    ui.bridge.signOut()
+    assert ui.bridge.signIn("presenter", DEMO_PIN) == ""
+
+
+def test_journal_scrolls_when_the_words_outgrow_the_box(ui):
+    screen = screen_item(ui, "/checkin")
+    journal = screen.findChild(QObject, "journal")
+    journal.setProperty("text", "A long day. " * 120)
+    QTest.qWait(100)
+    box = journal.parentItem().parentItem()  # the scroll view around it
+    assert journal.height() > box.height()
+    journal.setProperty("text", "")

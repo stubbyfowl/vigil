@@ -28,7 +28,8 @@ Item {
         : drifting.length ? drifting.map(function (s) { return s.name }).join(" and ") + " drifting"
         : "All systems normal"
     readonly property int cardWidth: 340
-    readonly property int firstVisible: Math.round(cards.contentX / (cardWidth + 16))
+    // Where the carousel is, in cards. Arrows step to the next card that is even partly hidden.
+    readonly property real position: (cards.contentX - cards.originX) / (cardWidth + cards.spacing)
     onWorstChanged: if (worst >= 0) cards.positionViewAtIndex(worst, ListView.Contain)
 
     function signed(row) {
@@ -37,8 +38,21 @@ Item {
         return (v >= 0 ? "+" : "−") + Math.abs(v) + (unit === "%" ? "%" : " " + unit)
     }
 
-    ColumnLayout {
+    // Fills the page when it fits. A short window scrolls, so the buttons at the bottom stay reachable.
+    Flickable {
+        id: homeFlick
         anchors.fill: parent
+        clip: true
+        contentWidth: width
+        contentHeight: Math.max(height, homeColumn.implicitHeight)
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        readonly property bool scrolls: homeColumn.implicitHeight > height + 1
+        ScrollBar.vertical: ScrollBar { policy: homeFlick.scrolls ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff }
+    ColumnLayout {
+        id: homeColumn
+        width: homeFlick.width - (homeFlick.scrolls ? 18 : 0)
+        height: homeFlick.contentHeight
         spacing: 0
 
         RowLayout {
@@ -142,8 +156,8 @@ Item {
             Layout.fillWidth: true
             spacing: 8
             Placard { text: "Systems"; Layout.fillWidth: true }
-            VButton { text: "‹"; textSize: 24; Accessible.name: "Previous system"; enabled: home.firstVisible > 0; onClicked: cards.positionViewAtIndex(home.firstVisible - 1, ListView.Beginning) }
-            VButton { text: "›"; textSize: 24; Accessible.name: "Next system"; enabled: !cards.atXEnd; onClicked: cards.positionViewAtIndex(home.firstVisible + 1, ListView.Beginning) }
+            VButton { text: "‹"; textSize: 24; Accessible.name: "Previous system"; enabled: !cards.atXBeginning; onClicked: cards.positionViewAtIndex(Math.max(0, Math.ceil(home.position - 0.01) - 1), ListView.Beginning) }
+            VButton { text: "›"; textSize: 24; Accessible.name: "Next system"; enabled: !cards.atXEnd; onClicked: cards.positionViewAtIndex(Math.min(cards.count - 1, Math.floor(home.position + 0.01) + 1), ListView.Beginning) }
         }
 
         // Swipe, drag or use the arrows. All four systems stay in the same order. Each card opens its detail.
@@ -233,5 +247,6 @@ Item {
                 }
             }
         }
+    }
     }
 }

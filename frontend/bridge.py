@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 from app import config
 from app.auth import CREW_ROLES, AuthError
-from app.views import Vigil
+from app.views import PUBLIC, Vigil
 from PySide6.QtCore import Property, QEvent, QObject, QTimer, Signal, Slot
 from PySide6.QtGui import QFont, QPageSize, QPdfWriter, QTextDocument
 from voice import VoiceInput, is_available
@@ -332,16 +332,18 @@ class Bridge(QObject):
         self._go("/accounts", remember=False)
         return ""
 
-    @Slot(str)
-    def openMission(self, mode: str) -> None:
-        if self._session:
-            self.vigil.note_session(self._session["id"], "signed_out")
+    @Slot(str, result=str)
+    def openMission(self, mode: str) -> str:
+        """Returns an empty string on success, or why the mission could not open."""
         try:
             self.vigil.open(mode)
-        except PROBLEMS:
-            return
+        except PROBLEMS as err:
+            return str(err)
+        if self._session:
+            self.vigil.note_session(self._session["id"], "signed_out")
         self._mission_opened()
         self._end_session()
+        return ""
 
     def _mission_opened(self) -> None:
         self._store_seen = self.vigil.store
@@ -415,7 +417,8 @@ class Bridge(QObject):
     # Everything else goes through one door, which checks who is asking
 
     def _request(self, name: str, args: dict[str, Any]) -> Any:
-        if self._locked:
+        # The mission name and the list of names stay readable while locked, so the sign-in screen always works.
+        if self._locked and name not in PUBLIC:
             raise PermissionError("The screen is locked.")
         return self.vigil.request(self._session, name, args)
 
@@ -450,7 +453,7 @@ class Bridge(QObject):
         writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
         writer.setTitle("Vigil health summary")
         doc = QTextDocument()
-        doc.setDefaultFont(QFont("Instrument Sans", 10))
+        doc.setDefaultFont(QFont("Public Sans", 10))
         doc.setHtml(report["html"])
         doc.print_(writer)
         return json.dumps({"path": str(path)})

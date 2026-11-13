@@ -72,7 +72,7 @@ OWN = {  # request name -> the argument that names whose data it is
 }
 MEDICAL_MAY = {"log_form", "log_readings", "entries", "delete_entry", "import_file"}  # the Medical Officer enters lab results
 CREW_TIER = {"crew", "crew_view", "import_files"}
-GROUND_TIER = {"ground"}
+GROUND_TIER = {"ground", "packets"}
 DEMO_ONLY = {"set_clock", "demo_start", "demo_next", "demo_stop", "timeline", "explainer", "results", "set_link"}
 LIVE_ONLY = {"log_form", "log_readings", "entries", "delete_entry", "import_files", "import_file", "archive_mission"}
 COMMAND = {
@@ -479,6 +479,11 @@ class Vigil:
             "packets": outbox.view(self.clock()), "link_up": True, "outbox": str(config.OUTBOX_DIR),
             "delay_minutes": self.store.cfg["sync"]["one_way_delay_minutes"], "flight_seconds": outbox.delay_s,
         }
+
+    def packets(self) -> dict[str, Any]:
+        """Only the packet list, so Mission Control can update the countdowns often without rebuilding everything else."""
+        queue = self.live.queue
+        return {"packets": queue.view(self.clock()), "link_up": queue.link_up or self.mode == "live", "flight_seconds": queue.delay_s}
 
     def set_link(self, up: bool) -> dict[str, bool]:
         self.live.queue.set_link(up, self.clock())

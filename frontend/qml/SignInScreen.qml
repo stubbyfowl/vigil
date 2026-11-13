@@ -1,16 +1,30 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import QtQuick.Window
 
 // Tap your name, then enter your PIN. Each person sees only their own health data.
 Item {
     id: screen
     objectName: "signin"
     readonly property bool ground: vigil.stationName === "ground"
-    readonly property var info: Api.ask("mission_info", { v: [vigil.version, vigil.mode] })
-    readonly property var members: Api.ask("members", { station: vigil.stationName, v: [vigil.version, vigil.mode, refresh] }).members
+    // Re-read whenever sign-in, lock or mission changes, so a sign-out from the lock screen never shows stale data.
+    readonly property var deps: [vigil.version, vigil.mode, vigil.signedIn, vigil.locked, vigil.stage, refresh]
+    readonly property var info: {
+        var out = Api.ask("mission_info", { v: deps })
+        return out.error ? { name: "", day: "", length_days: "", live_exists: false, demo_pin: null } : out
+    }
+    readonly property var members: Api.ask("members", { station: vigil.stationName, v: deps }).members || []
+    readonly property bool anyLocked: members.some(function (m) { return m.locked })
     property int refresh: 0
     property var chosen: null
+    property string switchError: ""
+
+    // A locked account's tile counts down to the moment it opens again.
+    Timer { interval: 1000; repeat: true; running: screen.visible && screen.anyLocked; onTriggered: screen.refresh += 1 }
+
+    function clock(seconds) { return Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") }
+    function openMission(mode) { switchError = vigil.openMission(mode) }
 
     function signIn(pin) {
         var err = vigil.signIn(chosen.id, pin)
@@ -74,7 +88,11 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: 2
                                 Text { Layout.fillWidth: true; text: tile.modelData.name; elide: Text.ElideRight; font.family: Theme.body; font.weight: Font.Medium; font.pixelSize: 19; color: Theme.ink }
-                                Note { text: tile.modelData.locked ? "Locked for " + tile.modelData.locked_seconds + " s" : tile.modelData.role_name }
+                                Note {
+                                    text: tile.modelData.locked ? "Locked · opens in " + screen.clock(tile.modelData.locked_seconds) : tile.modelData.role_name
+                                    color: tile.modelData.locked ? Theme.warning : Theme.ink2
+                                    font.features: { "tnum": 1 }
+                                }
                             }
                         }
                     }
@@ -83,8 +101,14 @@ Item {
             Banner {
                 visible: screen.members.length === 0
                 tone: "caution"
-                text: screen.ground ? "There are no Mission Control accounts yet. The Commander adds them on the vehicle, under Accounts." : "There are no accounts yet."
+                text: screen.ground ? "There are no Mission Control accounts on this mission yet. The Commander adds one on the vehicle under Accounts, with the role Mission Control." : "There are no accounts yet."
             }
+            VButton {
+                visible: screen.ground
+                text: "Close this window"
+                onClicked: screen.Window.window.close()
+            }
+            Banner { tone: "error"; text: screen.switchError }
             Item { Layout.fillHeight: true }
             RowLayout {
                 visible: !screen.ground
@@ -93,13 +117,13 @@ Item {
                     kind: "quiet"
                     visible: !vigil.isDemo
                     text: "Open the demo mission"
-                    onClicked: vigil.openMission("demo")
+                    onClicked: screen.openMission("demo")
                 }
                 VButton {
                     kind: "quiet"
                     visible: vigil.isDemo && screen.info.live_exists
                     text: "Open our mission"
-                    onClicked: vigil.openMission("live")
+                    onClicked: screen.openMission("live")
                 }
                 VButton {
                     kind: "quiet"
