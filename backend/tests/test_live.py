@@ -133,6 +133,10 @@ def test_crew_import_only_their_own_rows(run):
     (config.IMPORT_DIR / "mine.csv").write_text("date,member,signal,value\n2026-11-14,lena,spo2,98\n2026-11-14,ana,spo2,97\n")
     out = v.request(LENA, "import_file", {"file": "mine.csv"})
     assert out["imported"] == 1 and out["members"] == ["lena"]
+    # The Commander is crew here too: a file cannot write into anyone else's record.
+    (config.IMPORT_DIR / "boss.csv").write_text("date,member,signal,value\n2026-11-14,ana,spo2,97\n2026-11-14,lena,spo2,91\n")
+    out = v.request(BOSS, "import_file", {"file": "boss.csv"})
+    assert out["imported"] == 1 and out["members"] == ["ana"]
 
 
 def test_packets_are_files_and_never_duplicated(run):

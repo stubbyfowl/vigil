@@ -732,7 +732,7 @@ class Vigil:
         if Path(file).name != file or path.suffix.lower() not in IMPORT_TYPES or not path.is_file():
             raise LookupError("That file is not in the import folder.")
         self.store.who(id)
-        anyone = self.actor_role in ("medical", "commander", "system")
+        anyone = self.actor_role in ("medical", "system")  # like typed entry, only the Medical Officer enters data for others
         crew = self.store.crew if anyone else tuple(w for w in self.store.crew if w.id == id)
         names = {w.id: w.id for w in crew} | {w.name.lower(): w.id for w in crew} | {w.tag.lower(): w.id for w in crew}
         start = date.fromisoformat(self.store.info["start_date"])
