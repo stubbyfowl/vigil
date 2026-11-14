@@ -26,8 +26,9 @@ CHANGES_STATE = {
     "log_readings", "delete_entry", "import_file", "add_member", "update_member", "set_auto_lock", "archive_mission",
 }
 DESIGN_VERSION = 2  # the aurora redesign; older saved themes reset once to the new default
-DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False, "chose_demo": False, "design": DESIGN_VERSION, "narrator": False}
+DEFAULT_PREFS: dict[str, Any] = {"astronaut": "eng", "theme": "dark", "welcomed": False, "reduce_motion": False, "chose_demo": False, "design": DESIGN_VERSION, "narrator": False, "zoom": 1.0}
 PROBLEMS = (LookupError, ValueError, TypeError, PermissionError, AuthError)
+ZOOM_STEPS = (1.0, 1.15, 1.3)
 # Sound goes through the computer's own offline tools. None of them use the network.
 PLAYERS = (("afplay",), ("paplay",), ("pw-play",), ("aplay", "-q"), ("ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"))
 SPEAKERS = (("say", "-v", "Daniel", "-r", "165"), ("espeak-ng", "-s", "140"), ("espeak", "-s", "140"), ("spd-say", "-w"))
@@ -411,6 +412,16 @@ class Bridge(QObject):
         self._save_prefs()
 
     narrator = Property(bool, _get_narrator, _set_narrator, notify=prefsChanged)
+
+    def _get_zoom(self) -> float:
+        return float(self._prefs.get("zoom", 1.0))
+
+    def _set_zoom(self, value: float) -> None:
+        self._prefs["zoom"] = min(ZOOM_STEPS[-1], max(ZOOM_STEPS[0], round(float(value), 2)))
+        self._save_prefs()
+
+    # Text and controls size for every page: Standard, Large or Largest.
+    zoom = Property(float, _get_zoom, _set_zoom, notify=prefsChanged)
 
     # Heart rate album playback and the narrator's voice
 

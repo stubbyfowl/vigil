@@ -188,7 +188,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
-            Placard { text: "Systems"; Layout.fillWidth: true }
+            Placard { text: "Systems  ·  tap one for its readings and more"; Layout.fillWidth: true; elide: Text.ElideRight }
             VButton { text: "‹"; textSize: 24; Accessible.name: "Previous system"; enabled: !cards.atXBeginning; onClicked: cards.positionViewAtIndex(Math.max(0, Math.ceil(home.position - 0.01) - 1), ListView.Beginning) }
             VButton { text: "›"; textSize: 24; Accessible.name: "Next system"; enabled: !cards.atXEnd; onClicked: cards.positionViewAtIndex(Math.min(cards.count - 1, Math.floor(home.position + 0.01) + 1), ListView.Beginning) }
         }

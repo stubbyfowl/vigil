@@ -30,6 +30,7 @@ Item {
             BackButton {}
             BigTitle { text: "Heart rate album" }
             Item { Layout.fillWidth: true }
+            VButton { kind: "quiet"; text: "Heart readings"; onClicked: vigil.navigate("/system/heart") }
         }
         // One album per mission month. Wraps onto more lines as the mission goes on.
         Flow {

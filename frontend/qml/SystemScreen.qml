@@ -6,6 +6,13 @@ Item {
     readonly property string system: vigil.route.split("/")[2] || ""
     readonly property var fresh: Api.ask("system_detail", { id: vigil.astronaut, system: system, day: vigil.day, v: vigil.version })
     property var d: null
+    // The lighter views that belong to each system, so they are found where people look for them.
+    readonly property var more: ({
+        heart: [["/album", "Heart rate album"], ["/chat", "Organ chat"]],
+        immune: [["/replay", "Immune replay"], ["/chat", "Organ chat"]],
+        bone: [["/chat/future", "Texts from you at 70"], ["/chat", "Organ chat"]],
+        behavior: [["/gut", "Gut City"], ["/checkin", "Check in"], ["/chat/future", "Texts from you at 70"]]
+    })
     onFreshChanged: if (!fresh.error) d = fresh
     Component.onCompleted: if (!fresh.error) d = fresh
 
@@ -24,6 +31,18 @@ Item {
                 Item { Layout.fillWidth: true }
                 Placard { text: "Drift " + screen.d.score + " / 100 · Confidence " + Math.round(screen.d.confidence * 100) + "%" }
             }
+            RowLayout {
+                Layout.fillWidth: true
+                visible: (screen.more[screen.system] || []).length > 0
+                spacing: 8
+                Placard { text: "More for " + screen.d.name.toLowerCase(); Layout.rightMargin: 8 }
+                Repeater {
+                    model: screen.more[screen.system] || []
+                    VButton { required property var modelData; text: modelData[1]; onClicked: vigil.navigate(modelData[0]) }
+                }
+                Item { Layout.fillWidth: true }
+            }
+            LabTicker { Layout.fillWidth: true; visible: screen.system === "immune" && items.length > 0 }
             Note { text: "The shaded band is your usual range. Tap a chart to read a day." }
             GridLayout {
                 Layout.fillWidth: true
@@ -49,7 +68,7 @@ Item {
                                 StatusPill { visible: tile.s.flagged_now; status: "yellow"; compact: true; label: "Drifting for " + tile.s.drift_days + (tile.s.drift_days === 1 ? " day" : " days") }
                             }
                             Text { text: tile.s.current === null ? "--" : tile.s.current.toFixed(tile.s.decimals); font.family: Theme.body; font.weight: Font.DemiBold; font.pixelSize: 32; font.letterSpacing: -0.8; font.features: { "tnum": 1 }; color: Theme.ink }
-                            Placard { text: tile.s.unit; Layout.alignment: Qt.AlignBottom; bottomPadding: 5 }
+                            Placard { text: /to 10$/.test(tile.s.unit) ? "of 10" : tile.s.unit; Layout.alignment: Qt.AlignBottom; bottomPadding: 5 }
                         }
                         SeriesChart { Layout.fillWidth: true; series: tile.s; chartHeight: 170 }
                     }

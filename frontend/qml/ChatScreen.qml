@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // The organ group chat, and texts from this person at 70. Under every message is the reading it came from.
 Item {
     id: screen
-    property string thread: "organs"
+    property string thread: vigil.route.split("/")[2] === "future" ? "future" : "organs"
     readonly property var chat: Api.ask("organ_chat", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
     readonly property var future: Api.ask("future_you", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
     readonly property var messages: screen.thread === "organs" ? (chat.messages || []) : (future.texts || []).map(function (t) {

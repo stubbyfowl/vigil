@@ -33,6 +33,14 @@ Button {
         border.width: control.visualFocus ? 2 : 1
         opacity: control.down ? 0.75 : 1
         Rectangle {
+            visible: control.visualFocus
+            anchors { fill: parent; margins: -4 }
+            radius: parent.radius + 4
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.link
+        }
+        Rectangle {
             anchors.fill: parent
             radius: parent.radius
             color: Theme.faint(Theme.ink, 0.08)

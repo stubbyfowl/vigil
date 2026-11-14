@@ -383,3 +383,32 @@ def test_narrator_card_follows_the_menu_setting(ui):
     QTest.qWait(100)
     assert not any(i.property("text") == "Narrator" for i in ui.items())
     assert ui.warnings == []
+
+
+def test_menu_groups_each_view_with_its_body_system(ui):
+    sections = {s["title"]: [item[0] for item in s["items"]] for s in ui.engine.rootObjects()[0].property("sections").toVariant()}
+    assert "/album" in sections["Heart"] and "/system/heart" in sections["Heart"]
+    assert "/replay" in sections["Immune"] and "/gut" in sections["Behavior and food"]
+    every = [route for routes in sections.values() for route in routes]
+    assert len(every) == len(set(every))  # each place appears once
+
+
+@pytest.mark.parametrize("system, label", [("heart", "Heart rate album"), ("immune", "Immune replay"), ("behavior", "Gut City")])
+def test_system_pages_link_their_lighter_views(ui, system, label):
+    ui.warnings.clear()
+    ui.show("/system/" + system)
+    button = next(i for i in ui.items() if i.inherits("QQuickAbstractButton") and i.property("text") == label)
+    QTest.mouseClick(ui.window, Qt.LeftButton, pos=button.mapToScene(button.boundingRect().center()).toPoint())
+    QTest.qWait(150)
+    assert ui.bridge.route != "/system/" + system and ui.warnings == []
+
+
+def test_text_size_scales_every_page_and_stays_in_range(ui):
+    page = ui.window.findChild(QObject, "page")
+    ui.bridge.zoom = 1.3
+    QTest.qWait(50)
+    assert abs(page.property("scale") - 1.3) < 1e-6 and page.width() * 1.3 <= ui.window.width()
+    ui.bridge.zoom = 5
+    assert ui.bridge.zoom == 1.3
+    ui.bridge.zoom = 1.0
+    assert abs(page.property("scale") - 1.0) < 1e-6

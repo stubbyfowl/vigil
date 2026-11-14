@@ -29,6 +29,7 @@ Item {
             BigTitle { text: "Immune replay" }
             Placard { visible: !!screen.d.available; text: screen.d.result || "" }
             Item { Layout.fillWidth: true }
+            VButton { kind: "quiet"; text: "Immune readings"; onClicked: vigil.navigate("/system/immune") }
             VButton {
                 visible: !!screen.d.available
                 kind: "primary"

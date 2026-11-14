@@ -28,20 +28,33 @@ ApplicationWindow {
     readonly property bool crewRole: ["commander", "medical", "crew", "presenter"].indexOf(vigil.role) >= 0
     readonly property bool commands: vigil.role === "commander" || vigil.role === "presenter"
     readonly property var stages: ({ welcome: "WelcomeScreen.qml", setup: "SetupScreen.qml", signin: "SignInScreen.qml" })
-    readonly property var links: {
-        var out = [["/", "Home"]]
+    // The Menu, grouped by body area and by task, so every view sits next to the readings it comes from.
+    readonly property var sections: {
+        var out = []
         if (crewRole) {
-            out.push(["/checkin", "Check in"])
-            if (!vigil.isDemo) out.push(["/log", "Log readings"])
-            out.push(["/crew", "Crew"], ["/radiation", "Radiation"], ["/earth", "Call Earth"], ["/sensors", vigil.isDemo ? "Sensors" : "Data sources"])
-            out.push(["/chat", "Organ chat"], ["/replay", "Immune replay"], ["/album", "Heart rate album"], ["/gut", "Gut City"])
+            var today = [["/", "Home"], ["/checkin", "Check in"]]
+            if (!vigil.isDemo) today.push(["/log", "Log readings"])
+            today.push(["/chat", "Organ chat"], ["/earth", "Call Earth"])
+            out.push({ title: "Today", items: today })
+            out.push({ title: "Heart", items: [["/system/heart", "Heart readings"], ["/album", "Heart rate album"]] })
+            out.push({ title: "Immune", items: [["/system/immune", "Immune readings"], ["/replay", "Immune replay"]] })
+            out.push({ title: "Bone and muscle", items: [["/system/bone", "Bone and muscle readings"]] })
+            out.push({ title: "Behavior and food", items: [["/system/behavior", "Behavior readings"], ["/gut", "Gut City"], ["/chat/future", "Texts from you at 70"]] })
+            out.push({ title: "Radiation and crew", items: [["/radiation", "Radiation"], ["/crew", "Crew"], ["/sensors", vigil.isDemo ? "Sensors" : "Data sources"]] })
+        } else {
+            out.push({ title: "Today", items: [["/", "Home"]] })
         }
-        if (vigil.role === "ground" || vigil.role === "presenter") out.push(["/ground", "Mission Control"])
-        out.push(["/profile", "My account"])
-        if (commands) out.push(["/accounts", "Accounts"], ["/audit", "Audit log"], ["/admin", "Thresholds"])
-        if (vigil.isDemo) out.push(["/timeline", "Timeline"], ["/explainer", "Baselines explained"], ["/delay", "Delay Theater"], ["/results", "Results"])
-        out.push(["/about", "About Vigil"])
+        if (vigil.role === "ground" || vigil.role === "presenter") out.push({ title: "Earth", items: [["/ground", "Mission Control"]] })
+        if (vigil.isDemo) out.push({ title: "Demo and results", items: [["/timeline", "Timeline"], ["/explainer", "Baselines explained"], ["/delay", "Delay Theater"], ["/results", "Results"]] })
+        if (commands) out.push({ title: "Commander", items: [["/accounts", "Accounts"], ["/audit", "Audit log"], ["/admin", "Thresholds"]] })
+        out.push({ title: "You", items: [["/profile", "My account"], ["/about", "About Vigil"]] })
         return out
+    }
+    readonly property var links: [].concat.apply([], sections.map(function (s) { return s.items }))
+    readonly property var zoomSteps: [1.0, 1.15, 1.3]
+    function zoomBy(step) {
+        var i = zoomSteps.indexOf(vigil.zoom)
+        vigil.zoom = zoomSteps[Math.max(0, Math.min(zoomSteps.length - 1, (i < 0 ? 0 : i) + step))]
     }
 
     Backdrop { anchors.fill: parent; decor: !win.inApp }
@@ -62,6 +75,9 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+Right"; enabled: vigil.demo.active; onActivated: Api.ask("demo_next") }
     Shortcut { sequence: "Ctrl+."; enabled: vigil.demo.active; onActivated: Api.ask("demo_stop") }
     Shortcut { sequence: "Ctrl+G"; onActivated: vigil.openGround() }
+    Shortcut { sequences: [StandardKey.ZoomIn, "Ctrl+="]; enabled: win.inApp; onActivated: win.zoomBy(1) }
+    Shortcut { sequences: [StandardKey.ZoomOut]; enabled: win.inApp; onActivated: win.zoomBy(-1) }
+    Shortcut { sequence: "Ctrl+0"; enabled: win.inApp; onActivated: vigil.zoom = 1.0 }
 
     ColumnLayout {
         anchors.fill: parent
@@ -69,12 +85,19 @@ ApplicationWindow {
         spacing: 0
         TopBar { Layout.fillWidth: true; onMenuRequested: menu.open() }
         Item {
+            id: pageArea
             Layout.fillWidth: true
             Layout.fillHeight: true
+            // Larger text scales the whole page and lets it reflow into the narrower space, like zoom in a browser.
             Loader {
                 id: page
                 objectName: "page"
-                anchors { fill: parent; topMargin: 10; leftMargin: Theme.gutter; rightMargin: Theme.gutter; bottomMargin: vigil.demo.active ? 112 : 18 }
+                x: Theme.gutter
+                y: 10
+                width: (pageArea.width - 2 * Theme.gutter) / vigil.zoom
+                height: (pageArea.height - 10 - (vigil.demo.active ? 112 : 18)) / vigil.zoom
+                scale: vigil.zoom
+                transformOrigin: Item.TopLeft
                 active: win.inApp
                 source: !win.inApp ? "" : !win.crewRole && win.section === "" ? "GroundScreen.qml" : win.screens[win.section] || "NotFoundScreen.qml"
             }
@@ -135,7 +158,7 @@ ApplicationWindow {
         objectName: "menu"
         x: parent.width - width - Theme.gutter
         y: 72
-        width: 560
+        width: Math.min(720, win.width - 2 * Theme.gutter)
         modal: true
         padding: 16
         // A short window scrolls the menu instead of cutting off the bottom items.
@@ -154,21 +177,32 @@ ApplicationWindow {
             width: menuFlick.width - (menuFlick.scrolls ? 18 : 0)
             spacing: 4
             VButton { visible: vigil.role === "presenter"; Layout.fillWidth: true; kind: "primary"; text: "Play the demo"; onClicked: { Api.ask("demo_start"); menu.close() } }
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 2
-                columnSpacing: 4
-                rowSpacing: 2
-                Repeater {
-                    model: win.links
-                    VButton {
-                        required property var modelData
+            Repeater {
+                model: win.sections
+                ColumnLayout {
+                    id: group
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Placard { text: group.modelData.title; Layout.topMargin: 8; Layout.leftMargin: 12 }
+                    GridLayout {
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        kind: "quiet"
-                        textAlign: Text.AlignLeft
-                        text: modelData[1]
-                        onClicked: { vigil.navigate(modelData[0]); menu.close() }
+                        columns: 3
+                        columnSpacing: 4
+                        rowSpacing: 0
+                        Repeater {
+                            model: group.modelData.items
+                            VButton {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 1
+                                kind: "quiet"
+                                textAlign: Text.AlignLeft
+                                text: modelData[1]
+                                selected: vigil.route === modelData[0]
+                                onClicked: { vigil.navigate(modelData[0]); menu.close() }
+                            }
+                        }
                     }
                 }
             }
@@ -183,6 +217,20 @@ ApplicationWindow {
                         text: modelData[1]
                         selected: vigil.theme === modelData[0]
                         onClicked: vigil.theme = modelData[0]
+                    }
+                }
+            }
+            Placard { text: "Text size" }
+            RowLayout {
+                Repeater {
+                    model: [[1.0, "Standard"], [1.15, "Large"], [1.3, "Largest"]]
+                    VButton {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: modelData[1]
+                        selected: vigil.zoom === modelData[0]
+                        Accessible.name: "Text size " + modelData[1]
+                        onClicked: vigil.zoom = modelData[0]
                     }
                 }
             }

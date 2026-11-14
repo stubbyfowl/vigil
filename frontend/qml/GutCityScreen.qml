@@ -17,6 +17,7 @@ Item {
             BigTitle { text: "Gut City" }
             Placard { text: "Last " + (screen.d.days || 28) + " days" }
             Item { Layout.fillWidth: true }
+            VButton { kind: "quiet"; text: "Behavior readings"; onClicked: vigil.navigate("/system/behavior") }
             VButton { text: "Check in"; onClicked: vigil.navigate("/checkin") }
         }
         Banner { tone: "error"; text: screen.d.error || "" }
