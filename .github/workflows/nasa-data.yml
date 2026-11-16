@@ -1,21 +1,45 @@
 # Downloads NASA DONKI space weather data on GitHub's network and offers it as a file to commit.
 # Vigil never fetches anything itself. Run from the Actions tab, or: gh workflow run nasa-data.yml
+# NASA's shared DEMO_KEY allows 10 requests an hour per machine, so each year is fetched on its own runner.
 name: Fetch NASA data
 
 on:
   workflow_dispatch:
 
 jobs:
-  fetch:
+  year:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Download NASA DONKI solar particle events
-        run: python scripts/fetch_nasa_donki.py
+      - run: python scripts/fetch_nasa_donki.py ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.year }}
+          path: data/space_weather/parts/${{ matrix.year }}.json
+          if-no-files-found: error
+
+  merge:
+    needs: year
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          merge-multiple: true
+          path: data/space_weather/parts
+      - run: python scripts/fetch_nasa_donki.py merge
       - uses: actions/upload-artifact@v4
         with:
           name: nasa-data
