@@ -64,3 +64,8 @@
 - Left out: a cough classifier, because there is no validated model to run (DECISIONS 54).
 - Checked: 428 tests pass, including every new screen as every role, a 1024 by 700 window, and access rules for every new request.
 
+## NASA hazards, body map and NASA data (done)
+- Done: a body map with seven parts of the body, NASA's five hazards of human spaceflight, the Human Research Program risks for each part, and how to measure, why it matters and what to do for every reading.
+- Done: fasting blood sugar, body mass and cabin CO2 as new readings, judged against CDC ranges and NASA-STD-3001's CO2 limit, with prompts on Home. A scrubber fault on days 84 to 86 shows the CO2 limit in the demo. Existing readings and alerts are unchanged.
+- Done: NASA DONKI's record of solar energetic particle events, fetched once on GitHub and bundled for offline use, charted on the Radiation screen.
+- Checked: 458 tests pass, including the CDC and NASA thresholds, the body map for every role, and a 1024 by 700 window.

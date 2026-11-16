@@ -25,7 +25,10 @@
   "social_min": {"unit": "min per day", "low": null, "high": null, "status": "team choice", "source": "basner_2013", "note": "Minutes of social contact. The Mars-500 crews grew less active over time, which the behavioral slide follows."},
   "journal": {"unit": "-1 to 1", "low": null, "high": null, "status": "team choice", "source": null, "note": "Tone score from Vigil's own word list."},
   "fiber": {"unit": "servings", "low": null, "high": null, "status": "team choice", "source": null, "note": "Self-reported servings of fiber-rich food in the check-in, 0 to 5. Feeds Gut City only."},
-  "processed": {"unit": "servings", "low": null, "high": null, "status": "team choice", "source": null, "note": "Self-reported servings of processed food in the check-in, 0 to 5. Feeds Gut City only."}
+  "processed": {"unit": "servings", "low": null, "high": null, "status": "team choice", "source": null, "note": "Self-reported servings of processed food in the check-in, 0 to 5. Feeds Gut City only."},
+  "glucose": {"unit": "mg/dL", "low": 70, "high": 99, "status": "verified", "source": "cdc_glucose", "note": "Fasting: 99 or below is normal, 100 to 125 prediabetes, 126 or above diabetes. Below 70 is low and below 54 severe low (cdc_low_sugar). The demo crew's values are synthetic."},
+  "body_mass": {"unit": "kg", "low": null, "high": null, "status": "team choice", "source": "hrp_risks", "note": "Shown as change from the person's first reading. NASA lists inadequate food and nutrition as a risk. The slow fall in the demo is the team's."},
+  "co2": {"unit": "mmHg", "low": null, "high": 3, "status": "verified", "source": "nasa_std_3001_co2", "note": "Cabin CO2 held to a one-hour average of 3 mmHg [V2 6004]; headaches reported between 2.8 and 4.5 mmHg. The demo cabin averages about 2.2 mmHg, with a planted scrubber fault on days 84 to 86 (team choice)."}
  },
  "radiation": {
   "career_limit_msv": {"value": 600, "status": "verified", "source": "nasa_std_3001_radiation", "note": "Career effective dose, all ages and sexes [V1 4030]."},

@@ -15,6 +15,9 @@ The demo mission's crew are invented and all their readings are synthetic. No re
 - In the demo mission, sensors are simulated. In a real mission readings are typed in or imported from CSV files. Vigil does not talk to devices directly.
 - The radiation limits (600 mSv career, 250 mSv per storm) and the Curiosity cruise dose are sourced. The flux-to-dose conversion, the shelter factor and the 2-hour storm warning are team assumptions marked `must_verify`.
 - The demo mission is computed ahead from a seed and replayed. Check-ins do feed back into the engine. A real mission is rebuilt from entries whenever they change.
+- Blood sugar ranges are the CDC's for fasting adults on Earth. Nobody has checked whether they fit astronauts in flight. Body mass has no range: Vigil shows the change only.
+- Cabin CO2 is entered by hand from the cabin monitor. Vigil does not read the life support system, and the demo fault is invented.
+- The NASA DONKI events are shown as a record. Vigil does not turn them into dose; the storm in the demo still comes from NOAA's list.
 - The journal score uses a small word list. It misses sarcasm and context.
 - Protocols are samples, not medical advice.
 - In the demo, the Earth link is a model with delay, priority and link loss. In a real mission Vigil writes packets to an outbox folder. Connecting that folder to a real comm system is not built.

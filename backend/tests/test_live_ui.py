@@ -18,7 +18,7 @@ from main import create_engine, quick_window  # noqa: E402
 
 TARGETS = ("QQuickAbstractButton", "QQuickTextField", "QQuickSlider", "QQuickTextArea")
 CREW_ROUTES = ["/", "/log", "/checkin", "/sensors", "/radiation", "/crew", "/earth", "/profile", "/system/heart", "/about",
-               "/chat", "/replay", "/album", "/gut"]
+               "/chat", "/replay", "/album", "/gut", "/body"]
 PEOPLE = {"ana": "4826", "priya": "7391", "lena": "5170"}
 
 

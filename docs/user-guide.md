@@ -57,6 +57,20 @@ Tap your name and enter your PIN. A PIN is 4 to 8 digits, not all the same digit
 | 2 | Tell the Medical Officer. They also see a prompt on their Home |
 | 3 | Vigil writes a priority packet for Earth by itself. Start the checklist on the alert while it travels |
 
+## The body map
+
+Open **Body map** from Home or the Menu. Tap a part of the body, or its label, to see its readings. Tap a reading to see how to take it, why it matters in space and what to do. The five buttons at the top are NASA's hazards of human spaceflight: choose one to highlight the parts of the body it reaches.
+
+Blood sugar, body mass and cabin CO2 are entered under **Log readings**, in the Nutrition and Cabin air groups. They are judged against published ranges, not your own normal:
+
+| Reading | Range | Source |
+|---|---|---|
+| Fasting blood sugar | 70 to 99 mg/dL is normal, 100 to 125 above normal, 126 or more high; below 70 is low and below 54 severely low | CDC |
+| Cabin CO2 | Up to 3 mmHg, averaged over an hour | NASA-STD-3001 |
+| Body mass | Shown as the change since your first reading | None: a steady loss goes to the Medical Officer |
+
+When blood sugar is low or cabin CO2 is above the limit, Home shows a red prompt that opens the body map.
+
 ## The lighter screens
 
 The Menu also has **Organ chat**, **Immune replay**, **Heart rate album** and **Gut City**, and Home shows a **Lab market** ticker. They read the same readings as everything else and never raise an alert. Under each organ text is the reading it came from.

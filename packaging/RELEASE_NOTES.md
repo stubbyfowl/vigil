@@ -1,5 +1,11 @@
 Vigil is an offline health monitor for long space missions, built by The Trojans for the NASA Space Apps Challenge 2026 in Phoenix. It learns each astronaut's own normal, finds slow drift across heart, immune, bone and muscle, behavior and radiation readings, explains it in plain words, and decides when to call Earth.
 
+## New in 1.1
+
+- **Body map.** Tap a part of the body to see its readings, how to take each one, why it matters in space and what to do. NASA's five hazards of human spaceflight sit above the figure, and each part lists its NASA Human Research Program risks.
+- **New readings.** Fasting blood sugar (CDC ranges), body mass, and cabin CO2 (NASA-STD-3001's 3 mmHg limit), with prompts on Home when they are out of range.
+- **NASA data.** NASA DONKI's record of solar particle storms from 2010 to 2026 is bundled and charted on the Radiation screen. The app still opens no network connections.
+
 ## Download
 
 | System | File | How to open |
@@ -14,4 +20,4 @@ On first launch, choose **Explore the demo**. Sign in as the **Presenter** with 
 
 ## Please note
 
-The demo crew and all their readings are simulated. A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything. Reference figures cite 32 sources, listed in `SOURCES.md`.
+The demo crew and all their readings are simulated. A flight surgeon has not reviewed the thresholds, and Vigil does not diagnose anything. Reference figures cite 39 sources, listed in `SOURCES.md`.

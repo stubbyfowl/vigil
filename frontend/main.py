@@ -24,7 +24,7 @@ CHECK_MS = 1500
 CHECK_ROUTES = (
     "/", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors", "/timeline", "/explainer",
     "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit", "/system/heart",
-    "/chat", "/replay", "/album", "/gut",
+    "/chat", "/replay", "/album", "/gut", "/body",
 )
 
 

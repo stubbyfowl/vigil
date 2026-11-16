@@ -216,6 +216,34 @@ def _food_series(who: Astronaut, days: int, rng: np.random.Generator) -> dict[st
     return out
 
 
+def _nutrition_series(days: int, rng: np.random.Generator) -> dict[str, np.ndarray]:
+    """Weekly fasting blood sugar and body mass. Body mass drifts down slowly, as many long-flight crews' does."""
+    t = np.arange(days)
+    out = {}
+    for sid in ("glucose", "body_mass"):
+        sig = BY_ID[sid]
+        base = sig.pop_mean + rng.normal(0, sig.pop_sd)
+        values = base + sig.trend * t / max(1, days - 1) + rng.normal(0, sig.noise, days)
+        values = np.round(np.clip(values, sig.low, sig.high), sig.decimals)
+        weekly = (t - rng.integers(0, 7)) % 7 == 0
+        values[~weekly] = np.nan
+        out[sid] = values
+    return out
+
+
+CO2_FAULT_DAYS = (84, 86)  # a planted scrubber fault: cabin CO2 climbs past NASA's limit for three days
+
+
+def _cabin_co2(days: int, rng: np.random.Generator, planted: bool) -> np.ndarray:
+    """Daily cabin CO2 in mmHg. One cabin, so every crew member reads the same air."""
+    sig = BY_ID["co2"]
+    values = sig.pop_mean + 0.15 * np.sin(np.arange(days) / 9) + rng.normal(0, sig.noise, days)
+    if planted and days > CO2_FAULT_DAYS[1]:
+        first, last = CO2_FAULT_DAYS
+        values[first - 1:last] += np.array([1.1, 1.7, 1.3])[: last - first + 1]
+    return np.round(np.clip(values, sig.low, sig.high), 1)
+
+
 def generate_mission(seed: int = 42, days: int = 180, planted: bool = True, storm_event: str = REFERENCE_EVENT) -> Mission:
     """Build a full mission. Set planted=False for a mission with no events.
 
@@ -226,10 +254,13 @@ def generate_mission(seed: int = 42, days: int = 180, planted: bool = True, stor
     hourly_free: dict[str, np.ndarray] = {}
     storm = _storm_window(days, reference_event(storm_event)) if planted else None
     free = _free_space_hourly(days, storm, np.random.default_rng([seed, 999]))
+    cabin = _cabin_co2(days, np.random.default_rng([seed, 700]), planted)
     for index, who in enumerate(CREW):
         rng = np.random.default_rng([seed, index])
         series[who.id] = {s.id: _signal_series(s, who, days, rng, planted) for s in DRIFT_SIGNALS}
         rad, hourly[who.id], hourly_free[who.id] = _radiation_series(free, storm, days, rng)
         series[who.id].update(rad)
         series[who.id].update(_food_series(who, days, np.random.default_rng([seed, 500 + index])))
+        series[who.id].update(_nutrition_series(days, np.random.default_rng([seed, 600 + index])))
+        series[who.id]["co2"] = cabin.copy()
     return Mission(seed, days, series, hourly, hourly_free, storm, build_ground_truth(days, storm, planted))

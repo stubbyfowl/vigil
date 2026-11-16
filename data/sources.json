@@ -16,8 +16,8 @@
    "publisher": "NASA Office of the Chief Health and Medical Officer",
    "url": "https://nasa.gov/wp-content/uploads/2023/03/co2-technical-brief-ochmo.pdf",
    "gives": "Cabin CO2 limited to a one-hour average of 3 mmHg [V2 6004]. Headaches reported between 2.8 and 4.5 mmHg. 0.5% CO2 is 3.8 mmHg.",
-   "used_for": "Listed for a future cabin air signal. Vigil does not track CO2 yet.",
-   "checked": "full text", "status": "not used yet"
+   "used_for": "The cabin CO2 limit on the body map (3 mmHg one-hour average), the planted scrubber fault in the demo, and the prompt on Home.",
+   "checked": "full text", "status": "verified"
   },
   {
    "id": "zeitlin_2013", "kind": "paper", "group": "Radiation",
@@ -60,9 +60,9 @@
    "title": "DONKI Space Weather Database, solar energetic particle events",
    "publisher": "NASA Community Coordinated Modeling Center",
    "url": "https://ccmc.gsfc.nasa.gov/tools/DONKI",
-   "gives": "SEP events since 2010 with linked flares and coronal mass ejections, as JSON.",
-   "used_for": "Not downloaded: the CCMC servers did not answer from our network, and the public NASA API limits each request to 60 days.",
-   "checked": "summary", "status": "not used yet"
+   "gives": "494 SEP entries from August 2010 to September 2026, each with the instruments or models that logged it and its linked flare and coronal mass ejection, retrieved 16 November 2026 through api.nasa.gov one year at a time.",
+   "used_for": "The solar storm record on the Radiation screen: 167 storms measured by spacecraft instruments, grouped by shared flare or eruption, per year and most recent. Bundled in data/space_weather/nasa_donki_sep.json by scripts/fetch_nasa_donki.py.",
+   "checked": "full text", "status": "verified"
   },
   {
    "id": "bone_meta_2020", "kind": "paper", "group": "Bone and muscle",
@@ -288,6 +288,69 @@
    "gives": "Readings stored as Record elements with type, unit, value and startDate. Apple publishes no schema, so the format is read from real exports.",
    "used_for": "Vigil can import resting heart rate, blood oxygen, temperature, blood pressure and sleep from an Apple Health export.",
    "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "hrp_hazards", "kind": "web page", "group": "Health in space",
+   "title": "NASA Human Research Program: 5 Hazards of Human Spaceflight",
+   "publisher": "NASA Human Research Program",
+   "url": "https://www.nasa.gov/hrp/hazards/",
+   "gives": "The five hazards: space radiation, isolation and confinement, distance from Earth, gravity fields, and hostile closed environments. Mars is on average 140 million miles away; a Mars trip takes roughly three years; Mars gravity is three-eighths of Earth's.",
+   "used_for": "The five hazard buttons on the body map, what NASA says about each, and which parts of the body each one reaches.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "hrp_risks", "kind": "web page", "group": "Health in space",
+   "title": "NASA Human Research Program: Risks of Human Spaceflight",
+   "publisher": "NASA Human Research Program",
+   "url": "https://www.nasa.gov/hrp/risks/",
+   "gives": "The named risks, including altered immune system responses, cardiovascular adaptations, spaceflight-induced bone changes, reduced cardiorespiratory and musculoskeletal fitness, inadequate food and nutrition, hypoxia, host-microorganism interactions, altered sensorimotor and vestibular function, behavioral changes and psychiatric disorders, inadequate sleep and irregular schedules, and radiation-induced cancers.",
+   "used_for": "The NASA risks listed for each part of the body on the body map, and the 'why it matters in space' guidance.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "hrp_research", "kind": "web page", "group": "Health in space",
+   "title": "NASA Human Research Program: Ongoing HRP Research in Space",
+   "publisher": "NASA Human Research Program",
+   "url": "https://www.nasa.gov/hrp/ongoing-hrp-research/",
+   "gives": "Current studies on Artemis II and the ISS, including Standard Measures, ARCHeR (sleep and well-being), Immune Biomarkers, Food Physiology and Spinal Health.",
+   "used_for": "Choosing which indicators to track: the same areas NASA studies in flight (immune markers, sleep, nutrition, bone and cardiovascular health).",
+   "checked": "summary", "status": "partly verified"
+  },
+  {
+   "id": "csa_radiation", "kind": "web page", "group": "Radiation",
+   "title": "Canadian Space Agency: Monitoring radiation for astronaut health (26 February 2026)",
+   "publisher": "Canadian Space Agency",
+   "url": "https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp",
+   "gives": "Neutrons make up about 30% of total radiation on the ISS. Canada's CANS active neutron spectrometer measures them continuously, after bubble detectors, MOSFET, EVARM and Radi-N experiments on the ISS.",
+   "used_for": "Context for the Radiation screen and the dose reading on the body map: radiation is measured continuously by instruments, not felt.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "csa_why_science", "kind": "web page", "group": "Health in space",
+   "title": "Canadian Space Agency: Why do we conduct science experiments in space?",
+   "publisher": "Canadian Space Agency",
+   "url": "https://www.asc-csa.gc.ca/eng/iss/science/why-do-we-conduct-science-experiments-in-space.asp",
+   "gives": "Weightlessness produces effects like accelerated aging and a sedentary lifestyle. Six months in space gives data that would take years on Earth. Findings help with balance problems, osteoporosis, cardiovascular disorders and Type-2 diabetes.",
+   "used_for": "Why Vigil tracks blood sugar alongside bone and heart readings, and the nutrition guidance on the body map.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "cdc_glucose", "kind": "web page", "group": "Nutrition",
+   "title": "CDC: Testing for Diabetes",
+   "publisher": "US Centers for Disease Control and Prevention",
+   "url": "https://www.cdc.gov/diabetes/diabetes-testing/index.html",
+   "gives": "Fasting blood sugar: 99 mg/dL or below is normal, 100 to 125 is prediabetes, 126 or above is diabetes.",
+   "used_for": "The fasting blood sugar ranges on the body map: Normal, Above normal and High.",
+   "checked": "full text", "status": "verified"
+  },
+  {
+   "id": "cdc_low_sugar", "kind": "web page", "group": "Nutrition",
+   "title": "CDC: Low Blood Sugar (Hypoglycemia)",
+   "publisher": "US Centers for Disease Control and Prevention",
+   "url": "https://www.cdc.gov/diabetes/about/low-blood-sugar-hypoglycemia.html",
+   "gives": "Blood sugar below 70 mg/dL is low, and below 54 mg/dL is severe low. Symptoms include a fast heartbeat, shaking, sweating, dizziness and hunger.",
+   "used_for": "The Low and Severe low blood sugar levels, and the prompt on Home.",
+   "checked": "full text", "status": "verified"
   }
  ]
 }

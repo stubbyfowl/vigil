@@ -29,6 +29,8 @@ ALIASES = {
     "systolic": "bp_sys", "diastolic": "bp_dia", "oxygen": "spo2", "blood oxygen": "spo2",
     "temperature": "temp", "body temperature": "temp", "sleep": "sleep_hours", "sleep duration": "sleep_hours",
     "c-reactive protein": "crp", "interleukin-6": "il6", "il-6": "il6", "dose": "daily_dose",
+    "glucose": "glucose", "blood glucose": "glucose", "blood sugar": "glucose", "weight": "body_mass", "body weight": "body_mass",
+    "mass": "body_mass", "carbon dioxide": "co2", "cabin co2": "co2",
 }
 MAX_IMPORT_ROWS = 50_000
 MAX_SKIP_REASONS = 30
@@ -39,6 +41,8 @@ APPLE_TYPES = {
     "HKQuantityTypeIdentifierBodyTemperature": "temp",
     "HKQuantityTypeIdentifierBloodPressureSystolic": "bp_sys",
     "HKQuantityTypeIdentifierBloodPressureDiastolic": "bp_dia",
+    "HKQuantityTypeIdentifierBloodGlucose": "glucose",
+    "HKQuantityTypeIdentifierBodyMass": "body_mass",
 }
 APPLE_SLEEP = "HKCategoryTypeIdentifierSleepAnalysis"
 APPLE_ASLEEP = {
@@ -231,11 +235,15 @@ def _apple_records(stream: IO[bytes]) -> Iterator[dict[str, str]]:
 
 
 def _apple_value(signal: str, unit: str, value: float) -> float:
-    """Apple stores oxygen as a fraction and lets temperature be in Fahrenheit."""
+    """Apple stores oxygen as a fraction and allows Fahrenheit, mmol/L blood sugar and pounds."""
     if signal == "spo2" and value <= 1:
         return value * 100
     if signal == "temp" and unit.lower() in ("degf", "\u00b0f", "f"):
         return (value - 32) * 5 / 9
+    if signal == "glucose" and unit.lower().startswith("mmol"):
+        return value * 18.0  # mmol/L to mg/dL
+    if signal == "body_mass" and unit.lower() in ("lb", "lbs"):
+        return value * 0.45359237
     return value
 
 

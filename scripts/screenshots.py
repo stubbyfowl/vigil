@@ -26,7 +26,7 @@ SHOTS = [
     ("earth", "/earth", 49, "eng"), ("sensors", "/sensors", 49, "eng"), ("timeline", "/timeline", 96, "eng"), ("explainer", "/explainer", 176, "eng"),
     ("delay", "/delay", 49, "eng"), ("results", "/results", 176, "eng"), ("about", "/about", 49, "eng"), ("admin", "/admin", 49, "eng"),
     ("profile", "/profile", 49, "eng"), ("accounts", "/accounts", 49, "eng"), ("audit", "/audit", 49, "eng"),
-    ("chat", "/chat", 49, "eng"), ("replay", "/replay", 60, "eng"), ("album", "/album", 70, "cmdr"), ("gut", "/gut", 49, "eng"),
+    ("chat", "/chat", 49, "eng"), ("replay", "/replay", 60, "eng"), ("album", "/album", 70, "cmdr"), ("gut", "/gut", 49, "eng"), ("body", "/body", 85, "eng"),
 ]
 # A real mission, seen by each role: (file, member, PIN, route)
 LIVE_SHOTS = [

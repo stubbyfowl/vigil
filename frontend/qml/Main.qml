@@ -21,7 +21,7 @@ ApplicationWindow {
         sensors: "SensorsScreen.qml", timeline: "TimelineScreen.qml", explainer: "ExplainerScreen.qml", delay: "DelayScreen.qml",
         results: "ResultsScreen.qml", about: "AboutScreen.qml", admin: "AdminScreen.qml", profile: "ProfileScreen.qml",
         accounts: "AccountsScreen.qml", audit: "AuditScreen.qml", log: "LogScreen.qml",
-        chat: "ChatScreen.qml", replay: "ReplayScreen.qml", album: "AlbumScreen.qml", gut: "GutCityScreen.qml"
+        chat: "ChatScreen.qml", replay: "ReplayScreen.qml", album: "AlbumScreen.qml", gut: "GutCityScreen.qml", body: "BodyScreen.qml"
     })
     readonly property string section: vigil.route.split("/")[1] || ""
     readonly property bool inApp: vigil.stage === "app"
@@ -32,7 +32,7 @@ ApplicationWindow {
     readonly property var sections: {
         var out = []
         if (crewRole) {
-            var today = [["/", "Home"], ["/checkin", "Check in"]]
+            var today = [["/", "Home"], ["/body", "Body map"], ["/checkin", "Check in"]]
             if (!vigil.isDemo) today.push(["/log", "Log readings"])
             today.push(["/chat", "Organ chat"], ["/earth", "Call Earth"])
             out.push({ title: "Today", items: today })

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 
 Item {
     id: screen
+    readonly property var weather: Api.ask("space_weather", {})
     readonly property var d: Api.ask("radiation", { id: vigil.astronaut, day: vigil.day, v: vigil.version })
     readonly property bool active: d.storm.phase === "active"
     property bool drill: false
@@ -133,11 +134,68 @@ Item {
                     }
                 }
             }
-            Note { text: vigil.isDemo ? "The limit and dose figures are approximate and still need checking against sources. The storm size and shelter factor are made up." : "The limit is approximate and still needs checking against sources." }
+            Note { text: vigil.isDemo ? "Limits are from NASA-STD-3001. The storm replays a real event from NOAA's list. How its proton flux becomes dose in this ship, and how much the shelter blocks, are team assumptions." : "Limits are from NASA-STD-3001. Dose comes from the readings your crew logs." }
             second: [
                 Panel { Layout.fillWidth: true; visible: screen.active; surface: true; title: "Shelter steps"; ShelterFlow { Layout.fillWidth: true; storm: screen.d.storm } },
                 Panel { Layout.fillWidth: true; visible: !screen.active && screen.drill; surface: true; title: "Storm drill"; ShelterFlow { Layout.fillWidth: true; drill: true } },
-                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; surface: true; title: "Practice"; Body { text: "A drill walks through the shelter steps with a timer." } }
+                Panel { Layout.fillWidth: true; visible: !screen.active && !screen.drill; surface: true; title: "Practice"; Body { text: "A drill walks through the shelter steps with a timer." } },
+                // NASA's own record of solar particle storms, bundled so Vigil stays offline.
+                Panel {
+                    Layout.fillWidth: true
+                    visible: !!screen.weather.available
+                    surface: true
+                    title: "Solar storms measured, NASA DONKI"
+                    Body { text: screen.weather.available ? screen.weather.storms + " solar particle storms measured by spacecraft instruments from " + screen.weather.first + " to " + screen.weather.last + ". They rise and fall with the Sun's 11-year cycle." : "" }
+                    // Storms per year: one bar per year, its height the count. Point at or tap a bar to read it.
+                    Item {
+                        id: chart
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 160
+                        property int picked: -1
+                        readonly property var years: screen.weather.per_year || []
+                        readonly property real slot: width / Math.max(1, years.length)
+                        Repeater {
+                            model: chart.years
+                            Item {
+                                id: bar
+                                required property var modelData
+                                required property int index
+                                readonly property bool peak: modelData.storms === screen.weather.most
+                                x: index * chart.slot
+                                width: chart.slot
+                                height: chart.height
+                                Accessible.role: Accessible.StaticText
+                                Accessible.name: modelData.year + ": " + modelData.storms + (modelData.storms === 1 ? " storm" : " storms")
+                                Rectangle {
+                                    id: fill
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: yr.top
+                                    anchors.bottomMargin: 6
+                                    width: Math.max(4, chart.slot - 6)
+                                    height: Math.max(bar.modelData.storms ? 3 : 1, (parent.height - 44) * bar.modelData.storms / Math.max(1, screen.weather.most))
+                                    radius: 2
+                                    color: chart.picked === bar.index ? Theme.ink : Theme.link
+                                }
+                                Text { visible: bar.peak || chart.picked === bar.index; anchors.bottom: fill.top; anchors.bottomMargin: 2; anchors.horizontalCenter: parent.horizontalCenter; text: bar.modelData.storms; font.family: Theme.mono; font.pixelSize: 12; color: Theme.ink }
+                                Text { id: yr; anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; text: "'" + String(bar.modelData.year).slice(2); font.family: Theme.mono; font.pixelSize: 11; color: Theme.ink2 }
+                                MouseArea { anchors.fill: parent; hoverEnabled: true; onEntered: chart.picked = bar.index; onExited: chart.picked = -1; onClicked: chart.picked = bar.index }
+                            }
+                        }
+                    }
+                    Note { text: chart.picked >= 0 ? chart.years[chart.picked].year + ": " + chart.years[chart.picked].storms + " storms measured." : "Storms per year, with 2026 up to the day the data was fetched. Point at a bar to read its year." }
+                    Placard { text: "Most recent" }
+                    Repeater {
+                        model: screen.weather.recent || []
+                        RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Text { text: modelData.date; font.family: Theme.mono; font.pixelSize: 14; color: Theme.ink }
+                            Note { Layout.fillWidth: true; text: (modelData.flare ? "After a solar flare, seen by " : modelData.cme ? "After a coronal mass ejection, seen by " : "Seen by ") + modelData.instruments[0].split(":")[0] + (modelData.instruments.length > 1 ? " and " + (modelData.instruments.length - 1) + " more" : "") }
+                        }
+                    }
+                    Note { text: "From NASA's Space Weather Database Of Notifications, Knowledge, Information (DONKI), retrieved " + (screen.weather.retrieved || "") + ". Its " + (screen.weather.entries || 0) + " entries are grouped by the flare or eruption they share, and model forecasts are left out." }
+                }
             ]
         }
     }

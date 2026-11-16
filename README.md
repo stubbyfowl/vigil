@@ -18,7 +18,7 @@ Ready-to-run builds for macOS (Apple silicon), Windows and Linux are on the [Rel
 
 ## What it is
 
-Vigil is native desktop software built on Qt 6. It is not a web page and has no browser inside. The interface and the engine run in one process, with no server and no open network ports. It is tested on macOS and on Linux (ARM64 and x86-64). Qt also runs on Windows, but Vigil has not been tested there.
+Vigil is native desktop software built on Qt 6. It is not a web page and has no browser inside. The interface and the engine run in one process, with no server and no open network ports. It is tested on macOS and on Linux (ARM64 and x86-64). The Windows build opens every screen in a self-check on GitHub's Windows machines, but has not been tried by hand.
 
 ## Run it
 
@@ -83,6 +83,37 @@ Before any demo, this confirms the interface loads cleanly:
 
 Thresholds are on the Commander's Menu, or after five taps on the Vigil wordmark.
 
+## The body map and NASA's five hazards
+
+**Body map** (on Home and in the Menu) puts every reading on a figure of the body. Tap a part to see its readings, how to take each one, why it matters in space, and what to do when it is out of range. The buttons above the figure are the five hazards of human spaceflight from NASA's Human Research Program: radiation, isolation and confinement, distance from Earth, gravity fields, and hostile closed environments. Choose one to see which parts of the body it reaches. Each part also lists the Human Research Program risks it relates to.
+
+| Part | Readings | Judged against |
+|---|---|---|
+| Brain and sleep | Mood, stress, energy, sleep time and quality, time with others | Your own normal |
+| Lungs and air | Blood oxygen, cabin CO2 | Your own normal; NASA-STD-3001's 3 mmHg limit for CO2 |
+| Heart and vessels | Resting heart rate, heart rate variability, blood pressure, heart rate rise on standing | Your own normal |
+| Immune system | Temperature, CRP, IL-6, lymphocytes, symptoms | Your own normal |
+| Gut and nutrition | Fasting blood sugar, body mass, fiber and processed food | CDC fasting ranges for blood sugar |
+| Bones and muscles | Exercise, grip, bone marker, lean mass | Your own normal |
+| Radiation dose | Daily and career dose | NASA's career limit |
+
+Colors always come with a word (Normal, Drifting, Alert, Above NASA's limit), and Home prompts you to act when cabin CO2 or blood sugar is out of range. In the demo, a scrubber fault on days 84 to 86 pushes cabin CO2 past NASA's limit.
+
+![Body map](docs/screens/body.png)
+
+## NASA data inside
+
+| Data | What Vigil does with it |
+|---|---|
+| NASA DONKI solar energetic particle record, August 2010 to September 2026: 494 entries, 167 storms measured by spacecraft instruments, from NASA's Community Coordinated Modeling Center | The Radiation screen charts storms per year, showing the Sun's 11-year cycle, and lists the latest storms. Bundled in `data/space_weather/nasa_donki_sep.json` and refreshed with `scripts/fetch_nasa_donki.py`, because the app never connects to a network |
+| NASA-STD-3001 | The career and per-storm radiation limits and the cabin CO2 limit |
+| NASA Human Research Program: hazards, risks and ongoing research | The five hazards, the risk names on each part of the body, and the choice of readings |
+| NASA Mars delay and exercise figures | The 22-minute Earth link delay and the crew's usual exercise time |
+| CSA: radiation monitoring and why science is done in space | Radiation context and the nutrition guidance |
+| NOAA solar proton event list | The day-120 storm replays the October 1989 event |
+
+Every figure and where it comes from is in `SOURCES.md`.
+
 ## Ways to read your own data
 
 People skip health alerts but read a funny text, so the same readings also show up in lighter forms. None of them raise an alert, and each one shows the numbers it came from.
@@ -145,6 +176,7 @@ The full guide is [docs/user-guide.md](docs/user-guide.md).
 | Optional offline speech to text for the journal | `frontend/voice.py` |
 | Organ chat, texts from you at 70, lab ticker, immune replay, Gut City and narrator, all from real readings | `backend/app/extras.py` |
 | Heart rate album: each week of readings becomes a track, made offline | `backend/app/music.py` |
+| Body map: NASA hazards and risks, blood sugar and CO2 ranges, and what to do for each reading | `backend/app/body.py`, `data/indicator_guide.json` |
 | Interface | `frontend/qml` |
 
 Details are in [docs/architecture.md](docs/architecture.md). Design choices are in [docs/design-principles.md](docs/design-principles.md).

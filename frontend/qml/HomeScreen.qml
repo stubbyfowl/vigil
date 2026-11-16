@@ -266,8 +266,8 @@ Item {
             visible: !vigil.demo.active
             spacing: 12
             Repeater {
-                model: vigil.isDemo ? [["/checkin", "Check in", "normal"], ["/chat", "Organ chat", "normal"], ["/radiation", "Radiation", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
-                                    : [["/checkin", "Check in", "normal"], ["/log", "Log readings", "normal"], ["/chat", "Organ chat", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
+                model: vigil.isDemo ? [["/checkin", "Check in", "normal"], ["/body", "Body map", "normal"], ["/chat", "Organ chat", "normal"], ["/crew", "Crew", "normal"], ["/earth", "Call Earth", "urgent"]]
+                                    : [["/checkin", "Check in", "normal"], ["/log", "Log readings", "normal"], ["/body", "Body map", "normal"], ["/chat", "Organ chat", "normal"], ["/earth", "Call Earth", "urgent"]]
                 VButton {
                     required property var modelData
                     Layout.fillWidth: true

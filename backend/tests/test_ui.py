@@ -19,7 +19,7 @@ TARGETS = ("QQuickAbstractButton", "QQuickTextField", "QQuickSlider", "QQuickTex
 ROUTES = [
     "/", "/alert/eng-immune-46", "/system/immune", "/checkin", "/radiation", "/crew", "/ground", "/earth", "/sensors",
     "/timeline", "/explainer", "/delay", "/results", "/about", "/admin", "/profile", "/accounts", "/audit",
-    "/chat", "/replay", "/album", "/gut",
+    "/chat", "/replay", "/album", "/gut", "/body",
 ]
 
 

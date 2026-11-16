@@ -16,12 +16,12 @@ from typing import Any
 
 import numpy as np
 
-from . import auth, config, db, extras, mission, music
+from . import auth, body, config, db, extras, mission, music
 from .auth import CREW_ROLES, AuthError
 from .engine.alerts import PROTOCOLS
 from .live import Live, MissionClock
 from .models import CheckIn
-from .signals import BY_ID, DRIFT_SIGNALS, SIGNALS, SYSTEMS
+from .signals import BY_ID, DRIFT_SIGNALS, GROUP_NAMES, SIGNALS, SYSTEMS
 from .sim.generator import CREW
 from .store import Store, series_payload
 from .sync.outbox import Outbox
@@ -71,10 +71,10 @@ OWN = {  # request name -> the argument that names whose data it is
     "log_form": "id", "log_readings": "id", "entries": "id", "delete_entry": "id", "import_file": "id", "export_data": "id",
     "report": "id", "alert_action": "id", "undo_alert_action": "id",
     "organ_chat": "id", "future_you": "id", "lab_ticker": "id", "immune_replay": "id", "gut_city": "id",
-    "narration": "id", "album": "id", "album_track": "id",
+    "narration": "id", "album": "id", "album_track": "id", "body_map": "id",
 }
 MEDICAL_MAY = {"log_form", "log_readings", "entries", "delete_entry", "import_file"}  # the Medical Officer enters lab results
-CREW_TIER = {"crew", "crew_view", "import_files"}
+CREW_TIER = {"crew", "crew_view", "import_files", "space_weather"}
 GROUND_TIER = {"ground", "packets"}
 DEMO_ONLY = {"set_clock", "demo_start", "demo_next", "demo_stop", "timeline", "explainer", "results", "set_link"}
 LIVE_ONLY = {"log_form", "log_readings", "entries", "delete_entry", "import_files", "import_file", "archive_mission"}
@@ -84,6 +84,11 @@ COMMAND = {
 }
 REQUESTS = PUBLIC | set(OWN) | CREW_TIER | GROUND_TIER | DEMO_ONLY | LIVE_ONLY | COMMAND
 STATION_ROLES = {"vehicle": CREW_ROLES | {"presenter"}, "ground": {"ground", "presenter"}}
+
+
+def space_weather_nasa() -> dict[str, Any] | None:
+    path = config.DATA_DIR / "space_weather" / "nasa_donki_sep.json"
+    return json.loads(path.read_text()) if path.exists() else None
 
 
 def stamp() -> str:
@@ -496,6 +501,39 @@ class Vigil:
             music.render(track, path)
         return {"path": str(path), "title": track["title"]}
 
+    def body_map(self, id: str, day: int | None = None) -> dict[str, Any]:
+        """Every reading on the body, with NASA's five hazards and named risks, and plain guidance for each reading."""
+        run, series, d = self._person(id, day)
+        return body.body_map(run, series, d)
+
+    def space_weather(self) -> dict[str, Any]:
+        """NASA DONKI's record of solar energetic particle events, bundled for offline use."""
+        donki = space_weather_nasa()
+        if not donki:
+            return {"available": False}
+        # DONKI logs one entry per instrument or model, so entries are grouped into storms by the flare or CME they share.
+        # Model forecasts are left out: only storms an instrument measured are counted.
+        storms: list[dict[str, Any]] = []
+        by_key: dict[str, dict[str, Any]] = {}
+        for e in donki["events"]:
+            seen = [i for i in e["instruments"] if not i.startswith("MODEL")]
+            if not seen:
+                continue
+            keys = [k for k in (e["cme"], e["flare"]) if k] or [e["time"][:10]]
+            storm = next((by_key[k] for k in keys if k in by_key), None)
+            if storm is None:
+                storm = {"date": e["time"][:10], "flare": None, "cme": None, "instruments": []}
+                storms.append(storm)
+            storm["flare"], storm["cme"] = storm["flare"] or e["flare"], storm["cme"] or e["cme"]
+            storm["instruments"] += [i for i in seen if i not in storm["instruments"]]
+            by_key.update(dict.fromkeys(keys, storm))
+        storms.sort(key=lambda s: s["date"])
+        years = range(int(storms[0]["date"][:4]), int(donki["retrieved"][:4]) + 1)
+        per_year = [{"year": y, "storms": sum(s["date"].startswith(str(y)) for s in storms)} for y in years]
+        return {"available": True, "entries": donki["count"], "storms": len(storms), "first": storms[0]["date"], "last": storms[-1]["date"],
+                "retrieved": donki["retrieved"], "per_year": per_year, "most": max(p["storms"] for p in per_year),
+                "recent": storms[-5:][::-1], "source": donki["source"]}
+
     # Crew and ground
 
     def crew_view(self, day: int | None = None) -> dict[str, Any]:
@@ -700,6 +738,15 @@ class Vigil:
             have = self.store.days_with_readings(id)
             if have < needed:
                 out.append({"kind": "learning", "title": f"Baseline: {have} of {needed} days", "route": "/log"})
+        series = self.store.mission.series[id]
+        for sid, route in (("co2", "/body"), ("glucose", "/body")):
+            known = np.flatnonzero(~np.isnan(series[sid][:d]))
+            if len(known) and d - 1 - known[-1] <= 7:
+                status, word, _ = body.reference_status(sid, float(series[sid][known[-1]]), None)
+                if status == "red":
+                    value = float(series[sid][known[-1]])
+                    title = f"Cabin CO2 {value:.1f} mmHg: above NASA's limit" if sid == "co2" else f"Blood sugar {value:.0f} mg/dL: {word.lower()}"
+                    out.append({"kind": "crew", "title": title, "route": route})
         role = self.accounts.get(id)["role"] if self.actor_role == "system" else self.actor_role
         if role in ("medical", "commander", "presenter"):
             for card in self.crew_view(d)["crew"]:
@@ -721,7 +768,7 @@ class Vigil:
         groups: dict[str, list[dict[str, Any]]] = {}
         for sig in mission.LOGGABLE:
             past = np.flatnonzero(~np.isnan(series[sig.id][:d]))
-            groups.setdefault(SYSTEMS.get(sig.system, "Radiation"), []).append({
+            groups.setdefault(GROUP_NAMES[sig.system], []).append({
                 "id": sig.id, "name": sig.name, "unit": sig.unit, "low": sig.low, "high": sig.high, "decimals": sig.decimals,
                 "cadence": sig.cadence, "today": None if hide else _finite(series[sig.id][d - 1]),
                 "last": None if hide or not len(past) else _finite(series[sig.id][past[-1]]),
