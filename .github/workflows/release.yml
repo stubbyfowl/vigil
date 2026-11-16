@@ -1,0 +1,93 @@
+# Builds Vigil for macOS, Windows and Linux and attaches all three to a GitHub Release.
+# Runs when a version tag is pushed:  git tag v1.0.0 && git push origin v1.0.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            label: macOS-arm64
+          - os: windows-latest
+            label: Windows-x64
+          - os: ubuntu-22.04
+            label: Linux-x86_64
+    runs-on: ${{ matrix.os }}
+    env:
+      QT_QPA_PLATFORM: offscreen
+      QT_QUICK_BACKEND: software
+      VERSION: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Linux libraries Qt needs
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libopengl0 libglib2.0-0 libdbus-1-3 libfontconfig1 libfreetype6 libxkbcommon0 libgssapi-krb5-2 binutils
+      - name: Install
+        run: pip install -r backend/requirements.txt pyinstaller==6.22.3
+      - name: Build
+        run: pyinstaller --noconfirm --log-level WARN packaging/vigil.spec
+
+      # Each build opens every screen of the demo and fails on any interface error.
+      - name: Self-check (macOS)
+        if: runner.os == 'macOS'
+        run: VIGIL_HOME="$(mktemp -d)" dist/Vigil.app/Contents/MacOS/vigil --check
+      - name: Self-check (Linux)
+        if: runner.os == 'Linux'
+        run: VIGIL_HOME="$(mktemp -d)" dist/vigil/vigil --check
+      - name: Self-check (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: VIGIL_HOME="$(mktemp -d)" ./dist/Vigil.exe --check
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p stage/Vigil
+          cp -R dist/Vigil.app stage/Vigil/
+          ln -s /Applications stage/Vigil/Applications
+          for i in 1 2 3 4; do hdiutil create -quiet -volname Vigil -fs HFS+ -srcfolder stage/Vigil -ov -format UDZO "Vigil-$VERSION-macOS-arm64.dmg" && break; sleep 5; done
+          test -f "Vigil-$VERSION-macOS-arm64.dmg"
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: cp dist/Vigil.exe "Vigil-$VERSION-Windows-x64.exe"
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cp packaging/vigil.png packaging/vigil.desktop dist/vigil/
+          tar -C dist -czf "Vigil-$VERSION-Linux-x86_64.tar.gz" vigil
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.label }}
+          path: Vigil-*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" assets/* --title "Vigil ${{ github.ref_name }}" --notes-file packaging/RELEASE_NOTES.md

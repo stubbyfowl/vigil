@@ -12,6 +12,10 @@ The look follows nasa.gov: black, white and hairline rules, Inter headlines, Pub
 
 Built for the NASA Space Apps Challenge 2026, Phoenix.
 
+## Download
+
+Ready-to-run builds for macOS (Apple silicon), Windows and Linux are on the [Releases page](https://github.com/stubbyfowl/vigil/releases/latest). Open the app, choose **Explore the demo**, and sign in as the Presenter with PIN **2026**.
+
 ## What it is
 
 Vigil is native desktop software built on Qt 6. It is not a web page and has no browser inside. The interface and the engine run in one process, with no server and no open network ports. It is tested on macOS and on Linux (ARM64 and x86-64). Qt also runs on Windows, but Vigil has not been tested there.

@@ -1,5 +1,8 @@
-# Builds a standalone folder at dist/vigil. It needs no Python on the target computer.
-# Build on the operating system and CPU you are targeting: make package
+# Builds Vigil so it needs no Python on the target computer. Build on the system you are targeting: make package
+#   macOS:   dist/Vigil.app (and dist/vigil, the same app as a folder)
+#   Windows: dist/Vigil.exe, one file
+#   Linux:   dist/vigil, a folder with the vigil program inside
+import sys
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -37,5 +40,21 @@ analysis = Analysis(
     ],
 )
 pyz = PYZ(analysis.pure)
-exe = EXE(pyz, analysis.scripts, [], exclude_binaries=True, name="vigil", console=True)
-COLLECT(exe, analysis.binaries, analysis.datas, name="vigil")
+icons = root / "packaging"
+
+if sys.platform == "win32":
+    # One file that people can double-click. No console window behind the app.
+    EXE(pyz, analysis.scripts, analysis.binaries, analysis.datas, [], name="Vigil", console=False,
+        icon=str(icons / "vigil.ico"), upx=False)
+else:
+    exe = EXE(pyz, analysis.scripts, [], exclude_binaries=True, name="vigil", console=sys.platform != "darwin")
+    coll = COLLECT(exe, analysis.binaries, analysis.datas, name="vigil")
+    if sys.platform == "darwin":
+        BUNDLE(
+            coll, name="Vigil.app", icon=str(icons / "vigil.icns"), bundle_identifier="org.thetrojans.vigil",
+            info_plist={
+                "CFBundleDisplayName": "Vigil", "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1.0.0",
+                "NSHighResolutionCapable": True, "LSMinimumSystemVersion": "12.0",
+                "NSMicrophoneUsageDescription": "Vigil can turn your speech into journal text, on this computer only.",
+            },
+        )

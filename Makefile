@@ -48,3 +48,5 @@ screenshots:
 # Build a standalone folder in dist/vigil. Run this on the operating system you are targeting.
 package:
 	.venv/bin/pyinstaller --noconfirm packaging/vigil.spec
+
+# Release builds for all three systems are made on GitHub by .github/workflows/release.yml when a v* tag is pushed.

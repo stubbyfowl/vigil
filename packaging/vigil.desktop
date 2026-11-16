@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Vigil
+Comment=Offline health monitor for long space missions
+Exec=vigil
+Icon=vigil
+Terminal=false
+Categories=Science;MedicalSoftware;
